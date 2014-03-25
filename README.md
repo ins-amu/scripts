@@ -17,14 +17,22 @@ This pipeline uses T1 and diffusion imaging data to prepare surface, region mapp
 - cython for geodesic distance library
 - internet connection for scientific library and geodesic distance library
 
-To execute: 
-create a main directory, all files will be in this main directory
+#### Run the pipeline 
+- Create a main directory, all files will be in this main directory
 In this main directory you must have:
 
-- scripts directory (clone of this repo)
-- data directory with:
- - T1 directory with T1 nifti or dicom
- - DWI directory with DWI data nifti or dicom
+ - scripts directory (clone of this repo)
+ - data directory with:
+    - T1 directory with T1 nifti or dicom
+     - DWI directory with DWI data nifti or dicom
+
+- Edit the four first lines (export) of scripts/main.sh to put the right directory instead.
+
+- In a terminal:
+```shell
+cd main_directory/scripts
+sh main.sh
+```
 
 #### Outlook:
 - replace the AimsMeshDecimation in brainvisa by the matlab function iso2mesh as suggested by Paula
