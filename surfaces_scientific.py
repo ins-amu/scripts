@@ -845,3 +845,17 @@ class CortexScientific(surfaces_data.CortexData, SurfaceScientific):
         self.region_orientation = average_orientation
 
 
+
+    def compute_region_center(self):
+        """
+        """
+        regions = numpy.unique(self.region_mapping)
+        region_center = numpy.zeros((numpy.max(self.region_mapping)+1, 3))
+        #Average orientation of the region
+        #import pdb; pdb.set_trace()
+        for k in regions:
+            curr_vert = self.vertex[self.region_mapping == k, :]
+            region_center = numpy.mean(curr_vert, axis=0)
+
+        util.log_debug_array(LOG, region_center, "region_center", owner=self.__class__.__name__)
+        self.region_center= region_center
