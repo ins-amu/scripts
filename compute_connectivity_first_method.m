@@ -1,20 +1,19 @@
 addpath('read_and_write_func')
 PRD = getenv('PRD')
 SUBJ_ID = getenv('SUBJ_ID')
-cd([PRD, '/connectivity'])
 res = zeros(88,88);
 res_length = zeros(88,88);
-g = load_nii('aparcaseg_2_diff.nii.gz');
+g = load_nii([PRD, '/connectivity/aparcaseg_2_diff.nii.gz']);
 size_img = size(g.img);
 num_tracks = 100000;
 r = inv(g.hdr.hist.old_affine(1:3,1:3));
 data = g.img;
-corr_mat = load('../scripts/correspondance_mat.txt');
+corr_mat = load('correspondance_mat.txt');
 j=0;
 for nt =1:10
 'iteration'
 nt
-tracks = read_mrtrix_tracks(sprintf('whole_brain_%d.tck',nt));
+tracks = read_mrtrix_tracks(sprintf([PRD, '/connectivity/whole_brain_%d.tck'],nt));
 for i=1:num_tracks
 a = tracks.data{i};
 c = -g.hdr.hist.old_affine(1:3,4);
@@ -55,7 +54,7 @@ f1 = figure()
 imshow(log(length_mat)./max(max(log(length_mat))), 'Colormap', jet(255))
 f2 = figure()
 imshow(log(connectivity_mat)./max(max(log(connectivity_mat))), 'Colormap', jet(255))
-saveas(f1,'length_1.jpg','jpg')
-saveas(f2,'connectivity_1.jpg','jpg')
+saveas(f1,[PRD, '/connectivity/length_1.jpg'],'jpg')
+saveas(f2,[PRD, '/connectivity/connectivity_1.jpg'],'jpg')
 save([PRD, '/', SUBJ_ID, 'connectivity/weigths_method1.txt'], 'connectivity_mat', '-ascii')
 save([PRD, '/', SUBJ_ID, 'connectivity/tracts_method1.txt'], 'length_mat', '-ascii')

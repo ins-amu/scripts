@@ -1,11 +1,7 @@
 ################# parameter
 # the directory with all files
 export PRD=/home/tim/Work/Processed_data/tim_pipeline/TREC
-# in this directory you must have 
-# one directory named data
-# inside T1 directory with T1 nifti or dicom
-# and DWI directory with DWI data nifti or dicom
-# is freesurfer set
+# freesurfer 
 export FS=$SUBJECTS_DIR
 # subject name
 export SUBJ_ID=TREC
@@ -49,7 +45,7 @@ matlab -r "run left_region_mapping.m; quit;" -nodesktop
 python check_left_region_mapping.py
 
 # correct
-python correct_left_region_mapping.py
+#python correct_left_region_mapping.py
 
 ###################################### right hemisphere
 # export pial into text file
@@ -88,6 +84,10 @@ mkdir $PRD/$SUBJ_ID/surfaces
 
 # reunify both region_mapping, vertices and triangles
 python reunify_both_regions.py
+
+# zip to put in final format
+zip $PRD/$SUBJ_ID/surface.zip $PRD/$SUBJ_ID/surfaces/vertices $PRD/$SUBJ_ID/surfaces/triangles
+
 ########################## build connectivity
 # mrtrix
 mkdir $PRD/connectivity
@@ -95,7 +95,7 @@ mkdir $PRD/$SUBJ_ID/connectivity
 # mrconvert
 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.mif
 # brainmask # careful with percent value, check with mrview
-average $PRD/connectivity/dwi.mif -axis 3 - | threshold -percent 10 - - | median3D - - | median3D - $PRD/connectivity/mask.mif
+average $PRD/connectivity/dwi.mif -axis 3 $PRD/connectivity/lowb.nii| threshold -percent 10 $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask.mif
 # check the mask
 # mrview $PRD/connectivity/mask.mif
 # tensor imaging
@@ -119,10 +119,10 @@ done
 #Diff to T1
 mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/T1.mgz $PRD/connectivity/T1.nii
 mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/aparc+aseg.mgz $PRD/connectivity/aparc+aseg.nii
-flirt -in $nodif -ref $PRD/data/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat
+flirt -in $PRD/connectivity/lowb.nii-ref $PRD/data/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat
 #T1 to Diff (INVERSE)
 convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
-flirt -in $PRD/connectivity/aparc+aseg.nii -ref $nodif -out t1_2_diff -init diffusion_2_struct_inverse.mat -applyxfm -interp nearestneighbour
+flirt -in $PRD/connectivity/aparc+aseg.nii -ref $nodif -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init diffusion_2_struct_inverse.mat -applyxfm -interp nearestneighbour
 # now compute connectivity and length matrix, firt method
 matlab -r "run compute_connectivity_first_method.m; quit;" -nodesktop
 # now compute connectivity and length matrix, second method
@@ -131,8 +131,23 @@ matlab -r "run compute_connectivity_second_method.m; quit;" -nodesktop
 ########
 # we do not compute hemisphere
 # subcortical is already done
-cp hemisphere.txt $PRD/$SUBJ_ID/connectivity/hemisphere.txt
-cp subcortical.txt $PRD/$SUBJ_ID/connectivity/subcortical.txt
+cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 
+# set up tvb and gdist for calculations
+git clone https://github.com/the-virtual-brain/scientific_library.git
+cd scientific_library
+git checkout trunk
+cd ..
+mv scientific_library/tvb tvb/
+rm -fr scientific_library/
+cp surfaces_data.py tvb/datatypes/surfaces_data.py
+git clone https://github.com/the-virtual-brain/external_geodesic_library.git
+cd external_geodesic_library
+python setup.py build_ext --inplace
+export PYTHONPATH=$PRD/scripts/external_geodesic_library
+cd ..
 # compute centers, areas and orientations
 python compute_other_files.py
+
+# zip to put in final format
+zip $PRD/$SUBJ_ID/connectivity.zip $PRD/$SUBJ_ID/connectivity/area.txt $PRD/$SUBJ_ID/connectivity/position.txt $PRD/$SUBJ_ID/connectivity/orientation.txt $PRD/$SUBJ_ID/connectivity/weight.txt $PRD/$SUBJ_ID/connectivity/tract.txt $PRD/$SUBJ_ID/connectivity/cortical.txt $PRD/$SUBJ_ID/connectivity/centres.txt

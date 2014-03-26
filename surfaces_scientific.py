@@ -645,6 +645,7 @@ class CortexScientific(surfaces_data.CortexData, SurfaceScientific):
     #TODO: Prob. should implement these in the @property way...
     region_areas = None
     region_orientation = None
+    region_center = None
 
 
     def configure(self):
@@ -660,6 +661,9 @@ class CortexScientific(surfaces_data.CortexData, SurfaceScientific):
 
         if self.region_areas is None:
             self.compute_region_areas()
+
+        if self.region_center is None:
+            self.compute_region_center()
 
         if self.local_connectivity is None:
             # TODO: Switch to degree weighted nearest neighbour, or store a default,
@@ -796,7 +800,7 @@ class CortexScientific(surfaces_data.CortexData, SurfaceScientific):
         Set self._region_average attribute based on region mapping...
         """
         number_of_nodes = self.region_mapping.shape[0]  # TODO: need to support non-cortical regions here
-        number_of_areas = len(numpy.unique(spatial_mask))  # TODO: need to support non-cortical regions here
+        number_of_areas = numpy.max(spatial_mask)+1  # TODO: need to support non-cortical regions here
         #import pdb; pdb.set_trace()
         vertex_mapping = numpy.zeros((number_of_nodes, number_of_areas))
         vertex_mapping[numpy.arange(number_of_nodes), spatial_mask] = 1
@@ -854,8 +858,8 @@ class CortexScientific(surfaces_data.CortexData, SurfaceScientific):
         #Average orientation of the region
         #import pdb; pdb.set_trace()
         for k in regions:
-            curr_vert = self.vertex[self.region_mapping == k, :]
-            region_center = numpy.mean(curr_vert, axis=0)
+            curr_vert = self.vertices[self.region_mapping == k, :]
+            region_center[k,:] = numpy.mean(curr_vert, axis=0)
 
         util.log_debug_array(LOG, region_center, "region_center", owner=self.__class__.__name__)
         self.region_center= region_center

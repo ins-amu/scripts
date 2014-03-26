@@ -271,9 +271,9 @@ class RegionMappingData(arrays.MappedArray):
     """
     An array representing a measure of a Connectivity dataType.
     """
-    default = readers.File(folder_path="surfaces/cortex_reg13")
+    default = readers.File(folder_path=os.path.join(PRD, SUBJ_ID, 'surfaces'))
 
-    array_data = arrays.IndexArray(console_default=default.read_data(file_name="o52r00_irp2008.txt.bz2",
+    array_data = arrays.IndexArray(console_default=default.read_data(file_name="region_mapping.txt",
                                                                      dtype=numpy.int32, field="array_data"))
 
     connectivity = Connectivity
@@ -448,7 +448,7 @@ class CortexData(CorticalSurfaceData):
 
     def __init__(self, **kwargs):
         super(CortexData, self).__init__(**kwargs)
-        self.default.reload(self.__class__, folder_path="surfaces/cortex_reg13")
+        self.default.reload(self.__class__, folder_path=os.path.join(PRD, SUBJ_ID, 'surfaces'))
 
 
     def populate_cortex(self, cortex_surface, cortex_parameters=None):

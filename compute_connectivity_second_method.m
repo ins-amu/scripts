@@ -1,11 +1,11 @@
+addpath('read_and_write_func/')
 PRD = getenv('PRD')
 SUBJ_ID = getenv('SUBJ_ID')
-cd(PRD/connectivity)
 res = zeros(88,88);
 res_length = zeros(88,88);
-not_found = 0
+not_found = 0;
 num_tracks = 100000;
-g = ../scripts/load_nii('aparcaseg_2_diff.nii.gz');
+g = load_nii([PRD, '/connectivity/aparcaseg_2_diff.nii.gz']);
 size_img = size(g.img);
 r = inv(g.hdr.hist.old_affine(1:3,1:3));
 data = g.img;
@@ -14,7 +14,7 @@ j=0
 for nt =1:10
 'iteration'
 nt
-tracks = read_mrtrix_tracks(sprintf('whole_brain_%d.tck',nt));
+tracks = read_mrtrix_tracks(sprintf([PRD, '/connectivity/whole_brain_%d.tck'],nt));
     for i=1:num_tracks
     ind = [];
     uind = [];
@@ -59,9 +59,9 @@ j
 %imshow((res_length./res)./max(max((res_length./res))), 'Colormap', jet(25))
 %figure()
 %imshow(log(res_length./res)./max(max(log(res_length./res))), 'Colormap', jet(25))
-# to get the average length
+%to get the average length
 length_mat = res_length./res;
-# to compensate for the biais in favor of longer fibers
+%to compensate for the biais in favor of longer fibers
 connectivity_mat =  res./length_mat;
 connectivity_mat(isnan(connectivity_mat)) = 0;
 length_mat(isnan(length_mat))=0;
@@ -69,7 +69,7 @@ f1 = figure()
 imshow(log(length_mat)./max(max(log(length_mat))), 'Colormap', jet(255))
 f2 = figure()
 imshow(log(connectivity_mat)./max(max(log(connectivity_mat))), 'Colormap', jet(255))
-saveas(f1,length_2,'jpg')
-saveas(f2,connectivity_2,'jpg')
-save([PRD, '/', SUBJ_ID, '/weigths_method1.txt'], 'connectivity_mat', '-ascii')
-save([PRD, '/', SUBJ_ID, '/tracts_method1.txt'], 'length_mat', '-ascii')
+saveas(f1,[PRD, '/connectivity/length_2.jpg'],'jpg')
+saveas(f2,[PRD, '/connectivity/connectivity_2.jpg'],'jpg')
+save([PRD, '/', SUBJ_ID, 'connectivity/weigths_method2.txt'], 'connectivity_mat', '-ascii')
+save([PRD, '/', SUBJ_ID, 'connectivity/tracts_method2.txt'], 'length_mat', '-ascii')
