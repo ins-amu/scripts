@@ -1,6 +1,6 @@
 ################# parameter
 # the directory with all files
-export PRD=/home/tim/Work/Processed_data/tim_pipeline/TREC
+export PRD=/disk2/Work/Processed_data/tim_pipeline/TREC/
 # freesurfer 
 export FS=$SUBJECTS_DIR
 # subject name
@@ -94,6 +94,7 @@ zip $PRD/$SUBJ_ID/surface.zip $PRD/$SUBJ_ID/surfaces/vertices $PRD/$SUBJ_ID/surf
 mkdir $PRD/surfaces/subcortical
 cp $FS/$SUBJ_ID/ascii/* $PRD/surfaces/subcortical
 python list_subcortical.py
+
 
 ########################## build connectivity
 # mrtrix
