@@ -1,6 +1,6 @@
 ################# parameter
 # the directory with all files
-export PRD=/disk2/Work/Processed_data/tim_pipeline/TREC/
+export PRD=/home/tim/Work/Processed_data/tim_pipeline/TREC/
 # freesurfer 
 export FS=$SUBJECTS_DIR
 # subject name
