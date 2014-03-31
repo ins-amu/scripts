@@ -1,23 +1,24 @@
 ################# parameter
-# the directory with all files
-export PRD=/disk2/Work/Processed_data/tim_pipeline/TREC/
+#the directory with all files
+export PRD=/disk2/Work/Processed_data/tim_pipeline/ab/
 # freesurfer 
 export FS=$SUBJECTS_DIR
 # subject name
-export SUBJ_ID=TREC
+export SUBJ_ID=ab
 # brainvisa directory
 export BV=/home/tim/Work/Soft/brainvisa-4.3.0/
-
+# matlab path
+alias matlab=/home/tim/Matlab/bin/matlab
 
 ########## build cortical surface and region mapping
 cd $PRD/scripts
 ###################### freesurfer
-recon-all -i $PRD/data/T1/ -s $SUBJ_ID -all
+# recon-all -i $PRD/data/T1/01_0027_t1-mprage-sag-iso1-0mm/original-primary-m-nd-norm_e01_0001.dcm -s $SUBJ_ID -all
 
 
 ###################################### left hemisphere
 # export pial into text file
-mkdir ../surface
+mkdir -p ../surface
 mris_convert $FS/$SUBJ_ID/surf/lh.pial $PRD/surface/lh.pial.asc
 
 
@@ -39,13 +40,16 @@ $BV/bin/AimsMeshDecimation $PRD/surface/lh_mesh_high.mesh $PRD/surface/lh_mesh_l
 $BV/bin/python left_export_to_vertices.py
 
 # create left the region mapping
-matlab -r "run left_region_mapping.m; quit;" -nodesktop
+matlab -r "run left_region_mapping.m; quit;" -nodesktop -nodisplay
 
 # check
+if [ -n "$DISPLAY" ]
+then
 python check_left_region_mapping.py
+fi
 
 # correct
-#python correct_left_region_mapping.py
+python correct_left_region_mapping.py
 
 ###################################### right hemisphere
 # export pial into text file
@@ -69,37 +73,42 @@ $BV/bin/AimsMeshDecimation $PRD/surface/rh_mesh_high.mesh $PRD/surface/rh_mesh_l
 $BV/bin/python right_export_to_vertices.py
 
 # create left the region mapping
-matlab -r "run right_region_mapping.m; quit;" -nodesktop
+matlab -r "run right_region_mapping.m; quit;" -nodesktop -nodisplay
 
 # check
+if [ -n "$DISPLAY" ]
+then
 python check_right_region_mapping.py
+fi
 
 # correct
-#python correct_right_region_mapping.py
+python correct_right_region_mapping.py
 
 ###################################### both hemisphere
 # prepare final directory
-mkdir $PRD/$SUBJ_ID
-mkdir $PRD/$SUBJ_ID/surfaces
+mkdir -p $PRD/$SUBJ_ID
+mkdir -p $PRD/$SUBJ_ID/surfaces
 
 # reunify both region_mapping, vertices and triangles
 python reunify_both_regions.py
 
 # zip to put in final format
-zip $PRD/$SUBJ_ID/surface.zip $PRD/$SUBJ_ID/surfaces/vertices $PRD/$SUBJ_ID/surfaces/triangles
+cd $PRD/$SUBJ_ID/surfaces/scripts
+zip $PRD/$SUBJ_ID/surface.zip vertices.txt triangles.txt
+cd $PRD/scripts
 
 ########################### subcortical surfaces
 # extract subcortical surfaces 
 ./aseg2srf -s $SUBJ_ID
-mkdir $PRD/surfaces/subcortical
+mkdir -p $PRD/surfaces/subcortical
 cp $FS/$SUBJ_ID/ascii/* $PRD/surfaces/subcortical
 python list_subcortical.py
 
 
 ########################## build connectivity
 # mrtrix
-mkdir $PRD/connectivity
-mkdir $PRD/$SUBJ_ID/connectivity
+mkdir -p $PRD/connectivity
+mkdir -p $PRD/$SUBJ_ID/connectivity
 # mrconvert
 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.mif
 # brainmask # careful with percent value, check with mrview
@@ -132,9 +141,9 @@ flirt -in $PRD/connectivity/lowb.nii-ref $PRD/data/T1.nii -omat $PRD/connectivit
 convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
 flirt -in $PRD/connectivity/aparc+aseg.nii -ref $nodif -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init diffusion_2_struct_inverse.mat -applyxfm -interp nearestneighbour
 # now compute connectivity and length matrix, firt method
-matlab -r "run compute_connectivity_first_method.m; quit;" -nodesktop
+matlab -r "run compute_connectivity_first_method.m; quit;" -nodesktop -nodisplay
 # now compute connectivity and length matrix, second method
-matlab -r "run compute_connectivity_second_method.m; quit;" -nodesktop
+matlab -r "run compute_connectivity_second_method.m; quit;" -nodesktop -nodisplay
 
 ########
 # we do not compute hemisphere
@@ -158,4 +167,6 @@ cd ..
 python compute_other_files.py
 
 # zip to put in final format
-zip $PRD/$SUBJ_ID/connectivity.zip $PRD/$SUBJ_ID/connectivity/area.txt $PRD/$SUBJ_ID/connectivity/position.txt $PRD/$SUBJ_ID/connectivity/orientation.txt $PRD/$SUBJ_ID/connectivity/weight.txt $PRD/$SUBJ_ID/connectivity/tract.txt $PRD/$SUBJ_ID/connectivity/cortical.txt $PRD/$SUBJ_ID/connectivity/centres.txt
+cd $PRD/$SUBJ_ID/connectivity
+zip $PRD/$SUBJ_ID/connectivity.zip area.txt position.txt orientation.txt weight.txt tract.txt cortical.txt centres.txt
+cd $PRD/scripts
