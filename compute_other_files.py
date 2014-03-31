@@ -2,7 +2,7 @@ import numpy as np
 import os
 PRD = os.environ['PRD']
 SUBJ_ID = os.environ['SUBJ_ID']
-from tvb.simulator.lab import *
+from tvb.datatypes import surfaces
 default_cortex = surfaces.Cortex()
 default_cortex.configure()
 orientations = default_cortex.region_orientation

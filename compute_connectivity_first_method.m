@@ -58,5 +58,5 @@ length_mat(isnan(length_mat))=0;
 % imshow(log(connectivity_mat)./max(max(log(connectivity_mat))), 'Colormap', jet(255))
 % saveas(f1,[PRD, '/connectivity/length_1.jpg'],'jpg')
 % saveas(f2,[PRD, '/connectivity/connectivity_1.jpg'],'jpg')
-save([PRD, '/', SUBJ_ID, '/connectivity/weigths_method1.txt'], 'connectivity_mat', '-ascii')
+save([PRD, '/', SUBJ_ID, '/connectivity/weights_method1.txt'], 'connectivity_mat', '-ascii')
 save([PRD, '/', SUBJ_ID, '/connectivity/tracts_method1.txt'], 'length_mat', '-ascii')
