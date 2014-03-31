@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 #
-#  TheVirtualBrain-Scientific Package. This package holds all simulators, and 
+#  TheVirtualBrain-Scientific Package. This package holds all simulators, and
 # analysers necessary to run brain-simulations. You can use it stand alone or
 # in conjunction with TheVirtualBrain-Framework Package. See content of the
 # documentation-folder for more details. See also http://www.thevirtualbrain.org
 #
 # (c) 2012-2013, Baycrest Centre for Geriatric Care ("Baycrest")
 #
-# This program is free software; you can redistribute it and/or modify it under 
+# This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License version 2 as published by the Free
 # Software Foundation. This program is distributed in the hope that it will be
-# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
-# License for more details. You should have received a copy of the GNU General 
+# License for more details. You should have received a copy of the GNU General
 # Public License along with this program; if not, you can download it here
 # http://www.gnu.org/licenses/old-licenses/gpl-2.0
 #
@@ -51,7 +51,7 @@ from tvb.basic.logger.builder import get_logger
 from tvb.basic.traits.types_mapped import MappedType, SparseMatrix
 from tvb.basic.traits.core import FILE_STORAGE_NONE
 
-import os 
+import os
 PRD = os.environ['PRD']
 SUBJ_ID = os.environ['SUBJ_ID']
 
@@ -69,11 +69,11 @@ FACE = "Face"
 
 class SurfaceData(MappedType):
     """
-    This class primarily exists to bundle the structural Surface data into a 
+    This class primarily exists to bundle the structural Surface data into a
     single object.
     """
 
-    default = readers.File(folder_path=os.path.join(PRD, SUBJ_ID, 'surfaces'))
+    default = readers.File(folder_path=os.path.join(PRD, SUBJ_ID, 'surface'))
 
     vertices = arrays.PositionArray(
         label="Vertex positions",
@@ -271,7 +271,7 @@ class RegionMappingData(arrays.MappedArray):
     """
     An array representing a measure of a Connectivity dataType.
     """
-    default = readers.File(folder_path=os.path.join(PRD, SUBJ_ID, 'surfaces'))
+    default = readers.File(folder_path=os.path.join(PRD, SUBJ_ID, 'surface'))
 
     array_data = arrays.IndexArray(console_default=default.read_data(file_name="region_mapping.txt",
                                                                      dtype=numpy.int32, field="array_data"))
@@ -361,7 +361,7 @@ class LocalConnectivityData(MappedType):
 
     def validate(self, ignore_list=None):
         """
-        This method checks if the data stored into this entity is valid, and 
+        This method checks if the data stored into this entity is valid, and
         ready to be stored in DB.
         Method automatically called just before saving entity in DB.
         In case data is not valid an Exception should be thrown.
@@ -390,16 +390,16 @@ class CortexData(CorticalSurfaceData):
     local_connectivity = LocalConnectivityData(label="Local Connectivity",
                                                required=False,
                                                doc="""Define the interaction
-                                               between neighboring network nodes. 
-                                               This is implicitly integrated in 
-                                               the definition of a given surface 
-                                               as an excitatory mean coupling of 
-                                               directly adjacent neighbors to 
-                                               the first state variable of each 
-                                               population model (since these 
-                                               typically represent the mean-neural 
-                                               membrane voltage). 
-                                               This coupling is instantaneous 
+                                               between neighboring network nodes.
+                                               This is implicitly integrated in
+                                               the definition of a given surface
+                                               as an excitatory mean coupling of
+                                               directly adjacent neighbors to
+                                               the first state variable of each
+                                               population model (since these
+                                               typically represent the mean-neural
+                                               membrane voltage).
+                                               This coupling is instantaneous
                                                (no time delays).""")
 
     region_mapping_data = RegionMappingData(
@@ -448,16 +448,16 @@ class CortexData(CorticalSurfaceData):
 
     def __init__(self, **kwargs):
         super(CortexData, self).__init__(**kwargs)
-        self.default.reload(self.__class__, folder_path=os.path.join(PRD, SUBJ_ID, 'surfaces'))
+        self.default.reload(self.__class__, folder_path=os.path.join(PRD, SUBJ_ID, 'surface'))
 
 
     def populate_cortex(self, cortex_surface, cortex_parameters=None):
         """
-        Populate 'self' from a CorticalSurfaceData instance with additional 
+        Populate 'self' from a CorticalSurfaceData instance with additional
         CortexData specific attributes.
 
         :param cortex_surface:  CorticalSurfaceData instance
-        :param cortex_parameters: dictionary key:value, where key is attribute on CortexData 
+        :param cortex_parameters: dictionary key:value, where key is attribute on CortexData
         """
         for name in cortex_surface.trait:
             try:

@@ -1,7 +1,7 @@
 import numpy as np
 import os
 PRD = os.environ['PRD']
-os.chdir(os.path.join(PRD, 'surfaces', 'subcortical'))
+os.chdir(os.path.join(PRD, 'surface', 'subcortical'))
 
 for val in ['16','08','10','11','12','13','17','18','26','47','49','50','51','52','53','54','58']:
     val

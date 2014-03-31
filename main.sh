@@ -13,9 +13,10 @@ alias matlab=/home/tim/Matlab/bin/matlab
 set -e
 ########## build cortical surface and region mapping
 # cd $PRD/scripts
-# mrconvert $PRD/data/T1/ T1.nii
+# mrconvert $PRD/data/T1/ $PRD/data/T1.nii
+
 ###################### freesurfer
-# recon-all -i $PRD/data/T1/01_0027_t1-mprage-sag-iso1-0mm/original-primary-m-nd-norm_e01_0001.dcm -s $SUBJ_ID -all
+# recon-all -i $PRD/data/T1/T1.nii -s $SUBJ_ID -all
 
 
 ###################################### left hemisphere
@@ -86,13 +87,13 @@ python correct_right_region_mapping.py
 ###################################### both hemisphere
 # prepare final directory
 mkdir -p $PRD/$SUBJ_ID
-mkdir -p $PRD/$SUBJ_ID/surfaces
+mkdir -p $PRD/$SUBJ_ID/surface
 
 # reunify both region_mapping, vertices and triangles
 python reunify_both_regions.py
 
 # zip to put in final format
-cd $PRD/$SUBJ_ID/surfaces/scripts
+cd $PRD/$SUBJ_ID/surface
 zip $PRD/$SUBJ_ID/surface.zip vertices.txt triangles.txt
 cd $PRD/scripts
 
@@ -123,7 +124,7 @@ tensor2vector $PRD/connectivity/dt.mif - | mrmult - $PRD/connectivity/fa.mif $PR
 erode $PRD/connectivity/mask.mif -npass 3 - | mrmult $PRD/connectivity/fa.mif - - | threshold - -abs 0.7 $PRD/connectivity/sf.mif
 # here carefule with lmax
 estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax 6 $PRD/connectivity/response.txt
-disp_profile -response $PRD/connectivity/response.txt
+if [ -n "$DISPLAY" ]; then disp_profile -response $PRD/connectivity/response.txt; fi
 # here also careful with lmax
 csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax 6 -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif
 # tractography
