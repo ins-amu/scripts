@@ -1,10 +1,10 @@
 ################ 
 #the directory with all files
-export PRD=/disk2/Work/Processed_data/tim_pipeline/ab/
+export PRD=/home/tim/Work/Processed_data/tim_pipeline/TREC/
 # freesurfer 
 export FS=$SUBJECTS_DIR
 # subject name
-export SUBJ_ID=ab
+export SUBJ_ID=TREC
 # brainvisa directory
 export BV=/home/tim/Work/Soft/brainvisa-4.3.0/
 # matlab path
