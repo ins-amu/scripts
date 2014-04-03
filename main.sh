@@ -10,7 +10,7 @@ export BV=/home/tim/Work/Soft/brainvisa-4.3.0/
 # matlab path
 alias matlab=/home/tim/Matlab/bin/matlab
 # error handling
-set -e
+# set -e
 ########## build cortical surface and region mapping
 # cd $PRD/scripts
 # mrconvert $PRD/data/T1/ $PRD/data/T1.nii

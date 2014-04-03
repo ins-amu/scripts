@@ -5,18 +5,18 @@ PRD = os.environ['PRD']
 SUBJ_ID = os.environ['SUBJ_ID']
 from tvb.datatypes import surfaces
 
-# default_cortex = surfaces.Cortex()
-# default_cortex.configure()
+default_cortex = surfaces.Cortex()
+default_cortex.configure()
 
-# orientations = default_cortex.region_orientation
-# areas = default_cortex.region_areas
-# centers = default_cortex.region_center
+orientations = default_cortex.region_orientation
+areas = default_cortex.region_areas
+centers = default_cortex.region_center
 
-orientations = np.zeros((88, 3))
-areas = np.zeros((88,3))
-centers = np.zeros((88,3))
+# orientations = np.zeros((88, 3))
+# areas = np.zeros((88,3))
+# centers = np.zeros((88,3))
 
-def triangle_areas(vertices, triangles):
+def compute_triangle_areas(vertices, triangles):
     """Calculates the area of triangles making up a surface."""
     tri_u = vertices[triangles[:, 1], :] - vertices[triangles[:, 0], :]
     tri_v = vertices[triangles[:, 2], :] - vertices[triangles[:, 0], :]
@@ -40,7 +40,7 @@ def compute_region_areas(triangles_areas, vertex_triangles):
     return region_surface_area
 
 
-def compute_region_orientation(region_mapping, vertex_normals):
+def compute_region_orientation(vertex_normals):
     """
     """
     average_orientation = numpy.zeros((1, 3))
@@ -53,7 +53,7 @@ def compute_region_orientation(region_mapping, vertex_normals):
     return region_orientation
 
 
-def vertex_triangles(number_of_vertices, number_of_triangles, triangles):
+def compute_vertex_triangles(number_of_vertices, number_of_triangles, triangles):
     """
     .
     """
@@ -97,7 +97,7 @@ def compute_vertex_normals(number_of_vertices, vertex_triangles, triangles,
         print(" %d vertices have bad normals" % bad_normal_count)
     return vert_norms
 
-def triangle_angles(vertices, number_of_triangles, triangles):
+def compute_triangle_angles(vertices, number_of_triangles, triangles):
     """
     Calculates the inner angles of all the triangles which make up a surface
     """
@@ -141,24 +141,25 @@ for val in ['16', '08', '10', '11', '12', '13', '17', '18', '26', '47', '49',
                                     'aseg_0'+str(val)+'_vert.txt'))
     tri = np.loadtxt(os.path.join(PRD, 'surface', 'subcortical',
                                     'aseg_0'+str(val)+'_tri.txt'))
+    tri = tri.astype(int)
 
     curr_center = np.mean(verts, axis=0)
-    indx = corr_table[np.nonzero(corr_table[:, 0] == np.int(val)), 1] - 1
-    centers[int(indx), :] = curr_center
+    indx = int(corr_table[np.nonzero(corr_table[:, 0] == np.int(val)), 1] - 1)
+    centers[indx, :] = curr_center
     # Now calculate average orientations
-    number_of_vertices = verts.shape[0]
-    number_of_triangles = tri.shape[0]
-    vertex_triangles = vertex_triangles(number_of_vertices, number_of_triangles,
+    number_of_vertices = int(verts.shape[0])
+    number_of_triangles = int(tri.shape[0])
+    vertex_triangles = compute_vertex_triangles(number_of_vertices, number_of_triangles,
                                         tri)
     triangle_normals = compute_triangle_normals(tri, verts)
-    triangle_angles = triangle_angles(verts, number_of_triangles, tri)
+    triangle_angles = compute_triangle_angles(verts, number_of_triangles, tri)
     vertex_normals = compute_vertex_normals(number_of_vertices, vertex_triangles,
                                             tri, triangle_angles,
                                             triangle_normals, verts)
     average_orientation = compute_region_orientation(vertex_normals)
     orientations[indx, :] = average_orientation
 
-    triangle_areas = triangle_areas(verts, tri)
+    triangle_areas = compute_triangle_areas(verts, tri)
     region_areas = compute_region_areas(triangle_areas, vertex_triangles)
     areas[indx] = region_areas
 
