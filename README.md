@@ -15,7 +15,7 @@ The pipeline was tested on a Debian wheezy 64 bits, gcc version 4.6.3
 - matlab: tested with matlab R2013a
 - mrtrix: tested with mrtrix 0.2.11
 - cython for geodesic distance library: tested with cython 0.19.2
-- internet connection for scientific library and geodesic distance library
+- internet connection for scientific library (commit 44b1c18b27) and geodesic distance library ( commit 9bae57853d)
 
 #### Run the pipeline 
 - Create a main directory, all files will be in this main directory
