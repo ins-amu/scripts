@@ -9,12 +9,12 @@ This pipeline uses T1 and diffusion imaging data to prepare surface, region mapp
 
 #### Needed softwares
 
-- freesurfer
-- anatomist
-- python
-- matlab
-- mrtrix
-- cython for geodesic distance library
+- freesurfer: tested with freesurfer-x86_64-redhat-linux-gnu-stable5-20130513
+- anatomist: tested with anatomist 4.3.0
+- python: tested with python 2.7.3
+- matlab: tested with matlab R2013a
+- mrtrix: tested with mrtrix 0.2.11
+- cython for geodesic distance library: tested with cython 0.19.2
 - internet connection for scientific library and geodesic distance library
 
 #### Run the pipeline 
