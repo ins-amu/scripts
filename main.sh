@@ -1,6 +1,6 @@
 ################# parameter
 # the directory with all files
-export PRD=/home/tim/Work/Processed_data/tim_pipeline/TREC
+export PRD=/home/tim/Work/Processed_data/tim_pipeline/TREC/
 # freesurfer 
 export FS=$SUBJECTS_DIR
 # subject name
@@ -87,6 +87,14 @@ python reunify_both_regions.py
 
 # zip to put in final format
 zip $PRD/$SUBJ_ID/surface.zip $PRD/$SUBJ_ID/surfaces/vertices $PRD/$SUBJ_ID/surfaces/triangles
+
+########################### subcortical surfaces
+# extract subcortical surfaces 
+./aseg2srf -s $SUBJ_ID
+mkdir $PRD/surfaces/subcortical
+cp $FS/$SUBJ_ID/ascii/* $PRD/surfaces/subcortical
+python list_subcortical.py
+
 
 ########################## build connectivity
 # mrtrix

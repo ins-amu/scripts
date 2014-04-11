@@ -9,6 +9,14 @@ orientations = default_cortex.region_orientation
 areas = default_cortex.region_areas  
 centers = default_cortex.region_center 
 
+# compute subcortical centers
+corr_table = np.loadtxt('correspondance_mat.txt')
+for val in ['16','08','10','11','12','13','17','18','26','47','49','50','51','52','53','54','58']:
+	verts = np.loadtxt(os.path.join(PRD,'surface', 'subcortical', 'aseg_0'+str(val)+'_vert.txt'))
+	curr_center = np.mean(verts, axis=0)
+	indx = corr_table[np.nonzero(corr_table[:,0]==np.int(val)),1] - 1	
+	centers[int(indx),:] = curr_center
+
 np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity/area'), areas, fmt='%.2f')
 np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity/orientation'), orientations, fmt='%.2f %.2f %.2f')
 
