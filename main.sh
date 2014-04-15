@@ -8,10 +8,29 @@ export SUBJ_ID=TREC
 # brainvisa directory
 export BV=/home/tim/Work/Soft/brainvisa-4.3.0/
 # matlab path
-#alias matlab=/home/tim/Matlab/bin/matlab
+alias matlab='/usr/local/MATLAB/R2013a/bin/matlab'
 # error handling
-#set -e
-########## build cortical surface and region mapping
+set -e
+
+########## Important parameters
+# This parameter modify the mask for diffusion processing
+# check for different values with mrview
+export percent_value_mask=10
+
+# This parameter is the maximum harmonic order for spherical deconvolution
+# It depends of the number of directions used during acquisition
+# Please refer to the following table 
+# Maximum harmonic order (lmax)	Number of parameters required
+#             2				     6
+#             4				     15
+#             6				     28
+#             8				     45
+#             10			     66
+#             12			     91
+#             n				½ (n+1)(n+2)
+export lmax = 6 
+
+######### build cortical surface and region mapping
 # cd $PRD/scripts
 # mrconvert $PRD/data/T1/ $PRD/data/T1.nii
 
@@ -111,9 +130,9 @@ mkdir -p $PRD/connectivity
 mkdir -p $PRD/$SUBJ_ID/connectivity
 # mrconvert
 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.mif
-# brainmask # careful with percent value, check with mrview
+# brainmask 
 average $PRD/connectivity/dwi.mif -axis 3 $PRD/connectivity/lowb.nii
-threshold -percent 10 $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask.mif
+threshold -percent $percent_value_mask $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask.mif
 # check the mask
 if [ -n "$DISPLAY" ]; then mrview $PRD/connectivity/mask.mif; fi
 # tensor imaging
@@ -122,11 +141,9 @@ tensor2FA $PRD/connectivity/dt.mif - | mrmult - $PRD/connectivity/mask.mif $PRD/
 tensor2vector $PRD/connectivity/dt.mif - | mrmult - $PRD/connectivity/fa.mif $PRD/connectivity/ev.mif
 # constrained spherical decconvolution
 erode $PRD/connectivity/mask.mif -npass 3 - | mrmult $PRD/connectivity/fa.mif - - | threshold - -abs 0.7 $PRD/connectivity/sf.mif
-# here carefule with lmax
-estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax 6 $PRD/connectivity/response.txt
+estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax $lmax $PRD/connectivity/response.txt
 if [ -n "$DISPLAY" ]; then disp_profile -response $PRD/connectivity/response.txt; fi
-# here also careful with lmax
-csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax 6 -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif
+csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif
 # tractography
 for I in 1 2 3 4 5 6 7 8 9 10
 do
@@ -152,20 +169,6 @@ matlab -r "run compute_connectivity_second_method.m; quit;" -nodesktop -nodispla
 # subcortical is already done
 cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 
-# set up tvb and gdist for calculations
-# git clone https://github.com/the-virtual-brain/scientific_library.git
-# cd scientific_library
-# git checkout trunk
-# cd ..
-# mv scientific_library/tvb tvb/
-# rm -fr scientific_library/
-# cp surfaces_data.py tvb/datatypes/surfaces_data.py
-# cp surfaces_scientific.py tvb/datatypes/surfaces_scientific.py
-# git clone https://github.com/the-virtual-brain/external_geodesic_library.git
-# cd external_geodesic_library
-# python setup.py build_ext --inplace
-# export PYTHONPATH=$PRD/scripts/external_geodesic_library
-# cd ..
 # # compute centers, areas and orientations
 python compute_other_files.py
 

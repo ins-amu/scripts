@@ -12,7 +12,7 @@ r = inv(affin(1:3,1:3));
 data = g.img;
 corr_mat = load('correspondance_mat.txt');
 j=0;
-for nt =1:3
+for nt =1:10
 'iteration'
 nt
 tracks = read_mrtrix_tracks(sprintf([PRD, '/connectivity/whole_brain_%d.tck'],nt));

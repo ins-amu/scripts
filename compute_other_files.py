@@ -153,10 +153,10 @@ if __name__ == '__main__':
 
     # Cortex
     # import data
-    verts = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surfaces', 'vertices.txt'))
-    tri = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surfaces', 'triangles.txt'))
+    verts = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surface', 'vertices.txt'))
+    tri = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surface', 'triangles.txt'))
     tri = tri.astype(int)
-    region_mapping = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surfaces', 'region_mapping.txt'))
+    region_mapping = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surface', 'region_mapping.txt'))
 
     # compute centers
     centers = compute_region_center_cortex(verts, region_mapping)
