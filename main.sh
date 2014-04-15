@@ -105,15 +105,6 @@ mkdir -p $PRD/surface/subcortical
 cp $FS/$SUBJ_ID/ascii/* $PRD/surface/subcortical
 python list_subcortical.py
 
-
-########################### subcortical surfaces
-# extract subcortical surfaces 
-./aseg2srf -s $SUBJ_ID
-mkdir $PRD/surface/subcortical
-cp $FS/$SUBJ_ID/ascii/* $PRD/surface/subcortical
-python list_subcortical.py
-
-
 ########################## build connectivity
 # mrtrix
 mkdir -p $PRD/connectivity
@@ -137,7 +128,7 @@ if [ -n "$DISPLAY" ]; then disp_profile -response $PRD/connectivity/response.txt
 # here also careful with lmax
 csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax 6 -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif
 # tractography
-for I in 1 2 3
+for I in 1 2 3 4 5 6 7 8 9 10
 do
 streamtrack SD_PROB $PRD/connectivity/CSD6.mif -seed $PRD/connectivity/mask.mif -mask $PRD/connectivity/mask.mif $PRD/connectivity/whole_brain_$I.tck -num 100000
 done
