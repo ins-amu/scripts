@@ -60,8 +60,6 @@ def compute_vertex_triangles(number_of_vertices, number_of_triangles, triangles)
         vertex_triangles[triangles[k, 1]].append(k)
         vertex_triangles[triangles[k, 2]].append(k)
 
-    vertex_triangles = map(frozenset, vertex_triangles)
-
     return vertex_triangles
 
 
