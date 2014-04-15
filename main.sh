@@ -1,6 +1,6 @@
 ################ 
 #the directory with all files
-export PRD=/disk2/Work/Processed_data/tim_pipeline/TREC/
+export PRD=/home/tim/Work/Processed_data/tim_pipeline/TREC/
 # freesurfer 
 export FS=$SUBJECTS_DIR
 # subject name
@@ -8,9 +8,9 @@ export SUBJ_ID=TREC
 # brainvisa directory
 export BV=/home/tim/Work/Soft/brainvisa-4.3.0/
 # matlab path
-alias matlab=/home/tim/Matlab/bin/matlab
+#alias matlab=/home/tim/Matlab/bin/matlab
 # error handling
-set -e
+#set -e
 ########## build cortical surface and region mapping
 # cd $PRD/scripts
 # mrconvert $PRD/data/T1/ $PRD/data/T1.nii

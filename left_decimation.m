@@ -21,11 +21,12 @@ face = d + 1;
 %     end
 % end
 
-[newno, newfc] = remeshsurf(node, face, 2);
-save([PRD, '/', 'surface/lh_vertices_high.txt', 'newno', '-ascii')
-f =  newfc(:, 1:3)
-save([PRD, '/', 'surface/lh_triangles_high.txt', 'f', '-ascii')
-]
+[newno, newfc] = remeshsurf(node, face, 2.5);
+%[newno, newfc] = meshresample(node, face, 0.02);
+save([PRD, '/', 'surface/lh_vertices_low.txt'], 'newno', '-ascii');
+f =  newfc(:, 1:3) - 1;
+save([PRD, '/', 'surface/lh_triangles_low.txt'], 'f', '-ascii');
+
 % node_newsize = size(newno);
 % reg_map = zeros(node_newsize(1),1);
 % 
@@ -36,6 +37,6 @@ save([PRD, '/', 'surface/lh_triangles_high.txt', 'f', '-ascii')
 %     [valuni, induni] = count_unique(newfc(row, 4));
 % 
 %     [bull, indx] = max(induni);
-%     reg_map(i) = bull(indx);
+%     reg_map(y) = bull(indx);
 %     
 % end
