@@ -5,7 +5,7 @@ This pipeline uses T1 and diffusion imaging data to prepare surface, region mapp
 
 - The surface is built with freesurfer
 - The region mapping is built from the parcellation of freesurfer on a decimated surface (around 30.000 vertices)
-- The connectivity and length matrices are build with mrtrix, i.e. spherical deconvolution and probabilistic tractrography. Right now there are two ways of building the connectivity matrix, either taking the ROIs only at the end of each fibres, or by taking into account all ROIs in which the fibres go through. We need further validation to say which one is the best one. The first method use around 100.000 tracks, the second around 400.000 tracks
+- The connectivity and length matrices are build with mrtrix, i.e. spherical deconvolution and probabilistic tractrography. Right now there are two ways of building the connectivity matrix, either taking the ROIs only at the end of each fibres, or by taking into account all ROIs in which the fibres go through. We need further validation to say which one is the best one. The first method use around 100.000 tracks, the second around 400.000 tracks, however you can easily change these parameters.
 
 #### Needed softwares
 The pipeline was tested on a Debian wheezy 64 bits, gcc version 4.6.3
@@ -24,7 +24,8 @@ In this main directory you must have:
     - T1 directory with T1 nifti or dicom
      - DWI directory with DWI data nifti or dicom
 
-- Edit the four first lines (export) of scripts/main.sh to put the right directory instead.
+- Edit the four first lines (export) of scripts/main.sh to put the right directories instead.
+Also edit the important parameters if needed.
 
 - In a terminal:
 ```shell
@@ -35,3 +36,4 @@ sh main.sh
 #### Outlook:
 - translate python scripts in matlab scripts
 - compare two connectivity building methods
+- have also a look in the issues
