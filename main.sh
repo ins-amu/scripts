@@ -153,20 +153,20 @@ matlab -r "run compute_connectivity_second_method.m; quit;" -nodesktop -nodispla
 cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 
 # set up tvb and gdist for calculations
-git clone https://github.com/the-virtual-brain/scientific_library.git
-cd scientific_library
-git checkout trunk
-cd ..
-mv scientific_library/tvb tvb/
-rm -fr scientific_library/
-cp surfaces_data.py tvb/datatypes/surfaces_data.py
-cp surfaces_scientific.py tvb/datatypes/surfaces_scientific.py
-git clone https://github.com/the-virtual-brain/external_geodesic_library.git
-cd external_geodesic_library
-python setup.py build_ext --inplace
-export PYTHONPATH=$PRD/scripts/external_geodesic_library
-cd ..
-# compute centers, areas and orientations
+# git clone https://github.com/the-virtual-brain/scientific_library.git
+# cd scientific_library
+# git checkout trunk
+# cd ..
+# mv scientific_library/tvb tvb/
+# rm -fr scientific_library/
+# cp surfaces_data.py tvb/datatypes/surfaces_data.py
+# cp surfaces_scientific.py tvb/datatypes/surfaces_scientific.py
+# git clone https://github.com/the-virtual-brain/external_geodesic_library.git
+# cd external_geodesic_library
+# python setup.py build_ext --inplace
+# export PYTHONPATH=$PRD/scripts/external_geodesic_library
+# cd ..
+# # compute centers, areas and orientations
 python compute_other_files.py
 
 # zip to put in final format
