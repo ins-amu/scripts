@@ -12,9 +12,6 @@ orientations = default_cortex.region_orientation
 areas = default_cortex.region_areas
 centers = default_cortex.region_center
 
-# orientations = np.zeros((88, 3))
-# areas = np.zeros((88,3))
-# centers = np.zeros((88,3))
 
 def compute_triangle_areas(vertices, triangles):
     """Calculates the area of triangles making up a surface."""
