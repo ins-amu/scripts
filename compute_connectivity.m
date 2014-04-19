@@ -54,14 +54,17 @@ j
 
 % postprocessing
 %distance between voxels in mm: 0.04mm
-res_length = 0.04 .* res_length
+res_length = 0.04 .* res_length;
 % to have the right count
-length_mat = res_length./res
+length_mat = res_length./res;
 length_mat(isnan(length_mat))=0;
 % to avoid the biais toward longer tracts
 connectivity_mat =  res./length_mat;
 connectivity_mat(isnan(connectivity_mat)) = 0;
-
+% eliminate diagonal
+for i=1:88
+connectivity_mat(i,i) = 0;
+end
 
 %figure(1)
 %imshow(res./max(max(res)), 'Colormap', jet(25))
