@@ -25,8 +25,9 @@ tracks = read_mrtrix_tracks(sprintf([PRD, '/connectivity/whole_brain_%d.tck'],nt
     d= repmat(c',size(a,1),1);
     e = abs(r*(a+d)')+1;
         for i = 1:size(e,2)
-        point = [point, data(round(e(1,i)),round(size_img(2)-e(2,i)),round(e(3,i)))];
-        end
+        %point = [point, data(round(e(1,i)),round(size_img(2)-e(2,i)),round(e(3,i)))];
+        point = [point, data(round(e(1,i)),round(e(2,i)),round(e(3,i)))];
+		end
         [upoint, indpoint] = unique(point);
             if size(upoint,2) > 2
                 for k=2:size(upoint,2)
@@ -63,7 +64,8 @@ j
 %to get the average length
 length_mat = res_length./res;
 %to compensate for the biais in favor of longer fibers
-connectivity_mat =  res./length_mat;
+%connectivity_mat =  res./length_mat;
+connectivity_mat = res
 connectivity_mat(isnan(connectivity_mat)) = 0;
 length_mat(isnan(length_mat))=0;
 % f1 = figure()
@@ -72,5 +74,5 @@ length_mat(isnan(length_mat))=0;
 % imshow(log(connectivity_mat)./max(max(log(connectivity_mat))), 'Colormap', jet(255))
 % saveas(f1,[PRD, '/connectivity/length_2.jpg'],'jpg')
 % saveas(f2,[PRD, '/connectivity/connectivity_2.jpg'],'jpg')
-save([PRD, '/', SUBJ_ID, '/connectivity/weights_method2.txt'], 'connectivity_mat', '-ascii')
-save([PRD, '/', SUBJ_ID, '/connectivity/tracts_method2.txt'], 'length_mat', '-ascii')
+save([PRD, '/', SUBJ_ID, '/connectivity/weights_method3.txt'], 'connectivity_mat', '-ascii')
+save([PRD, '/', SUBJ_ID, '/connectivity/tracts_method3.txt'], 'length_mat', '-ascii')

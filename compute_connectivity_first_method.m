@@ -21,8 +21,10 @@ a = tracks.data{i};
 c = -affin(1:3,4);
 d= repmat(c',size(a,1),1);
 e = abs(r*(a+d)')+1;
-start_point = data(round(e(1,1)),round(size_img(2)-e(2,1)),round(e(3,1)));
-end_point =  data(round(e(1,end)),round(size_img(2)-e(2,end)),round(e(3,end)));
+%start_point = data(round(e(1,1)),round(size_img(2)-e(2,1)),round(e(3,1)));
+%end_point =  data(round(e(1,end)),round(size_img(2)-e(2,end)),round(e(3,end)));
+start_point = data(round(e(1,1)),round(e(2,1)),round(e(3,1)));
+end_point =  data(round(e(1,end)),round(e(2,end)),round(e(3,end)));
 if start_point >0 & end_point > 0
 start_ind = corr_mat(find(corr_mat(:,1)==start_point),2);
 end_ind = corr_mat(find(corr_mat(:,1)==end_point),2);
@@ -49,7 +51,8 @@ j
 % to get the average length
 length_mat = res_length./res;
 % to compensate for the biais in favor of longer fibers
-connectivity_mat =  res./length_mat;
+%connectivity_mat =  res./length_mat;
+connectivity_mat = res
 connectivity_mat(isnan(connectivity_mat)) = 0;
 length_mat(isnan(length_mat))=0;
 % f1 = figure()
@@ -58,5 +61,5 @@ length_mat(isnan(length_mat))=0;
 % imshow(log(connectivity_mat)./max(max(log(connectivity_mat))), 'Colormap', jet(255))
 % saveas(f1,[PRD, '/connectivity/length_1.jpg'],'jpg')
 % saveas(f2,[PRD, '/connectivity/connectivity_1.jpg'],'jpg')
-save([PRD, '/', SUBJ_ID, '/connectivity/weights_method1.txt'], 'connectivity_mat', '-ascii')
-save([PRD, '/', SUBJ_ID, '/connectivity/tracts_method1.txt'], 'length_mat', '-ascii')
+save([PRD, '/', SUBJ_ID, '/connectivity/weights_method4.txt'], 'connectivity_mat', '-ascii')
+save([PRD, '/', SUBJ_ID, '/connectivity/tracts_method4.txt'], 'length_mat', '-ascii')

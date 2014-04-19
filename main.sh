@@ -159,10 +159,9 @@ mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/
 #convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
 #flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii  -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -applyxfm -interp nearestneighbour
 flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparcaseg_2_diff.nii -interp nearestneighbour 
-# now compute connectivity and length matrix, firt method
-matlab -r "run compute_connectivity_first_method.m; quit;" -nodesktop -nodisplay
-# now compute connectivity and length matrix, second method
-matlab -r "run compute_connectivity_second_method.m; quit;" -nodesktop -nodisplay
+
+# now compute connectivity and length matrix
+matlab -r "run compute_connectivity.m; quit;" -nodesktop -nodisplay
 
 ########
 # we do not compute hemisphere
