@@ -1,16 +1,16 @@
 addpath('read_and_write_func')
 PRD = getenv('PRD')
 SUBJ_ID = getenv('SUBJ_ID')
-res = zeros(88,88);
-res_length = zeros(88,88);
+res = zeros(96,96);
+res_length = zeros(96,96);
 
-g = load_untouch_nii([PRD, '/connectivity/aparcaseg_2_diff.nii.gz']);
+g = load_untouch_nii([PRD, '/connectivity/rmask_2_diff.nii.gz']);
 size_img = size(g.img);
 num_tracks = 100000;
 affin = [g.hdr.hist.srow_x; g.hdr.hist.srow_y; g.hdr.hist.srow_z]
 r = inv(affin(1:3,1:3));
 data = g.img;
-corr_mat = load('correspondance_mat.txt');
+corr_mat = load('correspondance_mat_96.txt');
 j=0;
 for nt =1:10
 'iteration'
@@ -23,8 +23,20 @@ d= repmat(c',size(a,1),1);
 e = abs(r*(a+d)')+1;
 %start_point = data(round(e(1,1)),round(size_img(2)-e(2,1)),round(e(3,1)));
 %end_point =  data(round(e(1,end)),round(size_img(2)-e(2,end)),round(e(3,end)));
-start_point = data(round(e(1,1)),round(e(2,1)),round(e(3,1)));
-end_point =  data(round(e(1,end)),round(e(2,end)),round(e(3,end)));
+%start_point = data(round(e(1,1)),round(e(2,1)),round(e(3,1)));
+%end_point =  data(round(e(1,end)),round(e(2,end)),round(e(3,end)));
+countei = 0;
+start_point=0;
+while start_point==0 && countei < 10
+countei = countei + 1;
+start_point = data(round(e(1,countei)),round(e(2,countei)),round(e(3,countei)));
+end
+countei = size(e, 2);
+end_point=0;
+while end_point==0 && countei > size(e, 2) -10
+countei = countei - 1;
+end_point = data(round(e(1,countei)),round(e(2,countei)),round(e(3,countei)));
+end
 if start_point >0 & end_point > 0
 start_ind = corr_mat(find(corr_mat(:,1)==start_point),2);
 end_ind = corr_mat(find(corr_mat(:,1)==end_point),2);
@@ -32,7 +44,7 @@ if start_ind >0 & end_ind > 0
 j = j+1;
 res(start_ind, end_ind) = 1 + res(start_ind, end_ind);
 res_length(start_ind, end_ind) = size(e, 2) + res_length(start_ind, end_ind);
-end 
+end
 end
 end
 end
@@ -61,5 +73,5 @@ length_mat(isnan(length_mat))=0;
 % imshow(log(connectivity_mat)./max(max(log(connectivity_mat))), 'Colormap', jet(255))
 % saveas(f1,[PRD, '/connectivity/length_1.jpg'],'jpg')
 % saveas(f2,[PRD, '/connectivity/connectivity_1.jpg'],'jpg')
-save([PRD, '/', SUBJ_ID, '/connectivity/weights_method4.txt'], 'connectivity_mat', '-ascii')
-save([PRD, '/', SUBJ_ID, '/connectivity/tracts_method4.txt'], 'length_mat', '-ascii')
+save([PRD, '/', SUBJ_ID, '/connectivity/weights_method96.txt'], 'connectivity_mat', '-ascii')
+save([PRD, '/', SUBJ_ID, '/connectivity/tracts_method96.txt'], 'length_mat', '-ascii')
