@@ -32,8 +32,3 @@ Also edit the important parameters if needed.
 cd main_directory/scripts
 sh main.sh
 ```
-
-#### Outlook:
-- translate python scripts in matlab scripts
-- compare two connectivity building methods
-- have also a look in the issues
