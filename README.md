@@ -14,6 +14,7 @@ The pipeline was tested on a Debian wheezy 64 bits, gcc version 4.6.3
 - python: tested with python 2.7.3
 - matlab: tested with matlab R2013a
 - mrtrix: tested with mrtrix 0.2.11
+- fsl: tested with fsl 5.0
 
 #### Run the pipeline 
 - Create a main directory, all files will be in this main directory
