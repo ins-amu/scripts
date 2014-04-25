@@ -4,6 +4,8 @@
 export PRD=/disk2/Work/Processed_data/jonathan_subjects/ab/
 # subject name
 export SUBJ_ID=ab
+# FSL_DIR
+export FSL_DIR=/usr/share/fsl/5.0
 # matlab path
 alias matlab='/home/tim/Matlab/bin/matlab'
 # error handling
@@ -25,8 +27,10 @@ export percent_value_mask=10
 #             10			     66
 #             12			     91
 #             n				½ (n+1)(n+2)
-export lmax = 6 
+export lmax=6 
 
+# chosen parcellation
+export parcel=AAL
 ######### build cortical surface and region mapping
 # cd $PRD/scripts
 # mrconvert $PRD/data/T1/ $PRD/data/T1.nii
@@ -58,6 +62,19 @@ streamtrack SD_PROB $PRD/connectivity_regions/CSD6.mif -seed $PRD/connectivity_r
 done
 
 # FLIRT registration
+# parcellation MNI to T1 using FNIRT
+# first preregistration T1 to MNI using FLIRT
+#flirt -ref ${FSLDIR}/data/standard/MNI152_T1_2mm_brain -in $PRD/data/T1/T1.nii -omat $PRD/connectivity_regions/t1_2_mni_transf.mat
+## then register T1 to MNI using FNIRT
+#fnirt --in=$PRD/data/T1/T1.nii --aff=$PRD/connectivity_regions/t1_2_mni_transf.mat --cout=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf --config=T1_2_MNI152_2mm
+## apply the warp to check the registration 
+#applywarp --ref=${FSLDIR}/data/standard/MNI152_T1_2mm --in=$PRD/data/T1/T1.nii --warp=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf --out=$PRD/connectivity_regions/t1_2_mni_warped_structural_2mm
+## inverse the linear registration
+#convert_xfm -omat $PRD/connectivity_regions/t1_2_mni_transf_inverse.mat -inverse $PRD/connectivity_regions/t1_2_mni_transf.mat
+## inverse the warp
+#invwarp --ref=$PRD/data/T/T1.nii --warp=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf.nii.gz --out=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf_inverse
+##Bring the chosen parcellation to T1-Space
+#applywarp --ref=$PRD/data/T1/T1.nii --in=parcellations/$parcel --warp=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf_inverse --out=$PRD/connectivity_regions/region_parcellation
 # parcellation (T1 space) to diff
 flirt -in $PRD/connectivity_regions/region_parcellation.nii -ref $PRD/connectivity_regions/lowb.nii -out $PRD/connectivity_regions/region_parcellation_2_diff.nii -interp nearestneighbour 
 
