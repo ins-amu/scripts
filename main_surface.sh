@@ -173,5 +173,5 @@ python compute_other_files.py
 
 # zip to put in final format
 cd $PRD/$SUBJ_ID/connectivity
-zip $PRD/$SUBJ_ID/connectivity.zip area.txt orientation.txt weights_method1.txt weights_method2.txt tracts_method1.txt tracts_method2.txt cortical.txt centres.txt
+zip $PRD/$SUBJ_ID/connectivity.zip area.txt orientation.txt weights.txt tracts.txt cortical.txt centres.txt
 cd $PRD/scripts
