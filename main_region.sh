@@ -9,7 +9,7 @@ export FSL_DIR=/usr/share/fsl/5.0
 # matlab path
 alias matlab='/home/tim/Matlab/bin/matlab'
 # error handling
-set -e
+#set -e
 
 ########## Important parameters
 # This parameter modify the mask for diffusion processing
@@ -31,6 +31,7 @@ export lmax=6
 
 # chosen parcellation
 export parcel=AAL
+
 ######### build cortical surface and region mapping
 # cd $PRD/scripts
 # mrconvert $PRD/data/T1/ $PRD/data/T1.nii
@@ -86,8 +87,8 @@ matlab -r "run compute_connectivity_region.m; quit;" -nodesktop -nodisplay
 # subcortical is already done
 cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 
-# # compute centers, areas and orientations
-matlab -r "compute_regions_centres.m; quit;" -nodesktop -nodisplay
+# # compute centers
+matlab -r "run compute_region_centres.m; quit;" -nodesktop -nodisplay
 
 # zip to put in final format
 cd $PRD/"$SUBJ_ID"_regions/connectivity

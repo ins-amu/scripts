@@ -1,8 +1,9 @@
 addpath('read_and_write_func')
 PRD = getenv('PRD')
 SUBJ_ID = getenv('SUBJ_ID')
+parcel = getenv('parcel')
 
-g = load_untouch_nii([PRD, '/connectivity_regions/aparcaseg_2_diff.nii.gz']);
+g = load_untouch_nii([PRD, '/connectivity_regions/region_parcellation_2_diff.nii.gz']);
 data = g.img;
 size_img = size(g.img);
 list_region = unique(data);
@@ -12,7 +13,7 @@ res_length = zeros(size_parcel,size_parcel);
 num_tracks = 100000;
 affin = [g.hdr.hist.srow_x; g.hdr.hist.srow_y; g.hdr.hist.srow_z]
 r = inv(affin(1:3,1:3));
-corr_mat = load('correspondance_mat.txt');
+corr_mat = load(['parcellations/correspondance_mat_', parcel , '.txt']);
 j=0;
 for nt =1:10
 'iteration'

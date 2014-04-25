@@ -12,5 +12,5 @@ for j=2:size(list_region, 1)
     mean_centres(j-1, :) = [mean(a), mean(b), mean(c)];
 end
 
-centres = [double(list_region), mean_centres]
-save([PRD, SUBJ_ID, '_regions/centres.txt'], 'centres', '-ascii') 
+centres = [double(list_region(2:end)), mean_centres];
+save([PRD, SUBJ_ID, '_regions/connectivity/centres.txt'], 'centres', '-ascii');
