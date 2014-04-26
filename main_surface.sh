@@ -28,14 +28,14 @@ export percent_value_mask=10
 #             10			     66
 #             12			     91
 #             n				½ (n+1)(n+2)
-export lmax = 6 
+export lmax=6 
 
 ######### build cortical surface and region mapping
-# cd $PRD/scripts
-# mrconvert $PRD/data/T1/ $PRD/data/T1.nii
+cd $PRD/scripts
+mrconvert $PRD/data/T1/ $PRD/data/T1/T1.nii
 
 ###################### freesurfer
-# recon-all -i $PRD/data/T1/T1.nii -s $SUBJ_ID -all
+recon-all -i $PRD/data/T1/T1.nii -s $SUBJ_ID -all
 
 
 ###################################### left hemisphere
