@@ -32,11 +32,16 @@ export lmax=6
 
 ######### build cortical surface and region mapping
 cd $PRD/scripts
+if [ ! -f $PRD/data/T1/T1.nii ]
+then
 mrconvert $PRD/data/T1/ $PRD/data/T1/T1.nii
+fi
 
 ###################### freesurfer
+if [ ! -d $FS/$SUBJ_ID ] 
+then
 recon-all -i $PRD/data/T1/T1.nii -s $SUBJ_ID -all
-
+fi
 
 ###################################### left hemisphere
 # export pial into text file
@@ -129,21 +134,48 @@ python list_subcortical.py
 mkdir -p $PRD/connectivity
 mkdir -p $PRD/$SUBJ_ID/connectivity
 # mrconvert
+if [ ! -f $PRD/connectivity/dwi.mif ]
+then
 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.mif
+fi
 # brainmask 
+if [ ! -f $PRD/connectivity/lowb.nii  ]
+then
 average $PRD/connectivity/dwi.mif -axis 3 $PRD/connectivity/lowb.nii
+fi
+if [ ! -f $PRD/connectivity/mask.mif ]
+then
 threshold -percent $percent_value_mask $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask.mif
+fi
 # check the mask
 if [ -n "$DISPLAY" ]; then mrview $PRD/connectivity/mask.mif; fi
 # tensor imaging
+if [ ! -f $PRD/connectivity/dt.mif ]
+then
 dwi2tensor $PRD/connectivity/dwi.mif $PRD/connectivity/dt.mif
+fi
+if [ ! -f $PRD/connectivity/fa.mif ]
+then
 tensor2FA $PRD/connectivity/dt.mif - | mrmult - $PRD/connectivity/mask.mif $PRD/connectivity/fa.mif
+fi
+if [ ! -f $PRD/connectivity/ev.mif ]
+then
 tensor2vector $PRD/connectivity/dt.mif - | mrmult - $PRD/connectivity/fa.mif $PRD/connectivity/ev.mif
+fi
 # constrained spherical decconvolution
+if [ ! -f $PRD/connectivity/sf.mif ]
+then
 erode $PRD/connectivity/mask.mif -npass 3 - | mrmult $PRD/connectivity/fa.mif - - | threshold - -abs 0.7 $PRD/connectivity/sf.mif
+fi
+if [ ! -f $PRD/connectivity/response.txt ]
+then
 estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax $lmax $PRD/connectivity/response.txt
+fi
 if [ -n "$DISPLAY" ]; then disp_profile -response $PRD/connectivity/response.txt; fi
+if [ ! -f $PRD/connectivity/CSD6.mif ]
+then
 csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif
+fi
 # tractography
 for I in 1 2 3 4 5 6 7 8 9 10
 do
