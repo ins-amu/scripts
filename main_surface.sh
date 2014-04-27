@@ -76,13 +76,14 @@ $BV/bin/python left_export_to_vertices.py
 fi
 
 # create left the region mapping
-if [ ! -f $PRD/surface/lh_region_mapping_low.txt ]
+if [ ! -f $PRD/surface/lh_region_mapping_low_not_corrected.txt ]
 then
 echo "generating the left region mapping on the decimated surface"
 matlab -r "run left_region_mapping.m; quit;" -nodesktop -nodisplay
 fi
 
 # check
+if [ ! -f $PRD/surface/lh_region_mapping_low.txt ]
 if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ] 
 then
 echo "check left region mapping"
@@ -91,6 +92,7 @@ else
 echo "correct the left region mapping"
 # correct
 python correct_left_region_mapping.py
+fi
 fi
 
 ###################################### right hemisphere
@@ -120,7 +122,7 @@ $BV/bin/AimsMeshDecimation $PRD/surface/rh_mesh_high.mesh $PRD/surface/rh_mesh_l
 $BV/bin/python right_export_to_vertices.py
 fi
 
-if [ ! -f $PRD/surface/rh_region_mapping_low.txt ]
+if [ ! -f $PRD/surface/rh_region_mapping_low_not_corrected.txt ]
 then
 echo "generating the right region mapping on the decimated surface"
 # create left the region mapping
@@ -128,6 +130,7 @@ matlab -r "run right_region_mapping.m; quit;" -nodesktop -nodisplay
 fi
 
 # check
+if [ ! -f $PRD/surface/rh_region_mapping_low.txt ]
 if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
 then
 echo "check right region mapping"
@@ -136,6 +139,7 @@ else
 echo " correct the right region mapping"
 # correct
 python correct_right_region_mapping.py
+fi
 fi
 ###################################### both hemisphere
 # prepare final directory
@@ -180,24 +184,36 @@ if [ ! -f $PRD/connectivity/lowb.nii  ]
 then
 average $PRD/connectivity/dwi.mif -axis 3 $PRD/connectivity/lowb.nii
 fi
-if [ ! -f $PRD/connectivity/mask.mif ]
+if [ ! -f $PRD/connectivity/mask_not_checked.mif ]
 then
-threshold -percent $percent_value_mask $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask.mif
+threshold -percent $percent_value_mask $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask_not_checked.mif
 fi
 
 # check the mask
+if [ ! -f $PRD/connectivity/mask_checked.mif ]
+then
+cp mask_not_checked.mif mask_checked.mif
 if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
 then
 while true; do
-mrview $PRD/connectivity/mask.mif
+mrview $PRD/connectivity/mask_checked.mif
 read -p "was the mask good?" yn
 case $yn in
 [Yy]* ) break;;
-[Nn]* ) read -p "enter new threshold value" percent_value_mask; echo $percent_value_mask; rm $PRD/connectivity/mask.mif; 
+[Nn]* ) read -p "enter new threshold value" percent_value_mask; echo $percent_value_mask; rm $PRD/connectivity/mask_checked.mif; 
 	threshold -percent $percent_value_mask $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask.mif;;
  * ) echo "Please answer y or n.";;
 esac
 done
+fi
+fi
+
+if [ -f $PRD/connectivity/mask_checked.mif ]
+then
+cp mask_checked.mif mask.mif
+elif [ -f $PRD/connectivity/mask_not_checked.mif ]
+then
+cp mask_checked.mif mask.mif
 fi
 
 # tensor imaging

@@ -102,7 +102,7 @@ def check_region_mapping(texture, param_corr):
     return new_texture
 
 if __name__ == '__main__':
-    texture = loadtxt('rh_region_mapping_low.txt')
+    texture = loadtxt('rh_region_mapping_low_not_corrected.txt')
     param_corr = 3/7.
     while True:
         new_texture = check_region_mapping(texture, param_corr)

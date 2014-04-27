@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 vert = loadtxt('rh_vertices_low.txt')
 trian = loadtxt('rh_triangles_low.txt')
-texture = loadtxt('rh_region_mapping_low.txt')
+texture = loadtxt('rh_region_mapping_low_not_corrected.txt')
 labels = np.unique(texture)
 new_texture = deepcopy(texture)
 

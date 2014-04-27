@@ -20,4 +20,4 @@ for i=1:size(a,1)
 	end
 end
 not_found
-save('surface/rh_region_mapping_low.txt','reg_map', '-ascii' );
+save('surface/rh_region_mapping_low_not_corrected.txt','reg_map', '-ascii' );

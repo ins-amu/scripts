@@ -63,15 +63,15 @@ def check_region_mapping(texture, param_corr):
                 for int_curr in range(len(list_pos0)):
 
                     #print int_curr
-                    if list_pos1[int_curr] ==0:
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr],1]]))
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr],2]]))
+                    if list_pos1[int_curr]==0:
+                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 1]]))
+                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 2]]))
                     if list_pos1[int_curr] ==1:
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]]))
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr],2]]))
+                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 0]]))
+                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 2]]))
                     if list_pos1[int_curr] ==2:
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]]))
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr],1]]))
+                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 0]]))
+                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 1]]))
                 if len([x for x in res_curr if x==i])<3*len(res_curr)/7.:
                     print res_curr
                     print  vert[vert_curr]
@@ -97,7 +97,7 @@ def check_region_mapping(texture, param_corr):
     return new_texture
 
 if __name__ == '__main__':
-    texture = loadtxt('lh_region_mapping_low.txt')
+    texture = loadtxt('lh_region_mapping_low_not_corrected.txt')
     param_corr = 3/7.
     while True:
         new_texture = check_region_mapping(texture, param_corr)
