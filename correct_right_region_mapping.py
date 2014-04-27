@@ -7,7 +7,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 vert = loadtxt('rh_vertices_low.txt')
-trian = loadtxt('rh_triangles_low.txt') 
+trian = loadtxt('rh_triangles_low.txt')
 texture = loadtxt('rh_region_mapping_low.txt')
 labels = np.unique(texture)
 new_texture = deepcopy(texture)
@@ -57,16 +57,16 @@ for i in labels:
             list_pos0, list_pos1 = nonzero(trian==vert_curr)
             res_curr = []
             for int_curr in range(len(list_pos0)):
-            
+
                 #print int_curr
                 if list_pos1[int_curr] ==0:
-                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],1]])) 
+                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],1]]))
                     res_curr.append(np.round(texture[trian[list_pos0[int_curr],2]]))
                 if list_pos1[int_curr] ==1:
-                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]])) 
+                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]]))
                     res_curr.append(np.round(texture[trian[list_pos0[int_curr],2]]))
                 if list_pos1[int_curr] ==2:
-                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]])) 
+                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]]))
                     res_curr.append(np.round(texture[trian[list_pos0[int_curr],1]]))
             if len([x for x in res_curr if x==i])<3*len(res_curr)/7.:
                 print res_curr

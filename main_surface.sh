@@ -1,5 +1,5 @@
-################ 
-#the directory with all files
+############### #
+#the root directory for files 
 export PRD=/home/tim/Work/Processed_data/tim_pipeline/TREC/
 # freesurfer 
 export FS=$SUBJECTS_DIR
@@ -10,7 +10,9 @@ export BV=/home/tim/Work/Soft/brainvisa-4.3.0/
 # matlab path
 alias matlab='/usr/local/MATLAB/R2013a/bin/matlab'
 # error handling
-set -e
+#set -e
+# checking
+export CHECK=no
 
 ########## Important parameters
 # This parameter modify the mask for diffusion processing
@@ -34,87 +36,118 @@ export lmax=6
 cd $PRD/scripts
 if [ ! -f $PRD/data/T1/T1.nii ]
 then
+echo "generating T1 from DICOM"
 mrconvert $PRD/data/T1/ $PRD/data/T1/T1.nii
 fi
 
 ###################### freesurfer
 if [ ! -d $FS/$SUBJ_ID ] 
 then
+echo "running recon-all of freesurfer"
 recon-all -i $PRD/data/T1/T1.nii -s $SUBJ_ID -all
 fi
 
 ###################################### left hemisphere
 # export pial into text file
 mkdir -p ../surface
-mris_convert $FS/$SUBJ_ID/surf/lh.pial $PRD/surface/lh.pial.asc
-
-
-# change pial : erase first two lines, get number vertices and triangles
-tail -n +3 $PRD/surface/lh.pial.asc > $PRD/surface/lh_pial.txt
-sed -n '2p' $PRD/surface/lh.pial.asc | awk '{print $1}' > $PRD/surface/lh_number_vertices_high.txt
-sed -n '2p' $PRD/surface/lh.pial.asc | awk '{print $2}' > $PRD/surface/lh_number_triangles_high.txt
-
-# triangles and vertices high
-python left_extract_high.py
-
-# -> to mesh
-$BV/bin/python left_transform_mesh_high.py
-
-#  decimation
-$BV/bin/AimsMeshDecimation $PRD/surface/lh_mesh_high.mesh $PRD/surface/lh_mesh_low.mesh
-
-# export to list vertices triangles
-$BV/bin/python left_export_to_vertices.py
-
-# create left the region mapping
-matlab -r "run left_region_mapping.m; quit;" -nodesktop -nodisplay
-
-# check
-if [ -n "$DISPLAY" ]
+if [ ! -f $PRD/surface/lh.pial.asc ]
 then
-python check_left_region_mapping.py
+echo "importing left pial surface from freesurfer"
+mris_convert $FS/$SUBJ_ID/surf/lh.pial $PRD/surface/lh.pial.asc
 fi
 
+# triangles and vertices high
+if [ ! -f $PRD/surface/lh_vertices_high.txt ]
+then
+echo "extracting left vertices and triangles"
+python left_extract_high.py
+fi
+
+# decimation using brainvisa
+if [ ! -f $PRD/surface/lh_vertices_low.txt ]
+then
+echo "left decimation using brainvisa"
+# -> to mesh
+$BV/bin/python left_transform_mesh_high.py
+#  decimation
+$BV/bin/AimsMeshDecimation $PRD/surface/lh_mesh_high.mesh $PRD/surface/lh_mesh_low.mesh
+# export to list vertices triangles
+$BV/bin/python left_export_to_vertices.py
+fi
+
+# create left the region mapping
+if [ ! -f $PRD/surface/lh_region_mapping_low.txt ]
+then
+echo "generating the left region mapping on the decimated surface"
+matlab -r "run left_region_mapping.m; quit;" -nodesktop -nodisplay
+fi
+
+# check
+if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ] 
+then
+echo "check left region mapping"
+python check_left_region_mapping.py
+else
+echo "correct the left region mapping"
 # correct
 python correct_left_region_mapping.py
+fi
 
 ###################################### right hemisphere
 # export pial into text file
+if [ ! -f $PRD/surface/rh.pial.asc ]
+then
+echo "importing right pial surface from freesurfer"
 mris_convert $FS/$SUBJ_ID/surf/rh.pial $PRD/surface/rh.pial.asc
-
-# change pial : erase first two lines, get number vertices and triangles
-tail -n +3 $PRD/surface/rh.pial.asc > $PRD/surface/rh_pial.txt
-sed -n '2p' $PRD/surface/rh.pial.asc | awk '{print $1}' > $PRD/surface/rh_number_vertices_high.txt
-sed -n '2p' $PRD/surface/rh.pial.asc | awk '{print $2}' > $PRD/surface/rh_number_triangles_high.txt
+fi
 
 # triangles and vertices high
+if [ ! -f $PRD/surface/rh_vertices_high.txt ]
+then
+echo "extracting right vertices and triangles"
 python right_extract_high.py
+fi
 
+# decimation using brainvisa
+if [ ! -f $PRD/surface/rh_vertices_low.txt ]
+then
+echo "right decimation using brainvisa"
 # -> to mesh
 $BV/bin/python right_transform_mesh_high.py
-
 #  decimation
 $BV/bin/AimsMeshDecimation $PRD/surface/rh_mesh_high.mesh $PRD/surface/rh_mesh_low.mesh
-
 # export to list vertices triangles
 $BV/bin/python right_export_to_vertices.py
+fi
 
+if [ ! -f $PRD/surface/rh_region_mapping_low.txt ]
+then
+echo "generating the right region mapping on the decimated surface"
 # create left the region mapping
 matlab -r "run right_region_mapping.m; quit;" -nodesktop -nodisplay
+fi
 
 # check
-if [ -n "$DISPLAY" ]; then python check_right_region_mapping.py; fi
-
+if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+then
+echo "check right region mapping"
+python check_right_region_mapping.py
+else
+echo " correct the right region mapping"
 # correct
 python correct_right_region_mapping.py
-
+fi
 ###################################### both hemisphere
 # prepare final directory
 mkdir -p $PRD/$SUBJ_ID
 mkdir -p $PRD/$SUBJ_ID/surface
 
 # reunify both region_mapping, vertices and triangles
+if [ ! -f $PRD/$SUBJ_ID/surface/region_mapping.txt ]
+then
+echo "reunify both region mappings"
 python reunify_both_regions.py
+fi
 
 # zip to put in final format
 cd $PRD/$SUBJ_ID/surface
@@ -124,10 +157,14 @@ cd $PRD/scripts
 
 ########################### subcortical surfaces
 # extract subcortical surfaces 
+if [ ! -f $PRD/surface/subcortical/aseg_058_vert.txt ]
+then
+echo "generating subcortical surfaces"
 ./aseg2srf -s $SUBJ_ID
 mkdir -p $PRD/surface/subcortical
 cp $FS/$SUBJ_ID/ascii/* $PRD/surface/subcortical
 python list_subcortical.py
+fi
 
 ########################## build connectivity
 # mrtrix
@@ -147,8 +184,22 @@ if [ ! -f $PRD/connectivity/mask.mif ]
 then
 threshold -percent $percent_value_mask $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask.mif
 fi
+
 # check the mask
-if [ -n "$DISPLAY" ]; then mrview $PRD/connectivity/mask.mif; fi
+if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
+then
+while true; do
+mrview $PRD/connectivity/mask.mif
+read -p "was the mask good?" yn
+case $yn in
+[Yy]* ) break;;
+[Nn]* ) read -p "enter new threshold value" percent_value_mask; echo $percent_value_mask; rm $PRD/connectivity/mask.mif; 
+	threshold -percent $percent_value_mask $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask.mif;;
+ * ) echo "Please answer y or n.";;
+esac
+done
+fi
+
 # tensor imaging
 if [ ! -f $PRD/connectivity/dt.mif ]
 then
@@ -171,29 +222,54 @@ if [ ! -f $PRD/connectivity/response.txt ]
 then
 estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax $lmax $PRD/connectivity/response.txt
 fi
-if [ -n "$DISPLAY" ]; then disp_profile -response $PRD/connectivity/response.txt; fi
+if  [ -n "$DISPLAY" ]  &&  [ "$CHECK" = "yes" ]
+then
+disp_profile -response $PRD/connectivity/response.txt
+fi
 if [ ! -f $PRD/connectivity/CSD6.mif ]
 then
 csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif
 fi
+
 # tractography
+if [ ! -f $PRD/connectivity/whole_brain_1.tck ]
+then
+echo "generating tracks"
 for I in 1 2 3 4 5 6 7 8 9 10
 do
 streamtrack SD_PROB $PRD/connectivity/CSD6.mif -seed $PRD/connectivity/mask.mif -mask $PRD/connectivity/mask.mif $PRD/connectivity/whole_brain_$I.tck -num 100000
 done
+fi
 
 # FLIRT registration
 #Diff to T1
+if [ ! -f $PRD/connectivity/T1.nii ]
+then
+echo "generating good orientation for T1"
 mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/T1.mgz $PRD/connectivity/T1.nii
+fi
+if [ ! -f $PRD/connectivity/aparc+aseg.nii ]
+then
+echo " getting aparc+aseg"
 mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/aparc+aseg.mgz $PRD/connectivity/aparc+aseg.nii
+fi
+
 #flirt -in $PRD/connectivity/lowb.nii -ref $PRD/data/T1/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii
 # T1 to Diff (INVERSE)
 #convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
 #flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii  -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -applyxfm -interp nearestneighbour
+if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
+then
+echo " register aparc+aseg to diff"
 flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparcaseg_2_diff.nii -interp nearestneighbour 
+fi
 
 # now compute connectivity and length matrix
+if [ ! $PRD/$SUBJ_ID/connectivity_weights.txt ]
+then
+echo "compute connectivity matrix"
 matlab -r "run compute_connectivity.m; quit;" -nodesktop -nodisplay
+fi
 
 ########
 # we do not compute hemisphere
@@ -201,7 +277,11 @@ matlab -r "run compute_connectivity.m; quit;" -nodesktop -nodisplay
 cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 
 # # compute centers, areas and orientations
+if [ ! $PRD/$SUBJ_ID/connectivity/centres.txt ]
+then
+echo " generate useful files for TVB"
 python compute_other_files.py
+fi
 
 # zip to put in final format
 cd $PRD/$SUBJ_ID/connectivity
