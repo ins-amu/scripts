@@ -1,4 +1,4 @@
-# Surface and Connectivity Reconstruction Imaging & Pipeline ToolS - SCRIPTS
+## Surface and Connectivity Reconstruction: Imaging Pipeline & ToolS - SCRIPTS
 
 #### Documentation
 This pipeline uses T1 and diffusion imaging data to prepare surface, region mapping and connectivity for TVB in the following way:
