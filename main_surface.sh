@@ -31,6 +31,25 @@ export percent_value_mask=10
 #             12			     91
 #             n				½ (n+1)(n+2)
 export lmax=6 
+######### import config
+#!/bin/bash
+ 
+while getopts ":config:" opt; do
+case $opt in
+ config)
+ export CONFIG=$OPTARG
+ echo "use config file $CONFIG"
+ ;;
+ \?)
+ echo "Invalid option: -$OPTARG" >&2
+ exit 1
+ ;;
+ :)
+ echo "Option -$OPTARG requires an argument." >&2
+ exit 1
+ ;;
+esac
+done
 
 ######### build cortical surface and region mapping
 cd $PRD/scripts
