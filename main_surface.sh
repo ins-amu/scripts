@@ -255,7 +255,7 @@ fi
 if [ ! -f $PRD/connectivity/whole_brain_1.tck ]
 then
 echo "generating tracks"
-for I in {1.."$number_tracks"}
+for I in $(seq 1 $number_tracks)
 do
 streamtrack SD_PROB $PRD/connectivity/CSD6.mif -seed $PRD/connectivity/mask.mif -mask $PRD/connectivity/mask.mif $PRD/connectivity/whole_brain_$I.tck -num 100000
 done
