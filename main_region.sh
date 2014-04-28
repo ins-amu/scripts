@@ -153,7 +153,19 @@ flirt -in $PRD/connectivity_regions/region_parcellation.nii -ref $PRD/connectivi
 fi
 
 # now compute connectivity and length matrix
-if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]
+if [ ! -f $PRD/"$SUBJ_ID"_regions/connectivity/weights.txt ]
+then
+echo "compute connectivity region"
+if [ -n $matlab ]
+then
+$matlab -r "run compute_connectivity_region.m; quit;" -nodesktop -nodisplay
+else
+sh compute_connectivity_region/distrib/run_compute_connectivity_region.sh $MCR
+fi
+fi
+
+# now compute connectivity and length matrix
+if [ ! -f $PRD/"$SUBJ_ID"_regions/connectivity/centres.txt ]
 then
 echo "compute region centres"
 if [ -n $matlab ]
