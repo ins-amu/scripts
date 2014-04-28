@@ -1,6 +1,7 @@
 addpath('read_and_write_func')
 PRD = getenv('PRD')
 SUBJ_ID = getenv('SUBJ_ID')
+number_tracks = getenv('number_tracks')
 res = zeros(88,88);
 res_length = zeros(88,88);
 
@@ -12,7 +13,7 @@ r = inv(affin(1:3,1:3));
 data = g.img;
 corr_mat = load('correspondance_mat.txt');
 j=0;
-for nt =1:10
+for nt =1:number_tracks
 'iteration'
 nt
 tracks = read_mrtrix_tracks(sprintf([PRD, '/connectivity/whole_brain_%d.tck'],nt));
