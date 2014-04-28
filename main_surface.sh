@@ -80,7 +80,12 @@ fi
 if [ ! -f $PRD/surface/lh_region_mapping_low_not_corrected.txt ]
 then
 echo "generating the left region mapping on the decimated surface"
+if [ ! -n $matlab ]
+then
 $matlab -r "run left_region_mapping.m; quit;" -nodesktop -nodisplay
+else
+sh left_region_mapping/distrib/run_left_region_mapping.sh $MCR
+fi
 fi
 
 # check
@@ -128,7 +133,12 @@ if [ ! -f $PRD/surface/rh_region_mapping_low_not_corrected.txt ]
 then
 echo "generating the right region mapping on the decimated surface"
 # create left the region mapping
+if [ ! -n $matlab ]
+then
 $matlab -r "run right_region_mapping.m; quit;" -nodesktop -nodisplay
+else
+sh right_region_mapping/distrib/run_right_region_mapping.sh $MCR
+fi
 fi
 
 # check
@@ -288,7 +298,12 @@ fi
 if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]
 then
 echo "compute connectivity matrix"
+if [ ! -n $matlab ]
+then
 $matlab -r "run compute_connectivity.m; quit;" -nodesktop -nodisplay
+else
+sh compute_connectivity/distrib/run_compute_connectivity.sh $MCR
+fi
 fi
 
 ########

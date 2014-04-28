@@ -33,8 +33,14 @@ export SUBJ_ID=name_subj
 # brainvisa directory
 export BV=/pat_to_brainvisa/
 
-# matlab path
-export matlab=/path_to_matlab/
+# Matlab Runtime Compiler path
+# if you have matlab, do mcrinstaller at the matlab prompt
+# to find the location of the MCR
+# alternatively you can uncomment the following line and comment the MCR line
+# export matlab=/path_to_matlab/
+# if you don't have matlab, download the MCR (linux 64 bits) here: 
+# http://www.mathworks.com/products/compiler/mcr/index.html
+export MCR=/path_to_matlab_runtime_compiler/
 
 # error handling: in case of error, the pipeline 
 # stops immediately

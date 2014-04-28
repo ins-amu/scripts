@@ -1,9 +1,9 @@
 PRD = getenv('PRD')
 corr_left = load('left_hemi_ref_table.txt');
-cd(PRD)
 FS = getenv('FS')
 SUBJ_ID = getenv('SUBJ_ID')
 [v, L, ct] = read_annotation([FS,'/',SUBJ_ID, '/label/lh.aparc.annot']); 
+cd(PRD)
 a = load('surface/lh_vertices_low.txt');
 b = load('surface/lh_triangles_low.txt');
 c = load('surface/lh_vertices_high.txt');
