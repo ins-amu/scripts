@@ -44,7 +44,7 @@ fi
 ########################## build connectivity
 # mrtrix
 mkdir -p $PRD/connectivity_regions
-mkdir -p $PRD/$SUBJ_ID/connectivity
+mkdir -p $PRD/"$SUBJ_ID"_regions/connectivity
 # mrconvert
 if [ ! -f $PRD/connectivity_regions/dwi.mif ]
 then
@@ -155,22 +155,15 @@ fi
 # now compute connectivity and length matrix
 if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]
 then
-echo "compute connectivity matrix"
-if [ ! -n $matlab ]
+echo "compute region centres"
+if [ -n $matlab ]
 then
-$matlab -r "run compute_connectivity.m; quit;" -nodesktop -nodisplay
+$matlab -r "run compute_region_centres.m; quit;" -nodesktop -nodisplay
 else
-sh compute_connectivity/distrib/run_compute_connectivity.sh $MCR
+sh compute_region_centres/distrib/run_compute_region_centres.sh $MCR
 fi
 fi
 
-########
-# we do not compute hemisphere
-# subcortical is already done
-cp cortical.txt $PRD/$SUBJ_ID/connectivity_regions/cortical.txt
-
-# # compute centers
-matlab -r "run compute_region_centres.m; quit;" -nodesktop -nodisplay
 
 # zip to put in final format
 cd $PRD/"$SUBJ_ID"_regions/connectivity
