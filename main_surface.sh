@@ -285,7 +285,7 @@ flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii -out 
 fi
 
 # now compute connectivity and length matrix
-if [ ! $PRD/$SUBJ_ID/connectivity_weights.txt ]
+if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]
 then
 echo "compute connectivity matrix"
 $matlab -r "run compute_connectivity.m; quit;" -nodesktop -nodisplay
@@ -297,7 +297,7 @@ fi
 cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 
 # # compute centers, areas and orientations
-if [ ! $PRD/$SUBJ_ID/connectivity/centres.txt ]
+if [ ! -f $PRD/$SUBJ_ID/connectivity/centres.txt ]
 then
 echo " generate useful files for TVB"
 python compute_other_files.py

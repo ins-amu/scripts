@@ -1,7 +1,7 @@
 addpath('read_and_write_func')
 PRD = getenv('PRD')
 SUBJ_ID = getenv('SUBJ_ID')
-number_tracks = getenv('number_tracks')
+number_tracks = str2num(getenv('number_tracks'))
 res = zeros(88,88);
 res_length = zeros(88,88);
 
