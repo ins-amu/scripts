@@ -1,5 +1,6 @@
 import os
 PRD = os.environ['PRD']
+region_mapping_corr = os.environ['region_mapping_corr']
 os.chdir(os.path.join(PRD, 'surface'))
 from copy import deepcopy
 from pylab import *
@@ -67,7 +68,7 @@ for i in labels:
                 if list_pos1[int_curr] ==2:
                     res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]]))
                     res_curr.append(np.round(texture[trian[list_pos0[int_curr],1]]))
-            if len([x for x in res_curr if x==i])<3*len(res_curr)/7.:
+            if len([x for x in res_curr if x==i])<region_mapping_corr*len(res_curr):
                 print res_curr
                 print  vert[vert_curr]
                 c_withdraw.append(vert[vert_curr])

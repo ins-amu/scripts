@@ -1,12 +1,13 @@
 import os
 PRD = os.environ['PRD']
+region_mapping_corr = os.environ['region_mapping_corr']
 os.chdir(os.path.join(PRD, 'surface'))
 from copy import deepcopy
 from pylab import *
 from mpl_toolkits.mplot3d import Axes3D
 
 
-def check_region_mapping(texture, param_corr):
+def check_region_mapping(texture, region_mapping_corr):
     vert = loadtxt('rh_vertices_low.txt')
     trian = loadtxt('rh_triangles_low.txt')
     labels = np.unique(texture)
@@ -76,7 +77,7 @@ def check_region_mapping(texture, param_corr):
                     if list_pos1[int_curr] ==2:
                         res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]]))
                         res_curr.append(np.round(texture[trian[list_pos0[int_curr],1]]))
-                if len([x for x in res_curr if x==i])<param_corr*len(res_curr):
+                if len([x for x in res_curr if x==i])<region_mapping_corr*len(res_curr):
                     print res_curr
                     print  vert[vert_curr]
                     c_withdraw.append(vert[vert_curr])
@@ -103,9 +104,8 @@ def check_region_mapping(texture, param_corr):
 
 if __name__ == '__main__':
     texture = loadtxt('rh_region_mapping_low_not_corrected.txt')
-    param_corr = 3/7.
     while True:
-        new_texture = check_region_mapping(texture, param_corr)
+        new_texture = check_region_mapping(texture, region_mapping_corr)
         choice_user = raw_input("Do you want:\n"\
                             "1) to continue the pipeline with this correction\n"\
                             "2) rerun this correction with another value\n"\

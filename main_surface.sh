@@ -1,9 +1,15 @@
 ######### import config
-while getopts ":config:" opt; do
+while getopts ":c:" opt; do
 case $opt in
- config)
+ c)
  export CONFIG=$OPTARG
- echo "use config file $CONFIG"
+ echo "use config file $CONFIG" >&2
+ if [ ! -f $CONFIG ]
+ then
+ echo "config file unexistent" >&2
+ exit 1
+ fi
+ source "$CONFIG"
  ;;
  \?)
  echo "Invalid option: -$OPTARG" >&2
@@ -15,6 +21,18 @@ case $opt in
  ;;
 esac
 done
+
+if [ ! -n "$CONFIG" ]
+then
+echo "you must provide a config file"
+exit 1
+fi
+
+if [ ! -n "$FS" ]
+then
+echo "config file not correct"
+exit 1
+fi
 
 ######### build cortical surface and region mapping
 cd $PRD/scripts
@@ -63,11 +81,12 @@ fi
 if [ ! -f $PRD/surface/lh_region_mapping_low_not_corrected.txt ]
 then
 echo "generating the left region mapping on the decimated surface"
-matlab -r "run left_region_mapping.m; quit;" -nodesktop -nodisplay
+$matlab -r "run left_region_mapping.m; quit;" -nodesktop -nodisplay
 fi
 
 # check
 if [ ! -f $PRD/surface/lh_region_mapping_low.txt ]
+then
 if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ] 
 then
 echo "check left region mapping"
@@ -110,11 +129,12 @@ if [ ! -f $PRD/surface/rh_region_mapping_low_not_corrected.txt ]
 then
 echo "generating the right region mapping on the decimated surface"
 # create left the region mapping
-matlab -r "run right_region_mapping.m; quit;" -nodesktop -nodisplay
+$matlab -r "run right_region_mapping.m; quit;" -nodesktop -nodisplay
 fi
 
 # check
 if [ ! -f $PRD/surface/rh_region_mapping_low.txt ]
+then
 if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
 then
 echo "check right region mapping"
@@ -176,7 +196,7 @@ fi
 # check the mask
 if [ ! -f $PRD/connectivity/mask_checked.mif ]
 then
-cp mask_not_checked.mif mask_checked.mif
+cp $PRD/connectivity/mask_not_checked.mif $PRD/connectivity/mask_checked.mif
 if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
 then
 while true; do
@@ -194,10 +214,10 @@ fi
 
 if [ -f $PRD/connectivity/mask_checked.mif ]
 then
-cp mask_checked.mif mask.mif
+cp $PRD/connectivity/mask_checked.mif $PRD/connectivity/mask.mif
 elif [ -f $PRD/connectivity/mask_not_checked.mif ]
 then
-cp mask_checked.mif mask.mif
+cp $PRD/connectivity/mask_not_checked.mif $PRD/connectivity/mask.mif
 fi
 
 # tensor imaging
@@ -268,7 +288,7 @@ fi
 if [ ! $PRD/$SUBJ_ID/connectivity_weights.txt ]
 then
 echo "compute connectivity matrix"
-matlab -r "run compute_connectivity.m; quit;" -nodesktop -nodisplay
+$matlab -r "run compute_connectivity.m; quit;" -nodesktop -nodisplay
 fi
 
 ########

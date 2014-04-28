@@ -17,19 +17,16 @@ The pipeline was tested on a Debian wheezy 64 bits
 - fsl: tested with fsl 5.0
 
 #### Run the pipeline 
-- Create a main directory, all files will be in this main directory
+- Create a main directory, all data and processed data files will be in this main directory
 In this main directory you must have:
 
- - scripts directory (clone of this repo)
  - data directory with:
     - T1 directory with T1 nifti or dicom
      - DWI directory with DWI data nifti or dicom
 
-- Edit the four first lines (export) of scripts/main.sh to put the right directories instead.
-Also edit the important parameters if needed.
+- Clone this repository whenever you want, copy the example_config.sh file (you can copy it to your main directory) and edit it as needed.
 
-- In a terminal:
+- To run the pipeline, in a terminal:
 ```shell
-cd main_directory/scripts
-sh main.sh
+bash path_to_scripts/main.sh -c path_to_config/config.sh
 ```
