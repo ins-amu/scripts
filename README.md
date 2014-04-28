@@ -12,7 +12,7 @@ The pipeline was tested on a Debian wheezy 64 bits
 - freesurfer: tested with freesurfer-x86_64-redhat-linux-gnu-stable5-20130513
 - brainvisa: tested with brainvisa 4.3.0
 - python: tested with python 2.7.3
-- matlab: tested with matlab R2013a
+- matlab or Matlab Compiler Runtime (free): tested with matlab R2013a and MCR 8.1
 - mrtrix: tested with mrtrix 0.2.11
 - fsl: tested with fsl 5.0
 
@@ -29,5 +29,5 @@ In this main directory you must have:
 - To run the pipeline, in a terminal:
 ```shell
 cd path_to_scripts
-bash main.sh -c path_to_config/config.sh
+bash main_surface.sh -c path_to_config/config.sh
 ```
