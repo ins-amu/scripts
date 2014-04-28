@@ -28,7 +28,7 @@ echo "you must provide a config file"
 exit 1
 fi
 
-if [ ! -n "$FS" ]
+if [ ! -n "$number_tracks" ]
 then
 echo "config file not correct"
 exit 1
