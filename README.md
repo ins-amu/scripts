@@ -28,5 +28,6 @@ In this main directory you must have:
 
 - To run the pipeline, in a terminal:
 ```shell
-bash path_to_scripts/main.sh -c path_to_config/config.sh
+cd path_to_scripts
+bash main.sh -c path_to_config/config.sh
 ```

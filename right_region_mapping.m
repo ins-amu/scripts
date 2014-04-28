@@ -1,4 +1,5 @@
 PRD = getenv('PRD')
+corr_right = load('right_hemi_ref_table.txt');
 cd(PRD)
 FS = getenv('FS')
 SUBJ_ID = getenv('SUBJ_ID')
@@ -6,7 +7,6 @@ SUBJ_ID = getenv('SUBJ_ID')
 a = load('surface/rh_vertices_low.txt');
 b = load('surface/rh_triangles_low.txt');
 c = load('surface/rh_vertices_high.txt');
-corr_right = load('scripts/right_hemi_ref_table.txt');
 reg_map = zeros(size(a,1),1);
 not_found = [];
 for i=1:size(a,1)

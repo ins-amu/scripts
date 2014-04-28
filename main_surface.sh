@@ -35,7 +35,6 @@ exit 1
 fi
 
 ######### build cortical surface and region mapping
-cd $PRD/scripts
 if [ ! -f $PRD/data/T1/T1.nii ]
 then
 echo "generating T1 from DICOM"
@@ -51,7 +50,7 @@ fi
 
 ###################################### left hemisphere
 # export pial into text file
-mkdir -p ../surface
+mkdir -p $PRD/surface
 if [ ! -f $PRD/surface/lh.pial.asc ]
 then
 echo "importing left pial surface from freesurfer"
@@ -158,10 +157,11 @@ python reunify_both_regions.py
 fi
 
 # zip to put in final format
+pushd .
 cd $PRD/$SUBJ_ID/surface
 zip $PRD/$SUBJ_ID/surface.zip vertices.txt triangles.txt
 cp region_mapping.txt ..
-cd $PRD/scripts
+popd
 
 ########################### subcortical surfaces
 # extract subcortical surfaces 
@@ -304,6 +304,7 @@ python compute_other_files.py
 fi
 
 # zip to put in final format
+pushd .
 cd $PRD/$SUBJ_ID/connectivity
 zip $PRD/$SUBJ_ID/connectivity.zip area.txt orientation.txt weights.txt tracts.txt cortical.txt centres.txt
-cd $PRD/scripts
+popd

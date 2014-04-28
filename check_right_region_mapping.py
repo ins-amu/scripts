@@ -1,6 +1,6 @@
 import os
 PRD = os.environ['PRD']
-region_mapping_corr = os.environ['region_mapping_corr']
+region_mapping_corr = float(os.environ['region_mapping_corr'])
 os.chdir(os.path.join(PRD, 'surface'))
 from copy import deepcopy
 from pylab import *
