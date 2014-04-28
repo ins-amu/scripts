@@ -46,7 +46,7 @@ export MCR=/path_to_matlab_runtime_compiler/
 # stops immediately
 #set -e
 
-# check the processed data whe the pipeline is running
+# check the processed data when the pipeline is running
 # (you need a display) (no/yes)
 export CHECK=no
 
@@ -68,9 +68,13 @@ export percent_value_mask=10
 #             n				½ (n+1)(n+2)
 export lmax=6 
 
-# This parameter is important for the correction of the region mapping. Between 0 and 1. The bigger it is, the bigger is the correction.
+# This parameter is important for the correction of the region mapping. Between 0 and 1. The bigger it is, the bigger is the correction. (only import for the surface pipeline: main_surface.sh)
 export region_mapping_corr="0.42"
 
 # number of tracks (divided by 100.000) used in the tractography step.
 # note that you will have less tracks at the end.
 export number_tracks=10
+
+# uniquely for region pipeline (main_region.sh)
+# choice of the parcellation
+export parcel=AAL
