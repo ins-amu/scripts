@@ -19,6 +19,9 @@ The pipeline was tested on a Debian wheezy 64 bits
 - mrtrix: tested with mrtrix 0.2.11
 - fsl: tested with fsl 5.0
 
+#### Installation
+Please see [installation steps](scripts_installation_steps.md)
+
 #### Run the pipeline 
 - Create a main directory, all data and processed data files will be in this main directory
 In this main directory you must have:
