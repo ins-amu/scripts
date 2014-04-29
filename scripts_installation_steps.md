@@ -103,8 +103,21 @@ Add to mrtrix to your PATH (in your .bashrc)
 Before running the pipeline
     source $FREESURFER_HOME/SetUpFreeSurfer.sh
 
+FSL
+===
 
+You can download FSL on the [neurodebian repository](http://neuro.debian.net/pkgs/fsl-5.0-core.html?highlight=fsl)
 
+to install neurodebian
+
+    wget -O- http://neuro.debian.net/lists/wheezy.de-m.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list
+    sudo apt-key adv --recv-keys --keyserver pgp.mit.edu 2649A5A9
+
+    sudo apt-get update
+    
+To install fsl-5.0-core:
+
+    sudo apt-get install fsl-5.0-core
 
 
 
