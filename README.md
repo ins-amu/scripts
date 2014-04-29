@@ -19,6 +19,9 @@ The pipeline was tested on a Debian wheezy 64 bits
 - mrtrix: tested with mrtrix 0.2.11
 - fsl: tested with fsl 5.0
 
+#### Installation
+Please see [installation steps](scripts_installation_steps.md)
+
 #### Run the pipeline 
 - Create a main directory, all data and processed data files will be in this main directory
 In this main directory you must have:
@@ -27,7 +30,7 @@ In this main directory you must have:
     - T1 directory with T1 nifti or dicom
     - DWI directory with DWI data nifti or dicom
 
-- Clone this repository whenever you want, copy the example_config.sh file (you can copy it to your main directory) and edit it as needed.
+- Clone this repository wherever you want, copy the example_config.sh file (you can copy it to your main directory) and edit it as needed.
 
 - To run the surface pipeline, in a terminal:
 ```shell
