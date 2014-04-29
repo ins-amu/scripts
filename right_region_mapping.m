@@ -1,12 +1,12 @@
 PRD = getenv('PRD')
-cd(PRD)
+corr_right = load('right_hemi_ref_table.txt');
 FS = getenv('FS')
 SUBJ_ID = getenv('SUBJ_ID')
 [v, L, ct] = read_annotation([FS,'/',SUBJ_ID, '/label/rh.aparc.annot']); 
+cd(PRD)
 a = load('surface/rh_vertices_low.txt');
 b = load('surface/rh_triangles_low.txt');
 c = load('surface/rh_vertices_high.txt');
-corr_right = load('scripts/right_hemi_ref_table.txt');
 reg_map = zeros(size(a,1),1);
 not_found = [];
 for i=1:size(a,1)
@@ -20,4 +20,5 @@ for i=1:size(a,1)
 	end
 end
 not_found
-save('surface/rh_region_mapping_low.txt','reg_map', '-ascii' );
+
+save('surface/rh_region_mapping_low_not_corrected.txt','reg_map', '-ascii' );

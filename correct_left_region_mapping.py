@@ -1,13 +1,14 @@
 import os
 PRD = os.environ['PRD']
+region_mapping_corr = float(os.environ['region_mapping_corr'])
 os.chdir(os.path.join(PRD, 'surface'))
 from copy import deepcopy
 from pylab import *
 from mpl_toolkits.mplot3d import Axes3D
 
 vert = loadtxt('lh_vertices_low.txt')
-trian = loadtxt('lh_triangles_low.txt') 
-texture = loadtxt('lh_region_mapping_low.txt')
+trian = loadtxt('lh_triangles_low.txt')
+texture = loadtxt('lh_region_mapping_low_not_corrected.txt')
 new_texture = deepcopy(texture)
 labels = np.unique(texture)
 for i in labels:
@@ -56,18 +57,18 @@ for i in labels:
             list_pos0, list_pos1 = nonzero(trian==vert_curr)
             res_curr = []
             for int_curr in range(len(list_pos0)):
-            
+
                 #print int_curr
                 if list_pos1[int_curr] ==0:
-                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],1]])) 
+                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],1]]))
                     res_curr.append(np.round(texture[trian[list_pos0[int_curr],2]]))
                 if list_pos1[int_curr] ==1:
-                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]])) 
+                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]]))
                     res_curr.append(np.round(texture[trian[list_pos0[int_curr],2]]))
                 if list_pos1[int_curr] ==2:
-                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]])) 
+                    res_curr.append(np.round(texture[trian[list_pos0[int_curr],0]]))
                     res_curr.append(np.round(texture[trian[list_pos0[int_curr],1]]))
-            if len([x for x in res_curr if x==i])<3*len(res_curr)/7.:
+            if len([x for x in res_curr if x==i])<region_mapping_corr*len(res_curr):
                 print res_curr
                 print  vert[vert_curr]
                 c_withdraw.append(vert[vert_curr])
