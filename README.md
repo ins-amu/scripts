@@ -27,7 +27,7 @@ In this main directory you must have:
     - T1 directory with T1 nifti or dicom
     - DWI directory with DWI data nifti or dicom
 
-- Clone this repository whenever you want, copy the example_config.sh file (you can copy it to your main directory) and edit it as needed.
+- Clone this repository wherever you want, copy the example_config.sh file (you can copy it to your main directory) and edit it as needed.
 
 - To run the surface pipeline, in a terminal:
 ```shell
