@@ -17,10 +17,10 @@ for j=2:size(list_region, 1)
     ind = corr_mat(find(corr_mat(:, 1)==list_region(j)), 2)
     [a, b, c] = ind2sub(size(data), find(data==list_region(j)));
     centres(ind, 2:4) = [mean(a), mean(b), mean(c)];
-    centres(ind, 1) = int32(list_region(j))
+    centres(ind, 1) = int32(list_region(j));
 end
 
 % save([PRD, '/', SUBJ_ID, '_regions/connectivity/centres.txt'], 'centres', '-ascii');
-fid = fopen([PRD, '/', SUBJ_ID, '_regions/connectivity/centres.txt'], 'w')   
-fprintf(f, '%d %.3f %.3f %.3f\n', centres')
-fclose(fid)  
+fid = fopen([PRD, '/', SUBJ_ID, '_regions/connectivity/centres.txt'], 'w');
+fprintf(fid, '%d %.3f %.3f %.3f\n', centres');
+fclose(fid);  
