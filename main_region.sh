@@ -156,7 +156,7 @@ fi
 if [ ! -f $PRD/"$SUBJ_ID"_regions/connectivity/weights.txt ]
 then
 echo "compute connectivity region"
-if [ -n $matlab ]
+if [ -n "$matlab" ]
 then
 $matlab -r "run compute_connectivity_region.m; quit;" -nodesktop -nodisplay
 else
@@ -168,7 +168,7 @@ fi
 if [ ! -f $PRD/"$SUBJ_ID"_regions/connectivity/centres.txt ]
 then
 echo "compute region centres"
-if [ -n $matlab ]
+if [ -n "$matlab" ]
 then
 $matlab -r "run compute_region_centres.m; quit;" -nodesktop -nodisplay
 else
@@ -178,7 +178,8 @@ fi
 
 
 # zip to put in final format
+pushd .
 cd $PRD/"$SUBJ_ID"_regions/connectivity
 zip $PRD/"$SUBJ_ID"_regions/connectivity.zip weights.txt tract_lengths.txt centres.txt
 bzip2 *
-cd $PRD/scripts
+popd
