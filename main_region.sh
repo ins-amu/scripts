@@ -72,7 +72,7 @@ read -p "was the mask good?" yn
 case $yn in
 [Yy]* ) break;;
 [Nn]* ) read -p "enter new threshold value" percent_value_mask; echo $percent_value_mask; rm $PRD/connectivity_regions/mask_checked.mif; 
-	threshold -percent $percent_value_mask $PRD/connectivity_regions/lowb.nii - | median3D - - | median3D - $PRD/connectivity_regions/mask.mif;;
+	threshold -percent $percent_value_mask $PRD/connectivity_regions/lowb.nii - | median3D - - | median3D - $PRD/connectivity_regions/mask_checked.mif;;
  * ) echo "Please answer y or n.";;
 esac
 done
