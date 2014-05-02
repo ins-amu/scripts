@@ -94,4 +94,4 @@ end
 % saveas(f2,[PRD, '/connectivity/connectivity_1.jpg'],'jpg')
 
 save([PRD, '/', SUBJ_ID, '_regions/connectivity/weights.txt'], 'connectivity_mat', '-ascii')
-save([PRD, '/', SUBJ_ID, '_regions/connectivity/tracts.txt'], 'length_mat', '-ascii')
+save([PRD, '/', SUBJ_ID, '_regions/connectivity/tract_lengths.txt'], 'length_mat', '-ascii')

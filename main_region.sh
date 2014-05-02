@@ -179,5 +179,6 @@ fi
 
 # zip to put in final format
 cd $PRD/"$SUBJ_ID"_regions/connectivity
-zip $PRD/"$SUBJ_ID"_regions/connectivity.zip weights.txt tracts.txt centres.txt
+zip $PRD/"$SUBJ_ID"_regions/connectivity.zip weights.txt tract_lengths.txt centres.txt
+bzip2 *
 cd $PRD/scripts

@@ -208,8 +208,8 @@ if __name__ == '__main__':
         areas[indx] = region_areas
 
     # save orienations and areas
-    np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity/area.txt'), areas, fmt='%.2f')
-    np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity/orientation.txt'),
+    np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity/areas.txt'), areas, fmt='%.2f')
+    np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity/average_orientations.txt'),
             orientations, fmt='%.2f %.2f %.2f')
 
     # add the name to centers

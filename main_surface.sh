@@ -321,5 +321,6 @@ fi
 # zip to put in final format
 pushd .
 cd $PRD/$SUBJ_ID/connectivity
-zip $PRD/$SUBJ_ID/connectivity.zip area.txt orientation.txt weights.txt tracts.txt cortical.txt centres.txt
+zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt weights.txt tract_lengths.txt cortical.txt centres.txt
+bzip2 *
 popd
