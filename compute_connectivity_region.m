@@ -3,21 +3,22 @@ addpath('read_and_write_func')
 end
 PRD = getenv('PRD')
 SUBJ_ID = getenv('SUBJ_ID')
+number_tracks = str2num(getenv('number_tracks'))
 parcel = getenv('parcel')
 
 g = load_untouch_nii([PRD, '/connectivity_regions/region_parcellation_2_diff.nii.gz']);
 data = g.img;
 size_img = size(g.img);
+corr_mat = load(['parcellations/correspondance_mat_', parcel , '.txt']);
 list_region = unique(data);
-size_parcel = size(list_region, 1) - 1
+size_parcel = size(corr_mat, 1) 
 res = zeros(size_parcel, size_parcel);
 res_length = zeros(size_parcel,size_parcel);
 num_tracks = 100000;
 affin = [g.hdr.hist.srow_x; g.hdr.hist.srow_y; g.hdr.hist.srow_z]
 r = inv(affin(1:3,1:3));
-corr_mat = load(['parcellations/correspondance_mat_', parcel , '.txt']);
 j=0;
-for nt =1:10
+for nt =1:number_tracks
 'iteration'
 nt
 tracks = read_mrtrix_tracks(sprintf([PRD, '/connectivity_regions/whole_brain_%d.tck'],nt));
@@ -56,7 +57,7 @@ end
 
 'number of tracts'
 j
-
+save('[PRD, '/connectivity_regions/raw_connectivity.mat', 'res');
 % postprocessing
 %distance between voxels in mm: 0.04mm
 res_length = 0.04 .* res_length;
