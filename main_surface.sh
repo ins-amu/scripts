@@ -294,6 +294,12 @@ echo " register aparc+aseg to diff"
 flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparcaseg_2_diff.nii -interp nearestneighbour 
 fi
 
+# check parcellation to diff
+if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
+then
+fslview $PRD/connectivity/lowb.nii $PRD/connectivity/region_parcellation_2_diff -l "Cool"
+fi
+
 # now compute connectivity and length matrix
 if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]
 then

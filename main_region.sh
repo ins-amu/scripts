@@ -143,6 +143,11 @@ fi
 ##Bring the chosen parcellation to T1-Space
 #applywarp --ref=$PRD/data/T1/T1.nii --in=parcellations/$parcel --warp=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf_inverse --out=$PRD/connectivity_regions/region_parcellation
 
+# check parcellation to T1
+if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
+then
+fslview $PRD/data/T1/T1.nii $PRD/connectivity_regions/region_parcellation -l "Cool"
+fi
 
 if [ ! -f $PRD/connectivity_regions/region_parcellation_2_diff.nii.gz ]
 then
@@ -150,6 +155,12 @@ echo " register parcellation to diff"
 flirt -in $PRD/connectivity_regions/lowb.nii -ref $PRD/data/T1/T1.nii -omat $PRD/connectivity_regions/diffusion_2_struct.mat -out $PRD/connectivity_regions/lowb_2_struct.nii
 convert_xfm -omat $PRD/connectivity_regions/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity_regions/diffusion_2_struct.mat
 flirt -in $PRD/connectivity_regions/region_parcellation.nii -ref $PRD/connectivity_regions/lowb.nii -out $PRD/connectivity_regions/region_parcellation_2_diff.nii -init $PRD/connectivity_regions/diffusion_2_struct_inverse.mat -interp nearestneighbour 
+fi
+
+# check parcellation to diff
+if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
+then
+fslview $PRD/connectivity_regions/lowb.nii $PRD/connectivity_regions/region_parcellation_2_diff -l "Cool"
 fi
 
 # now compute connectivity and length matrix

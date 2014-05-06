@@ -57,7 +57,7 @@ end
 
 'number of tracts'
 j
-save('[PRD, '/connectivity_regions/raw_connectivity.mat', 'res');
+save([PRD, '/connectivity_regions/raw_connectivity.mat'], 'res');
 % postprocessing
 %distance between voxels in mm: 0.04mm
 res_length = 0.04 .* res_length;
