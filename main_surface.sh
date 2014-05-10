@@ -191,8 +191,14 @@ mkdir -p $PRD/$SUBJ_ID/connectivity
 # mrconvert
 if [ ! -f $PRD/connectivity/dwi.mif ]
 then
+if [ -f $PRD/data/DWI/*.nii ]
+then
+ls $PRD/data/DWI/ | grep .nii | xargs -I {} mrconvert {} $PRD/connectivity/dwi.mif 
+else
 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.mif
 fi
+fi
+
 # brainmask 
 if [ ! -f $PRD/connectivity/lowb.nii  ]
 then
@@ -288,15 +294,36 @@ fi
 # T1 to Diff (INVERSE)
 #convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
 #flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii  -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -applyxfm -interp nearestneighbour
+
+if [ ! -f $PRD/connectivity/aparc+aseg_reorient.nii ]
+then
+echo "reorienting the region parcellation"
+fslreorient2std $PRD/connectivity/aparc+aseg.nii $PRD/connectivity/aparc+aseg_reorient.nii
+fi
+
+# check parcellation to T1
+if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+then
+echo "check parcellation"
+echo " if it's correct, just close the window. Otherwise... well, it should be correct anyway"
+fslview $PRD/data/T1/T1.nii $PRD/connectivity/aparc+aseg_reorient -l "Cool"
+fi
+
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
 then
 echo " register aparc+aseg to diff"
-flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparcaseg_2_diff.nii -interp nearestneighbour 
+flirt -in $PRD/connectivity/lowb.nii -ref $PRD/data/T1/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
+convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
+flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparc+aseg_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+#flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparcaseg_2_diff.nii -interp nearestneighbour 
 fi
 
 # check parcellation to diff
 if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
 then
+echo "check parcellation registration to diffusion space"
+echo "if it's correct, just close the window. Otherwise you will have to
+do the registration by hand"
 fslview $PRD/connectivity/lowb.nii $PRD/connectivity/region_parcellation_2_diff -l "Cool"
 fi
 
