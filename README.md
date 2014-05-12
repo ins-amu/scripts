@@ -29,6 +29,7 @@ In this main directory you must have:
  - data directory with:
     - T1 directory with T1 nifti or dicom
     - DWI directory with DWI data nifti or dicom
+    (note: if your DWI are in the nifti format, you will need to also provide the DW gradient scheme, with an extension in .b, such as explained in [Mrtrix documentation](http://www.brain.org.au/software/mrtrix/tractography/dwi.html))
 
 - Clone this repository wherever you want, copy the example_config.sh file (you can copy it to your main directory) and edit it as needed.
 
