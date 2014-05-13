@@ -193,7 +193,7 @@ if [ ! -f $PRD/connectivity/dwi.mif ]
 then
 if [ -f $PRD/data/DWI/*.nii ]
 then
-ls $PRD/data/DWI/ | grep .nii | xargs -I {} mrconvert {} $PRD/connectivity/dwi.mif 
+ls $PRD/data/DWI/ | grep .nii | xargs -I {} mrconvert $PRD/data/DWI/{} $PRD/connectivity/dwi.mif 
 else
 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.mif
 fi
@@ -239,7 +239,12 @@ fi
 # tensor imaging
 if [ ! -f $PRD/connectivity/dt.mif ]
 then
+if [ -f $PRD/data/DWI/*.nii ]
+then
+ls $PRD/data/DWI/ | grep .b | xargs -I {} dwi2tensor $PRD/connectivity/dwi.mif $PRD/connectivity/dt.mif -grad $PRD/data/DWI/{}
+else
 dwi2tensor $PRD/connectivity/dwi.mif $PRD/connectivity/dt.mif
+fi
 fi
 if [ ! -f $PRD/connectivity/fa.mif ]
 then
@@ -256,7 +261,12 @@ erode $PRD/connectivity/mask.mif -npass 3 - | mrmult $PRD/connectivity/fa.mif - 
 fi
 if [ ! -f $PRD/connectivity/response.txt ]
 then
+if [ -f $PRD/data/DWI/*.nii ]
+then
+ls $PRD/data/DWI/ | grep .b | xargs -I {} estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax $lmax $PRD/connectivity/response.txt -grad $PRD/data/DWI/{}
+else
 estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax $lmax $PRD/connectivity/response.txt
+fi
 fi
 if  [ -n "$DISPLAY" ]  &&  [ "$CHECK" = "yes" ]
 then
@@ -264,7 +274,12 @@ disp_profile -response $PRD/connectivity/response.txt
 fi
 if [ ! -f $PRD/connectivity/CSD6.mif ]
 then
+if [ -f $PRD/data/DWI/*.nii ]
+then
+ls $PRD/data/DWI/ | grep .b | xargs -I {} csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif -grad $PRD/data/DWI/{}
+else
 csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif
+fi
 fi
 
 # tractography
@@ -290,10 +305,6 @@ echo " getting aparc+aseg"
 mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/aparc+aseg.mgz $PRD/connectivity/aparc+aseg.nii
 fi
 
-#flirt -in $PRD/connectivity/lowb.nii -ref $PRD/data/T1/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii
-# T1 to Diff (INVERSE)
-#convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
-#flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii  -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -applyxfm -interp nearestneighbour
 
 if [ ! -f $PRD/connectivity/aparc+aseg_reorient.nii ]
 then
@@ -306,15 +317,15 @@ if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
 then
 echo "check parcellation"
 echo " if it's correct, just close the window. Otherwise... well, it should be correct anyway"
-fslview $PRD/data/T1/T1.nii $PRD/connectivity/aparc+aseg_reorient -l "Cool"
+fslview $PRD/connectivity/T1.nii $PRD/connectivity/aparc+aseg_reorient -l "Cool"
 fi
 
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
 then
 echo " register aparc+aseg to diff"
-flirt -in $PRD/connectivity/lowb.nii -ref $PRD/data/T1/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
+flirt -in $PRD/connectivity/lowb.nii -ref $PRD/connectivity/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
 convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
-flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparc+aseg_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparcaseg_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
 #flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparcaseg_2_diff.nii -interp nearestneighbour 
 fi
 
@@ -324,7 +335,7 @@ then
 echo "check parcellation registration to diffusion space"
 echo "if it's correct, just close the window. Otherwise you will have to
 do the registration by hand"
-fslview $PRD/connectivity/lowb.nii $PRD/connectivity/region_parcellation_2_diff -l "Cool"
+fslview $PRD/connectivity/lowb.nii $PRD/connectivity/aparcaseg_2_diff -l "Cool"
 fi
 
 # now compute connectivity and length matrix

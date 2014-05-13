@@ -48,7 +48,12 @@ mkdir -p $PRD/"$SUBJ_ID"_regions/connectivity
 # mrconvert
 if [ ! -f $PRD/connectivity_regions/dwi.mif ]
 then
+if [ -f $PRD/data/DWI/*.nii ]
+then
+ls $PRD/data/DWI/ | grep .nii | xargs -I {} mrconvert $PRD/data/DWI/{} $PRD/connectivity_regions/dwi.mif 
+else
 mrconvert $PRD/data/DWI/ $PRD/connectivity_regions/dwi.mif
+fi
 fi
 # brainmask 
 if [ ! -f $PRD/connectivity_regions/lowb.nii  ]
@@ -91,7 +96,12 @@ fi
 # tensor imaging
 if [ ! -f $PRD/connectivity_regions/dt.mif ]
 then
+if [ -f $PRD/data/DWI/*.nii ]
+then
+ls $PRD/data/DWI/ | grep .b | xargs -I {} dwi2tensor $PRD/connectivity_regions/dwi.mif $PRD/connectivity_regions/dt.mif -grad $PRD/data/DWI/{}
+else
 dwi2tensor $PRD/connectivity_regions/dwi.mif $PRD/connectivity_regions/dt.mif
+fi
 fi
 if [ ! -f $PRD/connectivity_regions/fa.mif ]
 then
@@ -108,7 +118,12 @@ erode $PRD/connectivity_regions/mask.mif -npass 3 - | mrmult $PRD/connectivity_r
 fi
 if [ ! -f $PRD/connectivity_regions/response.txt ]
 then
+if [ -f $PRD/data/DWI/*.nii ]
+then
+ls $PRD/data/DWI/ | grep .b | xargs -I {} estimate_response $PRD/connectivity_regions/dwi.mif $PRD/connectivity_regions/sf.mif -lmax $lmax $PRD/connectivity_regions/response.txt -grad $PRD/data/DWI/{}
+else
 estimate_response $PRD/connectivity_regions/dwi.mif $PRD/connectivity_regions/sf.mif -lmax $lmax $PRD/connectivity_regions/response.txt
+fi
 fi
 if  [ -n "$DISPLAY" ]  &&  [ "$CHECK" = "yes" ]
 then
@@ -118,7 +133,12 @@ disp_profile -response $PRD/connectivity_regions/response.txt
 fi
 if [ ! -f $PRD/connectivity_regions/CSD6.mif ]
 then
+if [ -f $PRD/data/DWI/*.nii ]
+then
+ls $PRD/data/DWI/ | grep .b | xargs -I {} csdeconv $PRD/connectivity_regions/dwi.mif $PRD/connectivity_regions/response.txt -lmax $lmax -mask $PRD/connectivity_regions/mask.mif $PRD/connectivity_regions/CSD6.mif -grad $PRD/data/DWI/{}
+else
 csdeconv $PRD/connectivity_regions/dwi.mif $PRD/connectivity_regions/response.txt -lmax $lmax -mask $PRD/connectivity_regions/mask.mif $PRD/connectivity_regions/CSD6.mif
+fi
 fi
 
 # tractography
@@ -134,17 +154,17 @@ fi
 # FLIRT registration
 # parcellation MNI to T1 using FNIRT
 # first preregistration T1 to MNI using FLIRT
-#flirt -ref ${FSLDIR}/data/standard/MNI152_T1_2mm_brain -in $PRD/data/T1/T1.nii -omat $PRD/connectivity_regions/t1_2_mni_transf.mat
-## then register T1 to MNI using FNIRT
-#fnirt --in=$PRD/data/T1/T1.nii --aff=$PRD/connectivity_regions/t1_2_mni_transf.mat --cout=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf --config=T1_2_MNI152_2mm
-## apply the warp to check the registration 
-#applywarp --ref=${FSLDIR}/data/standard/MNI152_T1_2mm --in=$PRD/data/T1/T1.nii --warp=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf --out=$PRD/connectivity_regions/t1_2_mni_warped_structural_2mm
-## inverse the linear registration
-#convert_xfm -omat $PRD/connectivity_regions/t1_2_mni_transf_inverse.mat -inverse $PRD/connectivity_regions/t1_2_mni_transf.mat
-## inverse the warp
-#invwarp --ref=$PRD/data/T/T1.nii --warp=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf.nii.gz --out=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf_inverse
-##Bring the chosen parcellation to T1-Space
-#applywarp --ref=$PRD/data/T1/T1.nii --in=parcellations/$parcel --warp=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf_inverse --out=$PRD/connectivity_regions/region_parcellation
+# flirt -ref ${FSLDIR}/data/standard/MNI152_T1_2mm_brain -in $PRD/data/T1/T1.nii -omat $PRD/connectivity_regions/t1_2_mni_transf.mat
+# then register T1 to MNI using FNIRT
+# fnirt --in=$PRD/data/T1/T1.nii --aff=$PRD/connectivity_regions/t1_2_mni_transf.mat --cout=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf --config=T1_2_MNI152_2mm
+# apply the warp to check the registration 
+# applywarp --ref=${FSLDIR}/data/standard/MNI152_T1_2mm --in=$PRD/data/T1/T1.nii --warp=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf --out=$PRD/connectivity_regions/t1_2_mni_warped_structural_2mm
+# inverse the linear registration
+# convert_xfm -omat $PRD/connectivity_regions/t1_2_mni_transf_inverse.mat -inverse $PRD/connectivity_regions/t1_2_mni_transf.mat
+# inverse the warp
+# invwarp --ref=$PRD/data/T1/T1.nii --warp=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf.nii.gz --out=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf_inverse
+#Bring the chosen parcellation to T1-Space
+# applywarp --ref=$PRD/data/T1/T1.nii --in=parcellations/$parcel --warp=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf_inverse --out=$PRD/connectivity_regions/region_parcellation
 
 #reorient parcellation to standard orientation to match to T
 if [ ! -f $PRD/connectivity_regions/region_parcellation_reorient ]
