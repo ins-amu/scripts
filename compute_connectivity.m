@@ -3,17 +3,25 @@ addpath('read_and_write_func')
 end
 PRD = getenv('PRD')
 SUBJ_ID = getenv('SUBJ_ID')
+curr_K = getenv('curr_K')
 number_tracks = str2num(getenv('number_tracks'))
-res = zeros(88,88);
-res_length = zeros(88,88);
 
+
+if isempty(curr_K)
 g = load_untouch_nii([PRD, '/connectivity/aparcaseg_2_diff.nii.gz']);
+corr_mat = load('correspondance_mat.txt');
+else
+g = load_untouch_nii([PRD, '/connectivity/aparcaseg_2_diff_', num2str(curr_K),'.nii']);
+corr_mat = load([PRD, '/connectivity/corr_mat_', curr_K, '.txt']);
+end
 size_img = size(g.img);
+size_parcel = size(corr_mat, 1) 
+res = zeros(size_parcel, size_parcel);
+res_length = zeros(size_parcel,size_parcel);
 num_tracks = 100000;
 affin = [g.hdr.hist.srow_x; g.hdr.hist.srow_y; g.hdr.hist.srow_z]
 r = inv(affin(1:3,1:3));
 data = g.img;
-corr_mat = load('correspondance_mat.txt');
 j=0;
 for nt =1:number_tracks
 'iteration'
@@ -65,7 +73,7 @@ length_mat(isnan(length_mat))=0;
 connectivity_mat =  res./length_mat;
 connectivity_mat(isnan(connectivity_mat)) = 0;
 % eliminate diagonal
-for i=1:88
+for i=1:size_parcel
 connectivity_mat(i,i) = 0;
 end
 
@@ -91,5 +99,10 @@ end
 % saveas(f1,[PRD, '/connectivity/length_1.jpg'],'jpg')
 % saveas(f2,[PRD, '/connectivity/connectivity_1.jpg'],'jpg')
 
+if isempty(curr_K)
 save([PRD, '/', SUBJ_ID, '/connectivity/weights.txt'], 'connectivity_mat', '-ascii')
 save([PRD, '/', SUBJ_ID, '/connectivity/tract_lengths.txt'], 'length_mat', '-ascii')
+else
+save([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/weights_.txt'], 'connectivity_mat', '-ascii')
+save([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/tract_lengths.txt'], 'length_mat', '-ascii')
+end

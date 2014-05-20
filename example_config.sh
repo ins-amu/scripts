@@ -75,6 +75,13 @@ export region_mapping_corr="0.42"
 # note that you will have less tracks at the end.
 export number_tracks=10
 
+# if you want subdivided parcellations, you can set the folowing value
+# according to the following table
+# K:                7    8    9    10    11   12
+# Number of Nodes:  128  256  512  1024  2048 4096
+# export K=9
+
 # uniquely for region pipeline (main_region.sh)
 # choice of the parcellation
 export parcel=AAL
+

@@ -254,7 +254,7 @@ if [ ! -f $PRD/connectivity/ev.mif ]
 then
 tensor2vector $PRD/connectivity/dt.mif - | mrmult - $PRD/connectivity/fa.mif $PRD/connectivity/ev.mif
 fi
-# constrained spherical decconvolution
+# constrained spherical deconvolution
 if [ ! -f $PRD/connectivity/sf.mif ]
 then
 erode $PRD/connectivity/mask.mif -npass 3 - | mrmult $PRD/connectivity/fa.mif - - | threshold - -abs 0.7 $PRD/connectivity/sf.mif
@@ -338,10 +338,39 @@ do the registration by hand"
 fslview $PRD/connectivity/lowb.nii $PRD/connectivity/aparcaseg_2_diff -l "Cool"
 fi
 
+# compute sub parcellations connectivity if asked
+if [ -n "$K" ]
+then
+export curr_K=$(( 2**K ))
+mkdir -p $PRD/$SUBJ_ID/connectivity_"$curr_K"
+if [ -n "$matlab" ]  
+then
+if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii ]
+then
+$matlab -r "run uniform_parcellate.m; quit;" -nodesktop -nodisplay 
+fi
+if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt ]
+then
+$matlab -r "run compute_connectivity.m; quit;" -nodesktop -nodisplay
+fi
+else
+if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii ]
+then
+sh uniform_parcellate/distrib/run_uniform_parcellate.sh $MCR  
+fi
+if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt ]
+then
+sh compute_connectivity/distrib/run_compute_connectivity.sh $MCR
+fi
+fi
+fi
+
+
 # now compute connectivity and length matrix
 if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]
 then
 echo "compute connectivity matrix"
+export curr_K=""
 if [ -n "$matlab" ]
 then
 $matlab -r "run compute_connectivity.m; quit;" -nodesktop -nodisplay
