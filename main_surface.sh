@@ -363,6 +363,10 @@ then
 sh compute_connectivity/distrib/run_compute_connectivity.sh $MCR
 fi
 fi
+pushd
+cd $PRD/$SUBJ_ID/connectivity_"$curr_K"
+zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt
+popd
 fi
 
 

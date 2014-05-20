@@ -112,7 +112,7 @@ mat2nii(vol,Out,size(data),32,Msk);
 % compute centers
 list_region = unique(vol);
 list_region = list_region(2:end);
-centres = zeros(size(list_region, 1)-1, 4);  
+centres = zeros(size(list_region, 1), 4);  
 for j=1:size(list_region, 1) 
     list_region(j); 
     [a, b, c] = ind2sub(size(vol), find(vol==list_region(j))); 
@@ -125,8 +125,8 @@ fprintf(fid, '%d %.3f %.3f %.3f\n', centres');
 fclose(fid);
 
 % save corr_mat
-labels = unique(vol);
-corr_mat = repmat(labels(2:end)',1,2);
+corr_mat = repmat(list_region,1,2);
+
 fid = fopen([PRD, '/connectivity/corr_mat_', curr_K,'.txt'], 'w'); 
-fprintf(fid, '%d %d\n', corr_mat); 
+fprintf(fid, '%d %d\n', corr_mat'); 
 fclose(fid);
