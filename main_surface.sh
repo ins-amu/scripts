@@ -267,10 +267,11 @@ ls $PRD/data/DWI/ | grep .b | xargs -I {} estimate_response $PRD/connectivity/dw
 else
 estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax $lmax $PRD/connectivity/response.txt
 fi
-fi
+
 if  [ -n "$DISPLAY" ]  &&  [ "$CHECK" = "yes" ]
 then
 disp_profile -response $PRD/connectivity/response.txt
+fi
 fi
 if [ ! -f $PRD/connectivity/CSD6.mif ]
 then
@@ -310,14 +311,13 @@ if [ ! -f $PRD/connectivity/aparc+aseg_reorient.nii ]
 then
 echo "reorienting the region parcellation"
 fslreorient2std $PRD/connectivity/aparc+aseg.nii $PRD/connectivity/aparc+aseg_reorient.nii
-fi
-
 # check parcellation to T1
 if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
 then
 echo "check parcellation"
 echo " if it's correct, just close the window. Otherwise... well, it should be correct anyway"
 fslview $PRD/connectivity/T1.nii $PRD/connectivity/aparc+aseg_reorient -l "Cool"
+fi
 fi
 
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
@@ -327,8 +327,6 @@ flirt -in $PRD/connectivity/lowb.nii -ref $PRD/connectivity/T1.nii -omat $PRD/co
 convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
 flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparcaseg_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
 #flirt -in $PRD/connectivity/aparc+aseg.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparcaseg_2_diff.nii -interp nearestneighbour 
-fi
-
 # check parcellation to diff
 if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
 then
@@ -336,6 +334,7 @@ echo "check parcellation registration to diffusion space"
 echo "if it's correct, just close the window. Otherwise you will have to
 do the registration by hand"
 fslview $PRD/connectivity/lowb.nii $PRD/connectivity/aparcaseg_2_diff -l "Cool"
+fi
 fi
 
 # compute sub parcellations connectivity if asked
@@ -347,7 +346,7 @@ if [ -n "$matlab" ]
 then
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii ]
 then
-$matlab -r "run uniform_parcellate.m; quit;" -nodesktop -nodisplay 
+$matlab -r "run subparcel.m; quit;" -nodesktop -nodisplay 
 fi
 if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt ]
 then
@@ -356,14 +355,14 @@ fi
 else
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii ]
 then
-sh uniform_parcellate/distrib/run_uniform_parcellate.sh $MCR  
+sh subparcel/distrib/run_subparcel.sh $MCR  
 fi
 if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt ]
 then
 sh compute_connectivity/distrib/run_compute_connectivity.sh $MCR
 fi
 fi
-pushd
+pushd .
 cd $PRD/$SUBJ_ID/connectivity_"$curr_K"
 zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt
 popd

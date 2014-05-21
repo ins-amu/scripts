@@ -103,6 +103,6 @@ if isempty(curr_K)
 save([PRD, '/', SUBJ_ID, '/connectivity/weights.txt'], 'connectivity_mat', '-ascii')
 save([PRD, '/', SUBJ_ID, '/connectivity/tract_lengths.txt'], 'length_mat', '-ascii')
 else
-save([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/weights_.txt'], 'connectivity_mat', '-ascii')
+save([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/weights.txt'], 'connectivity_mat', '-ascii')
 save([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/tract_lengths.txt'], 'length_mat', '-ascii')
 end

@@ -166,11 +166,18 @@ fi
 #Bring the chosen parcellation to T1-Space
 # applywarp --ref=$PRD/data/T1/T1.nii --in=parcellations/$parcel --warp=$PRD/connectivity_regions/t1_2_mni_nonlinear_transf_inverse --out=$PRD/connectivity_regions/region_parcellation
 
-#reorient parcellation to standard orientation to match to T
-if [ ! -f $PRD/connectivity_regions/region_parcellation_reorient ]
+#reorient parcellation to standard orientation to match to T1
+if [ ! -f $PRD/connectivity_regions/region_parcellation_reorient.nii.gz ]
 then
 echo "reorienting the region parcellation"
 fslreorient2std $PRD/connectivity_regions/region_parcellation $PRD/connectivity_regions/region_parcellation_reorient
+fi
+
+#reorient T1 to standard orientation
+if [ ! -f $PRD/connectivity_regions/T1.nii.gz ]
+then
+echo "reorienting the T1"
+fslreorient2std $PRD/data/T1/T1.nii $PRD/connectivity_regions/T1.nii.gz
 fi
 
 # check parcellation to T1
@@ -179,13 +186,13 @@ then
 echo "check parcellation"
 echo "if it's correct, just close the window. Otherwise you will have to
 do the registration by hand"
-fslview $PRD/data/T1/T1.nii $PRD/connectivity_regions/region_parcellation_reorient -l "Cool"
+fslview $PRD/connectivity_regions/T1.nii.gz $PRD/connectivity_regions/region_parcellation_reorient -l "Cool"
 fi
 
 if [ ! -f $PRD/connectivity_regions/region_parcellation_2_diff.nii.gz ]
 then
 echo "register parcellation to diff"
-flirt -in $PRD/connectivity_regions/lowb.nii -ref $PRD/data/T1/T1.nii -omat $PRD/connectivity_regions/diffusion_2_struct.mat -out $PRD/connectivity_regions/lowb_2_struct.nii -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
+flirt -in $PRD/connectivity_regions/lowb.nii -ref $PRD/connectivity_regions/T1.nii.gz -omat $PRD/connectivity_regions/diffusion_2_struct.mat -out $PRD/connectivity_regions/lowb_2_struct.nii -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
 convert_xfm -omat $PRD/connectivity_regions/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity_regions/diffusion_2_struct.mat
 flirt -applyxfm -in $PRD/connectivity_regions/region_parcellation_reorient.nii -ref $PRD/connectivity_regions/lowb.nii -out $PRD/connectivity_regions/region_parcellation_2_diff.nii -init $PRD/connectivity_regions/diffusion_2_struct_inverse.mat -interp nearestneighbour
 fi
