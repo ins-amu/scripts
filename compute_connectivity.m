@@ -1,6 +1,7 @@
 if (~isdeployed)
 addpath('read_and_write_func')
 end
+
 PRD = getenv('PRD')
 SUBJ_ID = getenv('SUBJ_ID')
 curr_K = getenv('curr_K')
@@ -12,8 +13,9 @@ g = load_untouch_nii([PRD, '/connectivity/aparcaseg_2_diff.nii.gz']);
 corr_mat = load('correspondance_mat.txt');
 else
 g = load_untouch_nii([PRD, '/connectivity/aparcaseg_2_diff_', num2str(curr_K),'.nii']);
-corr_mat = load([PRD, '/connectivity/corr_mat_', curr_K, '.txt']);
+corr_mat = load([PRD, '/connectivity/corr_mat_', num2str(curr_K), '.txt']);
 end
+
 size_img = size(g.img);
 size_parcel = size(corr_mat, 1) 
 res = zeros(size_parcel, size_parcel);
@@ -64,8 +66,8 @@ end
 j
 
 % postprocessing
-%distance between voxels in mm: 0.04mm
-res_length = 0.04 .* res_length;
+%distance between steps of tractography in mrtrix: default_ value 0.2mm
+res_length = 0.2 .* res_length;
 % to have the right count
 length_mat = res_length./res;
 length_mat(isnan(length_mat))=0;

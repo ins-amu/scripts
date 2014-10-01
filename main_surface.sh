@@ -88,17 +88,16 @@ sh left_region_mapping/distrib/run_left_region_mapping.sh $MCR
 fi
 fi
 
-# check
+# correct
 if [ ! -f $PRD/surface/lh_region_mapping_low.txt ]
 then
+echo "correct the left region mapping"
+python correct_left_region_mapping.py
+# check
 if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ] 
 then
 echo "check left region mapping"
 python check_left_region_mapping.py
-else
-echo "correct the left region mapping"
-# correct
-python correct_left_region_mapping.py
 fi
 fi
 
@@ -141,17 +140,16 @@ sh right_region_mapping/distrib/run_right_region_mapping.sh $MCR
 fi
 fi
 
-# check
+# correct
 if [ ! -f $PRD/surface/rh_region_mapping_low.txt ]
 then
+echo " correct the right region mapping"
+python correct_right_region_mapping.py
+# check
 if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
 then
 echo "check right region mapping"
 python check_right_region_mapping.py
-else
-echo " correct the right region mapping"
-# correct
-python correct_right_region_mapping.py
 fi
 fi
 ###################################### both hemisphere
@@ -193,7 +191,7 @@ if [ ! -f $PRD/connectivity/dwi.mif ]
 then
 if [ -f $PRD/data/DWI/*.nii ]
 then
-ls $PRD/data/DWI/ | grep .nii | xargs -I {} mrconvert $PRD/data/DWI/{} $PRD/connectivity/dwi.mif 
+ls $PRD/data/DWI/ | grep '.nii$' | xargs -I {} mrconvert $PRD/data/DWI/{} $PRD/connectivity/dwi.mif 
 else
 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.mif
 fi
@@ -212,16 +210,15 @@ fi
 # check the mask
 if [ ! -f $PRD/connectivity/mask_checked.mif ]
 then
-cp $PRD/connectivity/mask_not_checked.mif $PRD/connectivity/mask_checked.mif
 if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
 then
 while true; do
-mrview $PRD/connectivity/mask_checked.mif
+mrview $PRD/connectivity/mask_not_checked.mif
 read -p "was the mask good?" yn
 case $yn in
-[Yy]* ) break;;
-[Nn]* ) read -p "enter new threshold value" percent_value_mask; echo $percent_value_mask; rm $PRD/connectivity/mask_checked.mif; 
-	threshold -percent $percent_value_mask $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask.mif;;
+[Yy]* ) cp $PRD/connectivity/mask_not_checked.mif $PRD/connectivity/mask_checked; break;;
+[Nn]* ) read -p "enter new threshold value" percent_value_mask; echo $percent_value_mask; rm $PRD/connectivity/mask_not_checked.mif; 
+	threshold -percent $percent_value_mask $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask_not_checked.mif;;
  * ) echo "Please answer y or n.";;
 esac
 done
@@ -241,7 +238,7 @@ if [ ! -f $PRD/connectivity/dt.mif ]
 then
 if [ -f $PRD/data/DWI/*.nii ]
 then
-ls $PRD/data/DWI/ | grep .b | xargs -I {} dwi2tensor $PRD/connectivity/dwi.mif $PRD/connectivity/dt.mif -grad $PRD/data/DWI/{}
+ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} dwi2tensor $PRD/connectivity/dwi.mif $PRD/connectivity/dt.mif -grad $PRD/data/DWI/{}
 else
 dwi2tensor $PRD/connectivity/dwi.mif $PRD/connectivity/dt.mif
 fi
@@ -263,7 +260,7 @@ if [ ! -f $PRD/connectivity/response.txt ]
 then
 if [ -f $PRD/data/DWI/*.nii ]
 then
-ls $PRD/data/DWI/ | grep .b | xargs -I {} estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax $lmax $PRD/connectivity/response.txt -grad $PRD/data/DWI/{}
+ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax $lmax $PRD/connectivity/response.txt -grad $PRD/data/DWI/{}
 else
 estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax $lmax $PRD/connectivity/response.txt
 fi
@@ -277,20 +274,10 @@ if [ ! -f $PRD/connectivity/CSD6.mif ]
 then
 if [ -f $PRD/data/DWI/*.nii ]
 then
-ls $PRD/data/DWI/ | grep .b | xargs -I {} csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif -grad $PRD/data/DWI/{}
+ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif -grad $PRD/data/DWI/{}
 else
 csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif
 fi
-fi
-
-# tractography
-if [ ! -f $PRD/connectivity/whole_brain_1.tck ]
-then
-echo "generating tracks"
-for I in $(seq 1 $number_tracks)
-do
-streamtrack SD_PROB $PRD/connectivity/CSD6.mif -seed $PRD/connectivity/mask.mif -mask $PRD/connectivity/mask.mif $PRD/connectivity/whole_brain_$I.tck -num 100000
-done
 fi
 
 # FLIRT registration
@@ -336,6 +323,18 @@ do the registration by hand"
 fslview $PRD/connectivity/lowb.nii $PRD/connectivity/aparcaseg_2_diff -l "Cool"
 fi
 fi
+
+# tractography
+if [ ! -f $PRD/connectivity/whole_brain_1.tck ]
+then
+echo "generating tracks"
+for I in $(seq 1 $number_tracks)
+do
+streamtrack SD_PROB $PRD/connectivity/CSD6.mif -unidirectional -seed $PRD/connectivity/mask.mif -mask $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/whole_brain_$I.tck -num 100000
+done
+fi
+
+
 
 # compute sub parcellations connectivity if asked
 if [ -n "$K" ]

@@ -103,7 +103,7 @@ def check_region_mapping(texture, region_mapping_corr):
     return new_texture
 
 if __name__ == '__main__':
-    texture = loadtxt('rh_region_mapping_low_not_corrected.txt')
+    texture = loadtxt('rh_region_mapping_low.txt')
     while True:
         new_texture = check_region_mapping(texture, region_mapping_corr)
         choice_user = raw_input("Do you want:\n"\

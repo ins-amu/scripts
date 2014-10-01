@@ -1,9 +1,13 @@
 if (~isdeployed) 
+
 addpath('read_and_write_func')   
 addpath('uniform_parcellate')
+
 end
+
 curr_K = getenv('curr_K')
-K = log(str2num(curr_K))/log(2) 
+curr_K = str2num(curr_K);
+K = log(curr_K)/log(2) 
 PRD = getenv('PRD')
 SUBJ_ID = getenv('SUBJ_ID')
 
@@ -59,8 +63,6 @@ Msk.img = dat;
 save_untouch_nii(Msk, [PRD, '/connectivity/aparcaseg_2_diff_cortical_only.nii']); 
 Msk= [PRD, '/connectivity/aparcaseg_2_diff_cortical_only.nii']; 
 
-%Output nii file
-Out=[PRD, '/connectivity/aparcaseg_2_diff_', curr_K, '.nii'];
 
 %Value of K in 2^K
 %K determines the number of nodes.
@@ -77,53 +79,35 @@ Out=[PRD, '/connectivity/aparcaseg_2_diff_', curr_K, '.nii'];
 [hdr,data]=read(Msk);
 
 %Uncomment this to constrain mask to one hemishere:
+regions = unique(data);
 
-data_1=zeros(size(data));
-data_1(ind2sub(size(data), find(data > 1999.9 )))=1;
-data_2=zeros(size(data));
-data_curr = data;
-data_curr(ind2sub(size(data), find(999.9 > data )))=10000;
-data_2(ind2sub(size(data), find(data_curr < 1999.9 )))=1;
+vol = zeros(size(data));
+number_nodes = 0;
 
-%Simulated data:
-%data=zeros(100,100,5);
-%data([5:95],[5:95],2)=1;
-
-% first hemisphere
-fprintf('Starting recursion first hemisphere...\n');
-fprintf('This may take several minutes\n');
-fprintf('(E.g. about 20 mins. to parcellate one hemisphere for K=9)\n');
-k=0;
-cell_ind={};
-[cell_ind]=recursive_split(data_1,cell_ind,k,K-1);
-
-vol_1=zeros(size(data_1));
-index=randperm(length(cell_ind));
-for i=1:length(cell_ind)
-    vol_1(cell_ind{i})=index(i); 
-    sz(i)=length(cell_ind{i}); 
+for ind_region=2:size(regions, 1) 
+     data_curr=zeros(size(data));
+    data_curr(ind2sub(size(data), find(data==regions(ind_region))))=1;
+    %  current region
+    fprintf('Starting recursion for region %d \n', ind_region);
+    k=0;
+    cell_ind={};
+    [cell_ind]=recursive_split(data_curr,cell_ind,k,K);
+    vol_curr=zeros(size(data_curr));
+    index=randperm(length(cell_ind));
+    for i=1:length(cell_ind)
+        vol_curr(cell_ind{i})=index(i)+ curr_K*(ind_region-2);
+        sz(i)=length(cell_ind{i}); 
+    end
+    fprintf('Number nodes for region %d: %d, Min size node: %d, Max size node: %d\n',ind_region, length(cell_ind),min(sz),max(sz));
+    number_nodes = number_nodes + length(cell_ind);
+    vol = vol + vol_curr;
 end
 
-fprintf('Total nodes: %d, Min size node: %d, Max size node: %d\n',length(cell_ind),min(sz),max(sz));
+%Output nii file
+Out=[PRD, '/connectivity/aparcaseg_2_diff_', num2str(curr_K), '.nii'];
 
-% second hemisphere
-fprintf('Starting recursion second hemisphere...\n');
-fprintf('This may take several minutes\n');
-fprintf('(E.g. about 20 mins. to parcellate one hemisphere for K=9)\n');
-k=0;
-cell_ind={};
-[cell_ind]=recursive_split(data_2,cell_ind,k,K-1);
 
-vol_2=zeros(size(data_2));
-index=randperm(length(cell_ind));
-for i=1:length(cell_ind)
-    vol_2(cell_ind{i})=index(i)+max(unique(vol_1)); 
-    sz(i)=length(cell_ind{i}); 
-end
-
-fprintf('Total nodes: %d, Min size node: %d, Max size node: %d\n',length(cell_ind),min(sz),max(sz));
-
-vol = vol_1 + vol_2;
+fprintf('Total nodes: %d',number_nodes);
 mat2nii(vol,Out,size(data),32,Msk);
 
 %%%%%%%%%%%%%%%%%
@@ -147,6 +131,6 @@ fclose(fid);
 % save corr_mat
 corr_mat = repmat(list_region,1,2);
 
-fid = fopen([PRD, '/connectivity/corr_mat_', curr_K,'.txt'], 'w'); 
+fid = fopen([PRD, '/connectivity/corr_mat_', num2str(curr_K),'.txt'], 'w'); 
 fprintf(fid, '%d %d\n', corr_mat'); 
 fclose(fid);
