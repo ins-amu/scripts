@@ -76,7 +76,7 @@ Matlab Runtime Compiler
 [Download MRC 8.1 for Matlab 2013a](wget http://www.mathworks.fr/supportfiles/MCR_Runtime/R2013a/MCR_R2013a_glnxa64_installer.zip)
 
     unzip MCR_R2013a_glnxa64_installer.zip
-    ./intall -mode silent -agreeToLicense yes 
+    ./install -mode silent -agreeToLicense yes 
 
 
 MRTRIX
