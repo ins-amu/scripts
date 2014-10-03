@@ -103,6 +103,9 @@ Add to mrtrix to your PATH (in your .bashrc)
 Before running the pipeline
     source $FREESURFER_HOME/SetUpFreeSurfer.sh
 
+If you have installed mrtrix via `apt-get` from the Neurodebian repositories,
+the binaries are installed to `/usr/lib/mrtrix/bin`.
+
 FSL
 ===
 
