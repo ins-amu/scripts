@@ -183,7 +183,7 @@ python list_subcortical.py
 fi
 
 ########################## build connectivity
-# mrtrix
+# Now using mrtrix 3 
 mkdir -p $PRD/connectivity
 mkdir -p $PRD/$SUBJ_ID/connectivity
 # mrconvert
@@ -198,13 +198,9 @@ fi
 fi
 
 # brainmask 
-if [ ! -f $PRD/connectivity/lowb.nii  ]
-then
-average $PRD/connectivity/dwi.mif -axis 3 $PRD/connectivity/lowb.nii
-fi
 if [ ! -f $PRD/connectivity/mask_not_checked.mif ]
 then
-threshold -percent $percent_value_mask $PRD/connectivity/lowb.nii - | median3D - - | median3D - $PRD/connectivity/mask_not_checked.mif
+dwi2mask $PRD/connectivity/dwi.mif $PRD/connectivity/mask_not_checked.mif
 fi
 
 # check the mask
@@ -233,52 +229,32 @@ then
 cp $PRD/connectivity/mask_not_checked.mif $PRD/connectivity/mask.mif
 fi
 
-# tensor imaging
-if [ ! -f $PRD/connectivity/dt.mif ]
-then
-if [ -f $PRD/data/DWI/*.nii ]
-then
-ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} dwi2tensor $PRD/connectivity/dwi.mif $PRD/connectivity/dt.mif -grad $PRD/data/DWI/{}
-else
-dwi2tensor $PRD/connectivity/dwi.mif $PRD/connectivity/dt.mif
-fi
-fi
-if [ ! -f $PRD/connectivity/fa.mif ]
-then
-tensor2FA $PRD/connectivity/dt.mif - | mrmult - $PRD/connectivity/mask.mif $PRD/connectivity/fa.mif
-fi
-if [ ! -f $PRD/connectivity/ev.mif ]
-then
-tensor2vector $PRD/connectivity/dt.mif - | mrmult - $PRD/connectivity/fa.mif $PRD/connectivity/ev.mif
-fi
-# constrained spherical deconvolution
-if [ ! -f $PRD/connectivity/sf.mif ]
-then
-erode $PRD/connectivity/mask.mif -npass 3 - | mrmult $PRD/connectivity/fa.mif - - | threshold - -abs 0.7 $PRD/connectivity/sf.mif
-fi
+dwi2response -grad $PRD/data/DWI/encoding.b $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -mask $PRD/connectivity/mask.mif
+
+
+# response function estimation
 if [ ! -f $PRD/connectivity/response.txt ]
 then
 if [ -f $PRD/data/DWI/*.nii ]
 then
-ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax $lmax $PRD/connectivity/response.txt -grad $PRD/data/DWI/{}
+ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -grad $PRD/data/DWI/{}
 else
-estimate_response $PRD/connectivity/dwi.mif $PRD/connectivity/sf.mif -lmax $lmax $PRD/connectivity/response.txt
+dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt
+fi
 fi
 
-if  [ -n "$DISPLAY" ]  &&  [ "$CHECK" = "yes" ]
-then
-disp_profile -response $PRD/connectivity/response.txt
-fi
-fi
+
+# fibre orientation distribution estimation
 if [ ! -f $PRD/connectivity/CSD6.mif ]
 then
 if [ -f $PRD/data/DWI/*.nii ]
 then
-ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif -grad $PRD/data/DWI/{}
+ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif -grad $PRD/data/DWI/{}
 else
-csdeconv $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif
+dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -lmax $lmax -mask $PRD/connectivity/mask.mif $PRD/connectivity/CSD6.mif
 fi
 fi
+
 
 # FLIRT registration
 #Diff to T1
@@ -330,11 +306,13 @@ then
 echo "generating tracks"
 for I in $(seq 1 $number_tracks)
 do
-streamtrack SD_PROB $PRD/connectivity/CSD6.mif -unidirectional -seed $PRD/connectivity/mask.mif -mask $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/whole_brain_$I.tck -num 100000
+tckgen SD_PROB $PRD/connectivity/CSD6.mif -unidirectional -seed $PRD/connectivity/mask.mif -mask $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/whole_brain_$I.tck -num 100000
 done
 fi
 
 
+# test new connectome functions in mrtrix
+labelconfig  
 
 # compute sub parcellations connectivity if asked
 if [ -n "$K" ]
