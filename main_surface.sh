@@ -327,13 +327,25 @@ fi
 # tractography
 if [ ! -f $PRD/connectivity/whole_brain_1.tck ]
 then
-echo "generating tracks"
+# !! Somehow spherical deconvolution does not work with HCP data
+# (because of the non-linear gradient, whose information should be used 
+# in odf estimation, but there is no option for that)
+# in that case, use DP_STREAM
+if [ "$PROB" = "SD" ]
+then
+echo "generating tracks using probabilistic tractography and spherical deconvolution"
 for I in $(seq 1 $number_tracks)
 do
 streamtrack SD_PROB $PRD/connectivity/CSD6.mif -unidirectional -seed $PRD/connectivity/mask.mif -mask $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/whole_brain_$I.tck -num 100000
 done
+else
+for I in $(seq 1 $number_tracks)
+do
+echo "generating tracks using deterministic tractography and tensor fitting"
+streamtrack DT_STREAM $PRD/connectivity/dwi.mif -unidirectional -seed $PRD/connectivity/mask.mif -mask $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/whole_brain_$I.tck -num 100000 -grad $PRD/data/DWI/encoding.b
+done
 fi
-
+fi
 
 
 # compute sub parcellations connectivity if asked

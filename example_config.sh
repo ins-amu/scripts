@@ -85,3 +85,7 @@ export number_tracks=10
 # choice of the parcellation
 export parcel=AAL
 
+# if you are using HCP, due to pb in mrtrix, 
+# you have to use deterministic tensor fitting
+# i.e. change this option to something else
+export PROB=SD
