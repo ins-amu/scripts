@@ -336,13 +336,13 @@ then
 echo "generating tracks using probabilistic tractography and spherical deconvolution"
 for I in $(seq 1 $number_tracks)
 do
-streamtrack SD_PROB $PRD/connectivity/CSD6.mif -unidirectional -seed $PRD/connectivity/mask.mif -mask $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/whole_brain_$I.tck -num 100000
+streamtrack SD_PROB $PRD/connectivity/CSD6.mif -unidirectional -mask $PRD/connectivity/mask.mif -seed $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/whole_brain_$I.tck -num 100000
 done
 else
 for I in $(seq 1 $number_tracks)
 do
 echo "generating tracks using deterministic tractography and tensor fitting"
-streamtrack DT_STREAM $PRD/connectivity/dwi.mif -unidirectional -seed $PRD/connectivity/mask.mif -mask $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/whole_brain_$I.tck -num 100000 -grad $PRD/data/DWI/encoding.b
+streamtrack DT_STREAM $PRD/connectivity/dwi.mif -unidirectional -mask $PRD/connectivity/mask.mif -seed $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/whole_brain_$I.tck -num 100000 -grad $PRD/data/DWI/encoding.b
 done
 fi
 fi
