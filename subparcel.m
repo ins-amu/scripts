@@ -113,24 +113,41 @@ mat2nii(vol,Out,size(data),32,Msk);
 %%%%%%%%%%%%%%%%%
 
 % compute centers
+fid = fopen('name_regions.txt');
+name_region = textscan(fid, '%s');
+fclose(fid);
+name_region = name_region{1}(2:end);
 list_region = unique(vol);
-
 list_region = list_region(2:end);
 centres = zeros(size(list_region, 1), 4);  
-for j=1:size(list_region, 1) 
-    list_region(j); 
-    [a, b, c] = ind2sub(size(vol), find(vol==list_region(j))); 
-    centres(j, 2:4) = [mean(a), mean(b), mean(c)];
-    centres(j, 1) = int32(list_region(j)); 
+for ind_j=1:size(list_region, 1) 
+    list_region(ind_j); 
+    [a, b, c] = ind2sub(size(vol), find(vol==list_region(ind_j))); 
+    centres(ind_j, 2:4) = [mean(a), mean(b), mean(c)];
+    centres(ind_j, 1) = list_region(ceil(ind_j/curr_K)); 
 end
 
-fid = fopen([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/centres.txt'], 'w'); 
-fprintf(fid, '%d %.3f %.3f %.3f\n', centres'); 
+fid = fopen([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/original_centres.txt'], 'w'); 
+for i=1:size(list_region, 1)
+fprintf(fid, '%s %.3f %.3f %.3f\n', name_region{centres(i, 1)}, centres(i,2:4)'); 
+end
 fclose(fid);
 
 % save corr_mat
-corr_mat = repmat(list_region,1,2);
-
 fid = fopen([PRD, '/connectivity/corr_mat_', num2str(curr_K),'.txt'], 'w'); 
-fprintf(fid, '%d %d\n', corr_mat'); 
+fprintf(fid, '%d %s\n', list_region, name_region{centres(i, 1)}'); 
+fclose(fid);
+
+% compute orientations, juste copying the orientation of the larger region
+load(['average_orientations.txt']);
+average_orientations = reshape(average_orientations, [71,3]);
+average_orientations = average_orientations(2:end,:);
+
+orientation_divided = zeros(size(list_region, 1), 3);
+for i=1:size(list_region, 1)
+   orientation_divided(i, :) = average_orientations(ceil(i/curr_K), :); 
+end
+
+fid = fopen([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/orientations.txt'], 'w'); 
+fprintf(fid, '%.3f %.3f %.3f\n', orientation_divided'); 
 fclose(fid);
