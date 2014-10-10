@@ -312,7 +312,10 @@ fi
 
 
 # test new connectome functions in mrtrix
-labelconfig  
+labelconfig $PRD/connectivity/aparcaseg_2_diff.nii.gz fs_region.txt $PRD/connectivity/aparcaseg_2_diff.mif $FREESURFER_HOME/FreeSurferColorLUT.txt
+
+tck2connectome $PRD/connectivity/whole_brain_1.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/weights.csv
+tck2connectome -metric meanlength -zero_diagonal $PRD/connectivity/whole_brain_1.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/tract_lengths.csv
 
 # compute sub parcellations connectivity if asked
 if [ -n "$K" ]
