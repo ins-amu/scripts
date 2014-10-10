@@ -76,7 +76,7 @@ Matlab Runtime Compiler
 [Download MRC 8.1 for Matlab 2013a](wget http://www.mathworks.fr/supportfiles/MCR_Runtime/R2013a/MCR_R2013a_glnxa64_installer.zip)
 
     unzip MCR_R2013a_glnxa64_installer.zip
-    ./intall -mode silent -agreeToLicense yes 
+    ./install -mode silent -agreeToLicense yes 
 
 
 MRTRIX
@@ -102,6 +102,9 @@ Add to mrtrix to your PATH (in your .bashrc)
 
 Before running the pipeline
     source $FREESURFER_HOME/SetUpFreeSurfer.sh
+
+If you have installed mrtrix via `apt-get` from the Neurodebian repositories,
+the binaries are installed to `/usr/lib/mrtrix/bin`.
 
 FSL
 ===
