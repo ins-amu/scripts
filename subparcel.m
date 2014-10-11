@@ -116,10 +116,13 @@ mat2nii(vol,Out,size(data),32,Msk);
 fid = fopen('name_regions.txt');
 name_region = textscan(fid, '%s');
 fclose(fid);
+
 name_region = name_region{1}(2:end);
+
 list_region = unique(vol);
 list_region = list_region(2:end);
 centres = zeros(size(list_region, 1), 4);  
+
 for ind_j=1:size(list_region, 1) 
     list_region(ind_j); 
     [a, b, c] = ind2sub(size(vol), find(vol==list_region(ind_j))); 
@@ -127,7 +130,7 @@ for ind_j=1:size(list_region, 1)
     centres(ind_j, 1) = list_region(ceil(ind_j/curr_K)); 
 end
 
-fid = fopen([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/original_centres.txt'], 'w'); 
+fid = fopen([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/centres.txt'], 'w'); 
 for i=1:size(list_region, 1)
 fprintf(fid, '%s %.3f %.3f %.3f\n', name_region{centres(i, 1)}, centres(i,2:4)'); 
 end
@@ -135,7 +138,10 @@ fclose(fid);
 
 % save corr_mat
 fid = fopen([PRD, '/connectivity/corr_mat_', num2str(curr_K),'.txt'], 'w'); 
-fprintf(fid, '%d %s\n', list_region, name_region{centres(i, 1)}'); 
+for i=1:size(list_region, 1)
+% fprintf(fid, '%d %s\n', list_region(i), name_region{centres(i, 1)}); 
+fprintf(fid, '%d %d\n', list_region(i), list_region(i)); 
+end
 fclose(fid);
 
 % compute orientations, juste copying the orientation of the larger region

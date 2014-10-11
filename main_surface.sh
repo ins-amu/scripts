@@ -279,15 +279,16 @@ then
 echo " compute labels"
 labelconfig $PRD/connectivity/aparcaseg_2_diff.nii.gz fs_region.txt $PRD/connectivity/aparcaseg_2_diff.mif -lut_freesurfer $FREESURFER_HOME/FreeSurferColorLUT.txt
 fi
-if [ ! -f $PRD/connectivity/weights_1.csv ]
-then
+
 for I in $(seq 1 $number_tracks)
 do
+if [ ! -f $PRD/connectivity/weights_"$I".csv ]
+then
 echo "compute connectivity matrix"
 tck2connectome $PRD/connectivity/whole_brain_$I.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/weights_$I.csv -assignment_radial_search 2
 tck2connectome $PRD/connectivity/whole_brain_$I.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/tract_lengths_$I.csv -metric meanlength -zero_diagonal -assignment_radial_search 2 
-done
 fi
+done
 
 # Compute other files
 # we do not compute hemisphere
@@ -295,7 +296,7 @@ fi
 cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 
 # # compute centers, areas and orientations
-if [ ! -f $PRD/$SUBJ_ID/connectivity/centres.txt ]
+if [ ! -f $PRD/$SUBJ_ID/connectivity/centres.txt.bz2 ]
 then
 echo " generate useful files for TVB"
 python compute_connectivity_files.py
@@ -308,6 +309,7 @@ zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt weights.tx
 bzip2 *
 popd
 
+###################################################
 # compute sub parcellations connectivity if asked
 if [ -n "$K" ]
 then
@@ -325,15 +327,30 @@ else
     sh subparcel/distrib/run_subparcel.sh $MCR  
     fi
 fi
+
+if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/aparcaseg_2_diff_"$curr_K".mif ]
+then
+labelconfig $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii $PRD/connectivity/corr_mat_"$curr_K".txt $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif  -lut_basic $PRD/connectivity/corr_mat_"$curr_K".txt
+fi
+
+for I in $(seq 1 $number_tracks)
+do
+if [ ! -f $PRD/connectivity/weights_"$K"_"$I".csv ]
+then
+echo "compute connectivity matrix"
+tck2connectome $PRD/connectivity/whole_brain_$I.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/weights_"$curr_K"_"$I".csv -assignment_radial_search 2
+tck2connectome  $PRD/connectivity/whole_brain_$I.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/tract_lengths_"$curr_K"_"$I".csv -metric meanlength -zero_diagonal
+fi
+done
+
 if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt ]
 then
-labelconfig $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz fs_region.txt $PRD/connectivity/aparcaseg_2_diff.mif -lut_freesurfer $FREESURFER_HOME/FreeSurferColorLUT.txt
-tck2connectome $PRD/connectivity/whole_brain_$I.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/weights.csv -assignment_radial_search 2
-tck2connectome -metric meanlength -zero_diagonal $PRD/connectivity/whole_brain_1.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/tract_lengths.csv
+python compute_connectivity_sub.py
 fi
+
 pushd .
 cd $PRD/$SUBJ_ID/connectivity_"$curr_K"
-zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt
+zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt orientations.txt
 popd
 fi
 

@@ -3,8 +3,8 @@
 #######################
 ####################################
 # Copy this file wherever you want #
-# (in the root directory for files #
-# would be a good idea)            #
+# (in the root directory for your  #
+# data would be a good idea)       #
 # and change the relevant options  #
 ####################################
 
@@ -31,7 +31,7 @@ export FS=$SUBJECTS_DIR
 export SUBJ_ID=name_subj
 
 # brainvisa directory
-export BV=/pat_to_brainvisa/
+export BV=/path_to_brainvisa/
 
 # Matlab Runtime Compiler path
 # if you have matlab, do mcrinstaller at the matlab prompt
@@ -77,11 +77,15 @@ export number_tracks=10
 
 # if you want subdivided parcellations, you can set the folowing value
 # according to the following table
-# K:                7    8    9    10    11   12
-# Number of Nodes:  128  256  512  1024  2048 4096
-# export K=9
+# K:                 0   1   2    3    4    5
+# Number of Nodes:  70  140 280  560  1120 2240
+# export K=4
 
 # uniquely for region pipeline (main_region.sh)
 # choice of the parcellation
-export parcel=AAL
+# export parcel=AAL
 
+# use topup and eddy distortion correction
+
+# use Anatomically Constrained Tractography
+export act=no
