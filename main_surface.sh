@@ -263,15 +263,26 @@ fslview $PRD/connectivity/T1w_acpc_dc_restore_1.25.nii.gz $PRD/connectivity/apar
 fi
 fi
 
-# tractography
-if [ ! -f $PRD/connectivity/whole_brain_1.tck ]
+# prepare file for act
+if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]
 then
-echo "generating tracks"
+/home/tim/Work/Soft/mrtrix3/scripts/act_anat_prepare_fsl $PRD/connectivity/T1w_acpc_dc_restore_1.25.nii.gz $PRD/connectivity/act.mif
+fi
+
+# tractography
 for I in $(seq 1 $number_tracks)
 do
+if [ ! -f $PRD/connectivity/whole_brain_$I.tck ]
+then
+echo "generating tracks" $I
+if [ "$act" = "yes" ]
+then
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_$I.tck -unidirectional -seed_image $PRD/connectivity/aparcaseg_2_diff.nii.gz -grad $PRD/data/DWI/encoding.b -mask $PRD/connectivity/mask.mif -num 100000 -act $PRD/connectivity/act.mif
+else
 tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_$I.tck -unidirectional -seed_image $PRD/connectivity/aparcaseg_2_diff.nii.gz -grad $PRD/data/DWI/encoding.b -mask $PRD/connectivity/mask.mif -num 100000 
-done
 fi
+fi
+done
 
 # now compute connectivity and length matrix
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.mif ]
@@ -328,6 +339,24 @@ else
     fi
 fi
 
+# tractography
+for I in $(seq 1 $number_tracks)
+do
+if [ ! -f $PRD/connectivity/whole_brain_"$curr_K"_"$I".tck ]
+then
+echo "generating tracks" $I "for K" $curr_K
+if [ "$act" = "yes" ]
+then
+echo "using act"
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_"$curr_K"_"$I".tck -unidirectional -seed_image $PRD/connectivity/mask.mif -grad $PRD/data/DWI/encoding.b -mask $PRD/connectivity/mask.mif -num 100000 -act $PRD/connectivity/act.mif
+#tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_"$curr_K"_"$I".tck -unidirectional -seed_image $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii -grad $PRD/data/DWI/encoding.b -mask $PRD/connectivity/mask.mif -num 100000 -act $PRD/connectivity/act.mif
+else
+echo "don't use act"
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_"$curr_K"_"$I".tck -unidirectional -seed_image $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii -grad $PRD/data/DWI/encoding.b -mask $PRD/connectivity/mask.mif -num 100000 
+fi
+fi
+done
+
 if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/aparcaseg_2_diff_"$curr_K".mif ]
 then
 labelconfig $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii $PRD/connectivity/corr_mat_"$curr_K".txt $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif  -lut_basic $PRD/connectivity/corr_mat_"$curr_K".txt
@@ -335,17 +364,19 @@ fi
 
 for I in $(seq 1 $number_tracks)
 do
-if [ ! -f $PRD/connectivity/weights_"$K"_"$I".csv ]
+if [ ! -f $PRD/connectivity/weights_"$curr_K"_"$I".csv ]
 then
 echo "compute connectivity matrix"
-tck2connectome $PRD/connectivity/whole_brain_$I.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/weights_"$curr_K"_"$I".csv -assignment_radial_search 2
-tck2connectome  $PRD/connectivity/whole_brain_$I.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/tract_lengths_"$curr_K"_"$I".csv -metric meanlength -zero_diagonal
+tck2connectome $PRD/connectivity/whole_brain_"$curr_K"_"$I".tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/weights_"$curr_K"_"$I".csv -assignment_reverse_search 10
+tck2connectome  $PRD/connectivity/whole_brain_"$curr_K"_"$I".tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/tract_lengths_"$curr_K"_"$I".csv -metric meanlength -zero_diagonal
 fi
 done
 
 if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt ]
 then
+
 python compute_connectivity_sub.py
+
 fi
 
 pushd .
