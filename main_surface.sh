@@ -185,6 +185,7 @@ fi
 ########################## build connectivity using mrtrix 3
 mkdir -p $PRD/connectivity
 mkdir -p $PRD/$SUBJ_ID/connectivity
+
 # mrconvert
 if [ ! -f $PRD/connectivity/dwi.mif ]
 then
@@ -196,28 +197,21 @@ mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.mif
 fi
 fi
 
+# topup and eddy correction
+if [ "$topup" = "yes" ]
+then
+echo "not implemented yes"
+fi
 
 if [ ! -f $PRD/connectivity/mask.mif ]
 then
 dwi2mask $PRD/connectivity/dwi.mif $PRD/connectivity/mask.mif -grad encoding.b
 fi
 
-# response function estimation
-if [ ! -f $PRD/connectivity/response.txt ]
+if [ ! -f $PRD/connectivity/lowb.nii.gz ]
 then
-if [ -f $PRD/data/DWI/*.nii ]
-then
-ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -grad $PRD/data/DWI/{}
-else
-dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt
-fi
-fi
-
-
-# fibre orientation distribution estimation
-if [ ! -f $PRD/connectivity/CSD$lmax.mif ]
-then
-ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif -grad $PRD/data/DWI/{} 
+dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif -bzero
+mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz 
 fi
 
 # FLIRT registration
@@ -250,23 +244,43 @@ fi
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
 then
 echo " register aparc+aseg to diff"
-flirt -in $PRD/connectivity/T1w_acpc_dc_restore_1.25.nii.gz -ref $PRD/connectivity/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
+flirt -in $PRD/connectivity/lowb.nii.gz -ref $PRD/connectivity/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
 convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
-flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii -ref $PRD/connectivity/T1w_acpc_dc_restore_1.25.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+flirt -applyxfm -in $PRD/connectivity/T1.nii -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/T1_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+
 # check parcellation to diff
 if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
 then
 echo "check parcellation registration to diffusion space"
 echo "if it's correct, just close the window. Otherwise you will have to
 do the registration by hand"
-fslview $PRD/connectivity/T1w_acpc_dc_restore_1.25.nii.gz $PRD/connectivity/aparcaseg_2_diff -l "Cool"
+fslview $PRD/connectivity/lowb.nii.gz $PRD/connectivity/aparcaseg_2_diff -l "Cool"
 fi
+fi
+
+# response function estimation
+if [ ! -f $PRD/connectivity/response.txt ]
+then
+if [ -f $PRD/data/DWI/*.nii ]
+then
+ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -grad $PRD/data/DWI/{}
+else
+dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt
+fi
+fi
+
+
+# fibre orientation distribution estimation
+if [ ! -f $PRD/connectivity/CSD$lmax.mif ]
+then
+ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif -grad $PRD/data/DWI/{} 
 fi
 
 # prepare file for act
 if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]
 then
-/home/tim/Work/Soft/mrtrix3/scripts/act_anat_prepare_fsl $PRD/connectivity/T1w_acpc_dc_restore_1.25.nii.gz $PRD/connectivity/act.mif
+/home/tim/Work/Soft/mrtrix3/scripts/act_anat_prepare_fsl $PRD/connectivity/T1_2_diff.nii $PRD/connectivity/act.mif
 fi
 
 # tractography
@@ -281,12 +295,13 @@ tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -algorit
 fi
 fi
 
-if [ -n "$sift" ] && ["$act" = "yes"]
+if [ -n "$sift" ] && ["$act" = "yes"] && [ ! -f $PRD/connectivity/whole_brain_post_act.tck ]
 then
     tcksift $PRD/connectivity/whole_brain_act.tck $PRD/connectivity/CSD$lmax  $PRD/connectivity/whole_brain_sift_act.tck -act $PRD/connectivity/act.mif -term_number $(( number_tracks/sift ))
-    ln -s $PRD/connectivity/whole_brain_sift_act.tck  $PRD/connectivitywhole_brain_post_act.tck
-elif ["$act" = "yes"]
-    ln -s $PRD/connectivity/whole_brain_act.tck  $PRD/connectivitywhole_brain_post_act.tck
+    ln -s $PRD/connectivity/whole_brain_sift_act.tck  $PRD/connectivity/whole_brain_post_act.tck
+elif [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/whole_brain_post_act.tck ]
+then
+    ln -s $PRD/connectivity/whole_brain_act.tck  $PRD/connectivity/whole_brain_post_act.tck
 fi
 
 
@@ -300,8 +315,8 @@ fi
 if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/weights_act.csv ]
 then
 echo "compute connectivity matrix using act"
-tck2connectome $PRD/connectivity/whole_brain_post_act.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/weights_act.csv -assignment_radial_search 20 
-tck2connectome $PRD/connectivity/whole_brain_post_act.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/tract_lengths_act.csv -metric meanlength -zero_diagonal -assignment_radial_search 2 
+tck2connectome $PRD/connectivity/whole_brain_post_act.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/weights_act.csv -assignment_forward_search 10 
+tck2connectome $PRD/connectivity/whole_brain_post_act.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/tract_lengths_act.csv -metric meanlength -zero_diagonal -assignment_forward_search 10
 elif [ ! -f $PRD/connectivity/weights.csv ]
 then
 echo "compute connectivity matrix without act"
@@ -366,20 +381,21 @@ then
 labelconfig $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii $PRD/connectivity/corr_mat_"$curr_K".txt $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif  -lut_basic $PRD/connectivity/corr_mat_"$curr_K".txt
 fi
 
-if [ -n "$sift" ] && ["$act" = "yes"]
+if [ -n "$sift" ] && ["$act" = "yes"] && [ ! -f $PRD/connectivity/whole_brain_post_act.tck ]
 then
     tcksift $PRD/connectivity/whole_brain_sub_act.tck $PRD/connectivity/CSD$lmax  $PRD/connectivity/whole_brain_sub_sift_act.tck -act $PRD/connectivity/act.mif -term_number $(( number_tracks/sift ))
-    ln -s $PRD/connectivity/whole_brain_sub_sift_act.tck  $PRD/connectivitywhole_brain_sub_post_act.tck
-elif ["$act" = "yes"]
-    ln -s $PRD/connectivity/whole_brain_sub_act.tck  $PRD/connectivitywhole_brain_sub_post_act.tck
+    ln -s $PRD/connectivity/whole_brain_sub_sift_act.tck  $PRD/connectivity/whole_brain_sub_post_act.tck
+elif [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/whole_brain_post_act.tck ]
+then
+    ln -s $PRD/connectivity/whole_brain_sub_act.tck  $PRD/connectivity/whole_brain_sub_post_act.tck
 fi
 
 
 if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/weights_act_$curr_K.csv ]
 then
 echo "compute connectivity sub matrix using act"
-tck2connectome $PRD/connectivity/whole_brain_sub_post_act.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/weights_act_"$curr_K".csv -assignment_radial_search 2
-tck2connectome  $PRD/connectivity/whole_brain_sub_post_act.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/tract_lengths_act_"$curr_K".csv -metric meanlength -assignment_forward_search 2 -zero_diagonal 
+tck2connectome $PRD/connectivity/whole_brain_sub_post_act.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/weights_act_"$curr_K".csv -assignment_forward_search 10 
+tck2connectome  $PRD/connectivity/whole_brain_sub_post_act.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/tract_lengths_act_"$curr_K".csv -metric meanlength -assignment_forward_search 10 -zero_diagonal 
 elif [ ! -f $PRD/connectivity/weights_act_$curr_K.csv ]
 then
 echo "compute connectivity matrix not using act"

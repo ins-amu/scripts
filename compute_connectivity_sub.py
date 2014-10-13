@@ -14,10 +14,6 @@ number_tracks = np.int(os.environ['number_tracks'])
 #     tract_lengths[:, :] += np.loadtxt(os.path.join(PRD, 'connectivity', ft))
 # 
 # save connectivity and tract length matrices
-weights = np.loadtxt(os.path.join(PRD, 'connectivity', 'weights_' + str(curr_K) + '.csv'))
-tract_lengths = np.loadtxt(os.path.join(PRD, 'connectivity', 'tract_lengths_' + str(curr_K) + '.csv'))
-weights = weights + weights.transpose() - np.diag(np.diag(weights)) # to avoid twice diag
-tract_lengths = tract_lengths + tract_lengths.transpose() # because diagonal nul 
 if act=='yes':
     weights = np.loadtxt(os.path.join(PRD, 'connectivity', 'weights_act_' + str(curr_K) + '.csv'))
     tract_lengths = np.loadtxt(os.path.join(PRD, 'connectivity', 'tract_lengths_act_' + str(curr_K) + '.csv'))
