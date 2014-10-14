@@ -289,7 +289,8 @@ then
 echo "generating tracks" 
 if [ "$act" = "yes" ]
 then
-tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_act.tck -unidirectional -seed_gmwmi $PRD/connectivity/act.mif -grad $PRD/data/DWI/encoding.b -mask $PRD/connectivity/mask.mif -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 250 -crop_at_gmwmi
+5tt2gmwmi $PRD/connectivity/act.mif $PRD/connectivity/gmwmi_mask.mif
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_act.tck -algorithm iFOD2 -step 0.7 -angle 90 -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -grad $PRD/data/DWI/encoding.b -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 500 -backtrack
 else
 tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii.gz -grad $PRD/data/DWI/encoding.b -mask $PRD/connectivity/mask.mif -num $number_tracks
 fi
