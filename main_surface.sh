@@ -205,7 +205,7 @@ fi
 
 if [ ! -f $PRD/connectivity/mask.mif ]
 then
-dwi2mask $PRD/connectivity/dwi.mif $PRD/connectivity/mask.mif -grad encoding.b
+dwi2mask $PRD/connectivity/dwi.mif $PRD/connectivity/mask.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
 fi
 
 if [ ! -f $PRD/connectivity/lowb.nii.gz ]
@@ -264,7 +264,7 @@ if [ ! -f $PRD/connectivity/response.txt ]
 then
 if [ -f $PRD/data/DWI/*.nii ]
 then
-ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -grad $PRD/data/DWI/{}
+dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals
 else
 dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt
 fi
@@ -274,7 +274,7 @@ fi
 # fibre orientation distribution estimation
 if [ ! -f $PRD/connectivity/CSD$lmax.mif ]
 then
-ls $PRD/data/DWI/ | grep '.b$' | xargs -I {} dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif -grad $PRD/data/DWI/{} 
+dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif -fslgrad $PRD/data/DWI/bvecs  $PRD/data/DWI/bvals -bvalue_scaling yes
 fi
 
 # prepare file for act
@@ -286,13 +286,14 @@ fi
 # tractography
 if [ ! -f $PRD/connectivity/whole_brain_act.tck ]
 then
-echo "generating tracks" 
 if [ "$act" = "yes" ]
 then
+echo "generating tracks using act" 
 5tt2gmwmi $PRD/connectivity/act.mif $PRD/connectivity/gmwmi_mask.mif
-tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_act.tck -algorithm iFOD2 -step 0.7 -angle 90 -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -grad $PRD/data/DWI/encoding.b -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 500 -backtrack
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_act.tck -unidirectional -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 250 
 else
-tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii.gz -grad $PRD/data/DWI/encoding.b -mask $PRD/connectivity/mask.mif -num $number_tracks
+echo "generating tracks without using act" 
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii.gz -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals -mask $PRD/connectivity/mask.mif -num $number_tracks
 fi
 fi
 
@@ -316,8 +317,8 @@ fi
 if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/weights_act.csv ]
 then
 echo "compute connectivity matrix using act"
-tck2connectome $PRD/connectivity/whole_brain_post_act.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/weights_act.csv -assignment_forward_search 10 
-tck2connectome $PRD/connectivity/whole_brain_post_act.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/tract_lengths_act.csv -metric meanlength -zero_diagonal -assignment_forward_search 10
+tck2connectome $PRD/connectivity/whole_brain_post_act.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/weights_act.csv -assignment_radial_search 2 
+tck2connectome $PRD/connectivity/whole_brain_post_act.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/tract_lengths_act.csv -metric meanlength -zero_diagonal -assignment_radial_search 2
 elif [ ! -f $PRD/connectivity/weights.csv ]
 then
 echo "compute connectivity matrix without act"
@@ -370,11 +371,11 @@ fi
 if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/whole_brain_sub_act.tck ]
 then
 echo "generating tracks for subparcellations using act"
-tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_sub_act.tck -unidirectional -seed_gmwmi $PRD/connectivity/act.mif -grad $PRD/data/DWI/encoding.b -mask $PRD/connectivity/mask.mif -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 250 -crop_at_gmwmi
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_sub_act.tck -unidirectional -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals -mask $PRD/connectivity/mask.mif -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 250 
 elif [ ! -f $PRD/connectivity/whole_brain_sub.tck ]
 then
 echo "don't use act"
-tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_sub.tck -unidirectional -seed_image $PRD/connectivity/aparcaseg_2_diff_cortical_only.nii -grad $PRD/data/DWI/encoding.b -mask $PRD/connectivity/mask.mif -num $number_tracks
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain_sub.tck -unidirectional -seed_image $PRD/connectivity/aparcaseg_2_diff_cortical_only.nii -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals -mask $PRD/connectivity/mask.mif -num $number_tracks
 fi
 
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif ]
@@ -395,8 +396,8 @@ fi
 if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/weights_act_$curr_K.csv ]
 then
 echo "compute connectivity sub matrix using act"
-tck2connectome $PRD/connectivity/whole_brain_sub_post_act.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/weights_act_"$curr_K".csv -assignment_forward_search 10 
-tck2connectome  $PRD/connectivity/whole_brain_sub_post_act.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/tract_lengths_act_"$curr_K".csv -metric meanlength -assignment_forward_search 10 -zero_diagonal 
+tck2connectome $PRD/connectivity/whole_brain_sub_post_act.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/weights_act_"$curr_K".csv -assignment_radial_search 2 
+tck2connectome  $PRD/connectivity/whole_brain_sub_post_act.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/tract_lengths_act_"$curr_K".csv -metric meanlength -assignment_radial_search 2 -zero_diagonal 
 elif [ ! -f $PRD/connectivity/weights_act_$curr_K.csv ]
 then
 echo "compute connectivity matrix not using act"
@@ -414,6 +415,6 @@ fi
 
 pushd .
 cd $PRD/$SUBJ_ID/connectivity_"$curr_K"
-#zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt orientations.txt
+zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt orientations.txt
 popd
 fi
