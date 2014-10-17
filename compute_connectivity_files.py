@@ -158,29 +158,13 @@ if __name__ == '__main__':
     tri = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surface', 'triangles.txt'))
     tri = tri.astype(int)
     region_mapping = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surface', 'region_mapping.txt'))
-    #weights, tract_lengths = np.zeros((88, 88)), np.zeros((88, 88))
-    #for i in range(np.int(number_tracks)):
-    #    fw = 'weights_' + str(i+1) + '.csv'
-    #    ft = 'tract_lengths_' + str(i+1) + '.csv'
-    #    weights[1:, 1:] += np.loadtxt(os.path.join(PRD, 'connectivity', fw))
-    #    tract_lengths[1:, 1:] += np.loadtxt(os.path.join(PRD, 'connectivity', ft))
-#
     # save connectivity and tract length matrices
-    if act=='yes':
-        weights = np.loadtxt(os.path.join(PRD, 'connectivity', 'weights_act.csv'))
-        tract_lengths = np.loadtxt(os.path.join(PRD, 'connectivity', 'tract_lengths_act.csv'))
-        weights = weights + weights.transpose() - np.diag(np.diag(weights))
-        tract_lengths = tract_lengths + tract_lengths.transpose() # because diagonal nul 
-        np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity', 'weights_act.txt'), weights, fmt='%d')
-        np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity', 'tract_lengths_act.txt'), tract_lengths, fmt='%.3f')
-    else:
-        weights = np.loadtxt(os.path.join(PRD, 'connectivity', 'weights.csv'))
-        tract_lengths = np.loadtxt(os.path.join(PRD, 'connectivity', 'tract_lengths.csv'))
-        weights = weights + weights.transpose() - np.diag(np.diag(weights))
-        tract_lengths = tract_lengths + tract_lengths.transpose() # because diagonal nul 
-        np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity', 'weights.txt'), weights, fmt='%d')
-        np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity', 'tract_lengths.txt'), tract_lengths, fmt='%.3f')
-
+    weights = np.loadtxt(os.path.join(PRD, 'connectivity', 'weights.csv'))
+    tract_lengths = np.loadtxt(os.path.join(PRD, 'connectivity', 'tract_lengths.csv'))
+    weights = weights + weights.transpose() - np.diag(np.diag(weights))
+    tract_lengths = tract_lengths + tract_lengths.transpose() # because diagonal nul 
+    np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity', 'weights.txt'), weights, fmt='%d')
+    np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity', 'tract_lengths.txt'), tract_lengths, fmt='%.3f')
 
     # compute centers
     centers = compute_region_center_cortex(verts, region_mapping)
