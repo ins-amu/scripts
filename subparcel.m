@@ -12,6 +12,7 @@ PRD = getenv('PRD')
 SUBJ_ID = getenv('SUBJ_ID')
 
 % get rid of subcortical regions and white matter
+
 mask_unprocessed = load_untouch_nii([PRD, '/connectivity/aparcaseg_2_diff.nii.gz']); 
 dat = mask_unprocessed.img;
 dat(ind2sub(size(dat), find(dat ==   0)))=0;
@@ -103,6 +104,28 @@ for ind_region=2:size(regions, 1)
     vol = vol + vol_curr;
 end
 
+% Re add subcortical regions
+last_reg = max(vol(:));
+mask_unprocessed = load_untouch_nii([PRD, '/connectivity/aparcaseg_2_diff.nii.gz']); 
+dat = mask_unprocessed.img;
+vol(ind2sub(size(dat), find(dat ==   8)))=last_reg +1;
+vol(ind2sub(size(dat), find(dat ==  10)))=last_reg +2;
+vol(ind2sub(size(dat), find(dat ==  11)))=last_reg +3;
+vol(ind2sub(size(dat), find(dat ==  12)))=last_reg +4;
+vol(ind2sub(size(dat), find(dat ==  13)))=last_reg +5;
+vol(ind2sub(size(dat), find(dat ==  16)))=last_reg +6;
+vol(ind2sub(size(dat), find(dat ==  17)))=last_reg +7;
+vol(ind2sub(size(dat), find(dat ==  18)))=last_reg +8;
+vol(ind2sub(size(dat), find(dat ==  26)))=last_reg +9;
+vol(ind2sub(size(dat), find(dat ==  47)))=last_reg +10;
+vol(ind2sub(size(dat), find(dat ==  49)))=last_reg +11;
+vol(ind2sub(size(dat), find(dat ==  50)))=last_reg +12;
+vol(ind2sub(size(dat), find(dat ==  51)))=last_reg +13;
+vol(ind2sub(size(dat), find(dat ==  52)))=last_reg +14;
+vol(ind2sub(size(dat), find(dat ==  53)))=last_reg +15;
+vol(ind2sub(size(dat), find(dat ==  54)))=last_reg +16;
+vol(ind2sub(size(dat), find(dat ==  58)))=last_reg +17;
+
 %Output nii file
 Out=[PRD, '/connectivity/aparcaseg_2_diff_', num2str(curr_K), '.nii'];
 
@@ -112,29 +135,53 @@ mat2nii(vol,Out,size(data),32,Msk);
 
 %%%%%%%%%%%%%%%%%
 
-% compute centers
+% compute centers and orientations
 fid = fopen('name_regions.txt');
 name_region = textscan(fid, '%s');
 fclose(fid);
 
-name_region = name_region{1}(2:end);
+load('cortical.txt');
+cortical(find(cortical==0))=false;
+name_region_subcortical = name_region{1}(find(cortical==0));
+name_region_subcortical = name_region_subcortical(2:end);
+name_region_cortical = name_region{1}(find(cortical==1));
 
+load([PRD, SUBJ_ID, '/connectivity/average_orientations.txt']);
+average_orientations = reshape(average_orientations, [88,3]);
+average_orientations_subcortical = average_orientations(find(cortical==0), :);
+average_orientations_subcortical = average_orientations_subcortical(2:end, :);
+average_orientations_cortical = average_orientations(find(cortical==1), :);
+
+name_region = [name_region_cortical; name_region_subcortical];
+average_orientations = [average_orientations_cortical; average_orientations_subcortical];
 list_region = unique(vol);
 list_region = list_region(2:end);
 centres = zeros(size(list_region, 1), 4);  
+orientation_divided = zeros(size(list_region, 1), 3);
 
-for ind_j=1:size(list_region, 1) 
+for ind_j=1:(size(list_region, 1)-size(name_region_subcortical, 1))
     list_region(ind_j); 
     [a, b, c] = ind2sub(size(vol), find(vol==list_region(ind_j))); 
     centres(ind_j, 2:4) = [mean(a), mean(b), mean(c)];
     centres(ind_j, 1) = list_region(ceil(ind_j/curr_K)); 
+    orientation_divided(ind_j, :) = average_orientations(list_region(ceil(ind_j/curr_K)), :); 
+end
+
+for ind_j=(size(list_region, 1)-size(name_region_subcortical, 1)+1):size(list_region, 1) 
+    [a, b, c] = ind2sub(size(vol), find(vol==list_region(ind_j))); 
+    centres(ind_j, 2:4) = [mean(a), mean(b), mean(c)];
+    centres(ind_j, 1) = list_region(ind_j)-(curr_K-1)*70; 
+    orientation_divided(ind_j, :) = average_orientations(list_region(ind_j)-(curr_K-1)*70,:); 
 end
 
 fid = fopen([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/centres.txt'], 'w'); 
+fid2 = fopen([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/average_orientations.txt'], 'w'); 
 for i=1:size(list_region, 1)
 fprintf(fid, '%s %.3f %.3f %.3f\n', name_region{centres(i, 1)}, centres(i,2:4)'); 
+fprintf(fid2, '%.3f %.3f %.3f\n', orientation_divided(i,:)'); 
 end
 fclose(fid);
+fclose(fid2);
 
 % save corr_mat
 fid = fopen([PRD, '/connectivity/corr_mat_', num2str(curr_K),'.txt'], 'w'); 
@@ -144,16 +191,4 @@ fprintf(fid, '%d %d\n', list_region(i), list_region(i));
 end
 fclose(fid);
 
-% compute orientations, juste copying the orientation of the larger region
-load(['average_orientations.txt']);
-average_orientations = reshape(average_orientations, [71,3]);
-average_orientations = average_orientations(2:end,:);
 
-orientation_divided = zeros(size(list_region, 1), 3);
-for i=1:size(list_region, 1)
-   orientation_divided(i, :) = average_orientations(ceil(i/curr_K), :); 
-end
-
-fid = fopen([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/orientations.txt'], 'w'); 
-fprintf(fid, '%.3f %.3f %.3f\n', orientation_divided'); 
-fclose(fid);
