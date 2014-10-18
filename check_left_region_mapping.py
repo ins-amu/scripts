@@ -5,11 +5,10 @@ os.chdir(os.path.join(PRD, 'surface'))
 from copy import deepcopy
 from pylab import *
 from mpl_toolkits.mplot3d import Axes3D
+from collections import Counter
 
-def calculate_connected(texture):
+def calculate_connected(texture, vert, trian):
     "find if the regions are connected components using Breadth-first seach"
-    vert = loadtxt('lh_vertices_low.txt')
-    trian = loadtxt('lh_triangles_low.txt')
     labels = np.unique(texture) 
     res = []
     for ilab in labels:
@@ -31,10 +30,8 @@ def calculate_connected(texture):
         res.append((ilab, ivert.shape[0]-len(V)))
     return res
 
-def find_both_components(texture, labels):
+def find_both_components(texture, vert, trian, ilab):
     " find the two subgraphs"
-    vert = loadtxt('lh_vertices_low.txt')
-    trian = loadtxt('lh_triangles_low.txt')
     ivert = vert[np.nonzero(texture==ilab)]
 
     itrian=[]
@@ -71,11 +68,17 @@ def find_both_components(texture, labels):
 
     return (V1, V2)
 
-def correct_sub_region(wrong_comp):
+def correct_sub_region(texture, trian, Vw):
+    "correct the region mapping for the chosen component"
+    while len(Vw)>0:
+        iVw = Vw.pop()
+        itrian = trian[np.nonzero(trian==iVw)[0]].flatten().tolist()
+        ir = filter(lambda x : x != iVw, itrian)
+        texture[iVw] = Counter(ir).most_common(1) 
+    return texture
 
-def check_region_mapping(texture, param_corr, labels):
-    vert = loadtxt('lh_vertices_low.txt')
-    trian = loadtxt('lh_triangles_low.txt')
+def check_region_mapping(texture, vert, trian):
+    "drawing the region"
     new_texture = deepcopy(texture)
     # labels = np.unique(texture)
     for i in labels:
@@ -119,70 +122,69 @@ def check_region_mapping(texture, param_corr, labels):
                 ax.plot(x_pos, y_pos, z_pos)
                 xlabel('x')
                 ylabel('y')
-            c_withdraw = []
-            change_val = []
-            for indx_curr, vert_curr in enumerate(list_vert):
-                list_pos0, list_pos1 = nonzero(trian==vert_curr)
-                res_curr = []
-                for int_curr in range(len(list_pos0)):
-                    #print int_curr
-                    if list_pos1[int_curr]==0:
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 1]]))
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 2]]))
-                    if list_pos1[int_curr] ==1:
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 0]]))
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 2]]))
-                    if list_pos1[int_curr] ==2:
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 0]]))
-                        res_curr.append(np.round(texture[trian[list_pos0[int_curr], 1]]))
-                if len([x for x in res_curr if x==i])<region_mapping_corr*len(res_curr):
-                    print res_curr
-                    print  vert[vert_curr]
-                    c_withdraw.append(vert[vert_curr])
-                    counter = 0
-                    good_val = 0.0
-                    for curr_val in set(res_curr):
-                        if len([x for x in res_curr if x ==curr_val])>counter:
-                            counter = len([x for x in res_curr if x ==curr_val])
-                            good_val = curr_val
-                    change_val.append(good_val)
-                    print good_val
-                    #print list_vert[indx_curr]
-                    new_texture[np.floor(list_vert[indx_curr])] = good_val
-            if len(c_withdraw)>0:
-                #print c_withdraw
-                c_withdraw = np.array(c_withdraw)
-                ax.scatter(c_withdraw[:,0],c_withdraw[:,1],c_withdraw[:,2], color='b', s=80)
+            #c_withdraw = []
+            #change_val = []
+            #for indx_curr, vert_curr in enumerate(list_vert):
+            #    list_pos0, list_pos1 = nonzero(trian==vert_curr)
+            #    res_curr = []
+            #    for int_curr in range(len(list_pos0)):
+            #        #print int_curr
+            #        if list_pos1[int_curr]==0:
+            #            res_curr.append(np.round(texture[trian[list_pos0[int_curr], 1]]))
+            #            res_curr.append(np.round(texture[trian[list_pos0[int_curr], 2]]))
+            #        if list_pos1[int_curr] ==1:
+            #            res_curr.append(np.round(texture[trian[list_pos0[int_curr], 0]]))
+            #            res_curr.append(np.round(texture[trian[list_pos0[int_curr], 2]]))
+            #        if list_pos1[int_curr] ==2:
+            #            res_curr.append(np.round(texture[trian[list_pos0[int_curr], 0]]))
+            #            res_curr.append(np.round(texture[trian[list_pos0[int_curr], 1]]))
+            #    if len([x for x in res_curr if x==i])<region_mapping_corr*len(res_curr):
+            #        print res_curr
+            #        print  vert[vert_curr]
+            #        c_withdraw.append(vert[vert_curr])
+            #        counter = 0
+            #        good_val = 0.0
+            #        for curr_val in set(res_curr):
+            #            if len([x for x in res_curr if x ==curr_val])>counter:
+            #                counter = len([x for x in res_curr if x ==curr_val])
+            #                good_val = curr_val
+            #        change_val.append(good_val)
+            #        print good_val
+            #        #print list_vert[indx_curr]
+            #        new_texture[np.floor(list_vert[indx_curr])] = good_val
+            #if len(c_withdraw)>0:
+            #    #print c_withdraw
+            #    c_withdraw = np.array(c_withdraw)
+            #    ax.scatter(c_withdraw[:,0],c_withdraw[:,1],c_withdraw[:,2], color='b', s=80)
             show()
-    return new_texture
 
 if __name__ == '__main__':
 
-    texture = loadtxt('lh_region_mapping_low.txt')
+    vert = loadtxt('lh_vertices_low.txt')
+    trian = loadtxt('lh_triangles_low.txt')
 
-    while True:
-        res = np.array(calculate_connected(texture))
-        wrong_labels = res[np.where(res[:,1]>0.),0][0]
-        new_texture = check_region_mapping(texture, region_mapping_corr, wrong_labels)
-        
-        choice_user = raw_input("Do you want to get rid of region with:\n"\
-                            "1) %{1} nodes\n"\
-                            "2) %{2} nodes\n"\
-                            "3) continue the pipeline\n".format({1:str(V1), 2:str(v2)}))\
-                            "(answer: 1, 2, 3 or 4)? \n")
+    texture = loadtxt('lh_region_mapping_low.txt')
+    res = np.array(calculate_connected(texture, vert, trian))
+    wrong_labels = res[np.where(res[:,1]>0.),0][0]
+    if size(wrong_labels)=0; quit()
+    for iwrong in res.shape:
+        (V1, V2) = find_both_components(texture, vert, trian, iwrong):
+        check_region_mapping(texture, vert, trian)
+    
+        choice_user = raw_input("""Do you want to get rid of region with:\n\
+                            1) %{1} nodes\n\
+                            2) %{2} nodes\n\
+                            3) continue the pipeline anyway\n\
+                            (answer: 1, 2, or 3)? \n"""
+                            .format({1:str(V1), 2:str(V2)}))\
         print "you chose " + choice_user
         if int(choice_user)==3:
             print "keep that correction"
             savetxt('lh_region_mapping_low.txt', new_texture)
-            quit()
         elif int(choice_user)==1:
-            print('rerun with another value')
-            param_corr = np.float(raw_input('enter new value for the correction parameter: \n'))
+            new_texture  =  correct_sub_region(texture, wrong_labels[0])
         elif  int(choice_user)==2:
-            print('run another time with same correction value')
-            texture = deepcopy(new_texture)
-        elif int(choice_user)==4:
-            print('run another time with new correction value')
-            param_corr = np.float(raw_input('enter new value for the correction parameter: \n'))
-            texture = deepcopy(new_texture)
-
+            new_texture =  correct_sub_region(texture, wrong_labels[1])
+        else: 
+            print('please choose 1, 2, or 3')
+        savetxt('lh_region_mapping_low.txt', new_texture)
