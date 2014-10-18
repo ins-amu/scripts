@@ -82,7 +82,7 @@ then
 echo "generating the left region mapping on the decimated surface"
 if [ -n "$matlab" ]
 then
-$matlab -r "run left_region_mapping.m; quit;" -nodesktop -nodisplay
+$matlab -r "rl='lh';run region_mapping.m; quit;" -nodesktop -nodisplay
 else
 sh left_region_mapping/distrib/run_left_region_mapping.sh $MCR
 fi
@@ -93,12 +93,8 @@ if [ ! -f $PRD/surface/lh_region_mapping_low.txt ]
 then
 echo "correct the left region mapping"
 python correct_region_mapping.py lh
-# check
-if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ] 
-then
 echo "check left region mapping"
 python check_region_mapping.py lh
-fi
 fi
 
 ###################################### right hemisphere
@@ -125,7 +121,7 @@ $BV/bin/python transform_mesh_high.py rh
 #  decimation
 $BV/bin/AimsMeshDecimation $PRD/surface/rh_mesh_high.mesh $PRD/surface/rh_mesh_low.mesh
 # export to list vertices triangles
-$BV/bin/python export_to_vertices.py lh
+$BV/bin/python export_to_vertices.py rh
 fi
 
 if [ ! -f $PRD/surface/rh_region_mapping_low_not_corrected.txt ]
@@ -134,7 +130,7 @@ echo "generating the right region mapping on the decimated surface"
 # create left the region mapping
 if [ -n "$matlab" ]
 then
-$matlab -r "run right_region_mapping.m; quit;" -nodesktop -nodisplay
+$matlab -r "rl='rh'; run region_mapping.m; quit;" -nodesktop -nodisplay
 else
 sh right_region_mapping/distrib/run_right_region_mapping.sh $MCR
 fi
@@ -145,12 +141,8 @@ if [ ! -f $PRD/surface/rh_region_mapping_low.txt ]
 then
 echo " correct the right region mapping"
 python correct_region_mapping.py rh
-# check
-if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
-then
 echo "check right region mapping"
 python check_region_mapping.py rh
-fi
 fi
 ###################################### both hemisphere
 # prepare final directory
