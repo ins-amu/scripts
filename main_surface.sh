@@ -197,13 +197,19 @@ fi
 
 if [ ! -f $PRD/connectivity/mask.mif ]
 then
-dwi2mask $PRD/connectivity/dwi.mif $PRD/connectivity/mask.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
+dwi2mask $PRD/connectivity/dwi.mif $PRD/connectivity/mask.mif -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals
 fi
 
-if [ ! -f $PRD/connectivity/lowb.nii.gz ]
+if [ ! -f $PRD/connectivity/lowb.nii ]
 then
+if [ -f $PRD/data/DWI/*.nii ]
+then
+dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif -bzero -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals
+mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii 
+else
 dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif -bzero
-mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz 
+mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii 
+fi
 fi
 
 # FLIRT registration
@@ -233,17 +239,17 @@ fslview $PRD/connectivity/T1.nii $PRD/connectivity/aparc+aseg_reorient -l "Cool"
 fi
 fi
 
-if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
+if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii ]
 then
 echo " register aparc+aseg to diff"
-flirt -in $PRD/connectivity/lowb.nii.gz -ref $PRD/connectivity/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
+flirt -in $PRD/connectivity/lowb.nii -ref $PRD/connectivity/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
 convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
-flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparcaseg_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
 
 if [ ! -f $PRD/connectivity/T1_2_diff.nii ]
 then
 echo " register aparc+aseg to diff"
-flirt -applyxfm -in $PRD/connectivity/T1.nii -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/T1_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+flirt -applyxfm -in $PRD/connectivity/T1.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/T1_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
 fi
 
 # check parcellation to diff
@@ -252,7 +258,7 @@ then
 echo "check parcellation registration to diffusion space"
 echo "if it's correct, just close the window. Otherwise you will have to
 do the registration by hand"
-fslview $PRD/connectivity/lowb.nii.gz $PRD/connectivity/aparcaseg_2_diff -l "Cool"
+fslview $PRD/connectivity/lowb.nii $PRD/connectivity/aparcaseg_2_diff -l "Cool"
 fi
 fi
 
@@ -293,7 +299,7 @@ echo "generating tracks using act"
 tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 150
 else
 echo "generating tracks without using act" 
-tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii.gz -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals -mask $PRD/connectivity/mask.mif -maxlength 150 -num $number_tracks
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals -mask $PRD/connectivity/mask.mif -maxlength 150 -num $number_tracks
 fi
 fi
 
@@ -317,7 +323,7 @@ fi
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.mif ]
 then
 echo " compute labels"
-labelconfig $PRD/connectivity/aparcaseg_2_diff.nii.gz fs_region.txt $PRD/connectivity/aparcaseg_2_diff.mif -lut_freesurfer $FREESURFER_HOME/FreeSurferColorLUT.txt
+labelconfig $PRD/connectivity/aparcaseg_2_diff.nii fs_region.txt $PRD/connectivity/aparcaseg_2_diff.mif -lut_freesurfer $FREESURFER_HOME/FreeSurferColorLUT.txt
 fi
 
 if [ ! -f $PRD/connectivity/weights.csv ]
