@@ -61,7 +61,7 @@ fi
 if [ ! -f $PRD/surface/lh_vertices_high.txt ]
 then
 echo "extracting left vertices and triangles"
-python left_extract_high.py
+python extract_high.py lh
 fi
 
 # decimation using brainvisa
@@ -69,11 +69,11 @@ if [ ! -f $PRD/surface/lh_vertices_low.txt ]
 then
 echo "left decimation using brainvisa"
 # -> to mesh
-$BV/bin/python left_transform_mesh_high.py
+$BV/bin/python transform_mesh_high.py lh
 #  decimation
 $BV/bin/AimsMeshDecimation $PRD/surface/lh_mesh_high.mesh $PRD/surface/lh_mesh_low.mesh
 # export to list vertices triangles
-$BV/bin/python left_export_to_vertices.py
+$BV/bin/python export_to_vertices.py lh
 fi
 
 # create left the region mapping
@@ -92,12 +92,12 @@ fi
 if [ ! -f $PRD/surface/lh_region_mapping_low.txt ]
 then
 echo "correct the left region mapping"
-python correct_left_region_mapping.py
+python correct_region_mapping.py lh
 # check
 if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ] 
 then
 echo "check left region mapping"
-python check_left_region_mapping.py
+python check_region_mapping.py lh
 fi
 fi
 
@@ -113,7 +113,7 @@ fi
 if [ ! -f $PRD/surface/rh_vertices_high.txt ]
 then
 echo "extracting right vertices and triangles"
-python right_extract_high.py
+python extract_high.py rh
 fi
 
 # decimation using brainvisa
@@ -121,11 +121,11 @@ if [ ! -f $PRD/surface/rh_vertices_low.txt ]
 then
 echo "right decimation using brainvisa"
 # -> to mesh
-$BV/bin/python right_transform_mesh_high.py
+$BV/bin/python transform_mesh_high.py rh
 #  decimation
 $BV/bin/AimsMeshDecimation $PRD/surface/rh_mesh_high.mesh $PRD/surface/rh_mesh_low.mesh
 # export to list vertices triangles
-$BV/bin/python right_export_to_vertices.py
+$BV/bin/python export_to_vertices.py lh
 fi
 
 if [ ! -f $PRD/surface/rh_region_mapping_low_not_corrected.txt ]
@@ -144,12 +144,12 @@ fi
 if [ ! -f $PRD/surface/rh_region_mapping_low.txt ]
 then
 echo " correct the right region mapping"
-python correct_right_region_mapping.py
+python correct_region_mapping.py rh
 # check
 if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
 then
 echo "check right region mapping"
-python check_right_region_mapping.py
+python check_region_mapping.py rh
 fi
 fi
 ###################################### both hemisphere

@@ -88,4 +88,7 @@ export number_tracks=10
 # use topup and eddy distortion correction
 
 # use Anatomically Constrained Tractography
-export act=no
+export act=yes
+
+# using Spherical-deconvolution informed filtering of tractograms
+export sift=yes
