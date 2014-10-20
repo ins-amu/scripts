@@ -35,17 +35,17 @@ exit 1
 fi
 
 ######### build cortical surface and region mapping
-if [ ! -f $PRD/data/T1/T1.nii ]
+if [ ! -f $PRD/data/T1/T1.nii.gz ]
 then
 echo "generating T1 from DICOM"
-mrconvert $PRD/data/T1/ $PRD/data/T1/T1.nii
+mrconvert $PRD/data/T1/ $PRD/data/T1/T1.nii.gz
 fi
 
 ###################### freesurfer
 if [ ! -d $FS/$SUBJ_ID ] 
 then
 echo "running recon-all of freesurfer"
-recon-all -i $PRD/data/T1/T1.nii -s $SUBJ_ID -all
+recon-all -i $PRD/data/T1/T1.nii.gz -s $SUBJ_ID -all
 fi
 
 ###################################### left hemisphere
@@ -157,11 +157,11 @@ python reunify_both_regions.py
 fi
 
 # zip to put in final format
-pushd .
+pushd . > /dev/null
 cd $PRD/$SUBJ_ID/surface > /dev/null
 zip $PRD/$SUBJ_ID/surface.zip vertices.txt triangles.txt
 cp region_mapping.txt ..
-popd
+popd > /dev/null
 
 ########################### subcortical surfaces
 # extract subcortical surfaces 
@@ -290,7 +290,7 @@ echo "prepare files for act"
 fi
 
 # tractography
-if [ ! -f $PRD/connectivity/whole_brain_act.tck ]
+if [ ! -f $PRD/connectivity/whole_brain.tck ]
 then
 if [ "$act" = "yes" ]
 then
@@ -299,7 +299,7 @@ echo "generating tracks using act"
 tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 150
 else
 echo "generating tracks without using act" 
-tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii -mask $PRD/connectivity/mask.mif -maxlength 150 -num $number_tracks
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii.gz -mask $PRD/connectivity/mask.mif -maxlength 150 -num $number_tracks
 fi
 fi
 
@@ -323,7 +323,7 @@ fi
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.mif ]
 then
 echo " compute labels"
-labelconfig $PRD/connectivity/aparcaseg_2_diff.nii fs_region.txt $PRD/connectivity/aparcaseg_2_diff.mif -lut_freesurfer $FREESURFER_HOME/FreeSurferColorLUT.txt
+labelconfig $PRD/connectivity/aparcaseg_2_diff.nii.gz fs_region.txt $PRD/connectivity/aparcaseg_2_diff.mif -lut_freesurfer $FREESURFER_HOME/FreeSurferColorLUT.txt
 fi
 
 if [ ! -f $PRD/connectivity/weights.csv ]
@@ -346,10 +346,10 @@ python compute_connectivity_files.py
 fi
 
 # zip to put in final format
-pushd .
+pushd . > /dev/null
 cd $PRD/$SUBJ_ID/connectivity > /dev/null
 zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt weights.txt tract_lengths.txt cortical.txt centres.txt
-popd
+popd > /dev/null 
 
 ###################################################
 # compute sub parcellations connectivity if asked
@@ -360,20 +360,22 @@ mkdir -p $PRD/$SUBJ_ID/connectivity_"$curr_K"
 
 if [ -n "$matlab" ]  
 then
-    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii ]
+    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz ]
     then
     $matlab -r "run subparcel.m; quit;" -nodesktop -nodisplay 
+    gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
     fi
 else
-    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii ]
+    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz ]
     then
     sh subparcel/distrib/run_subparcel.sh $MCR  
+    gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
     fi
 fi
 
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif ]
 then
-labelconfig $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii $PRD/connectivity/corr_mat_"$curr_K".txt $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif  -lut_basic $PRD/connectivity/corr_mat_"$curr_K".txt
+labelconfig $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz $PRD/connectivity/corr_mat_"$curr_K".txt $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif  -lut_basic $PRD/connectivity/corr_mat_"$curr_K".txt
 fi
 
 if [ ! -f $PRD/connectivity/weights_$curr_K.csv ]
@@ -389,29 +391,30 @@ echo "generate files for TVB subparcellations"
 python compute_connectivity_sub.py
 fi
 
-pushd .
+pushd . > /dev/null
 cd $PRD/$SUBJ_ID/connectivity_"$curr_K" > /dev/null
 zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt orientations.txt
-popd
+popd > /dev/null
 fi
 
 # compute MEG and EEG forward projection matrices
 # make BEM surfaces
-if [ ! -f ${FS}/${SUBJ_ID}/bem/inner-skull.surf ]
+if [ ! -f ${FS}/${SUBJ_ID}/bem/inner_skull.surf ]
 then
-mne_watershed_bem -subject ${SUBJ_ID}
+echo "generating bem surfaces"
+mne_watershed_bem --subject ${SUBJ_ID}
 ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_inner_skull_surface ${FS}/${SUBJ_ID}/bem/inner_skull.surf
 ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skin_surface  ${FS}/${SUBJ_ID}/bem/outer_skin.surf
 ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skull_surface ${FS}/${SUBJ_ID}/bem/outer_skull.surf
 fi
 
 # export to ascii
-if [ ! -f ${FS}/${SUBJ_ID}/bem/rh.inner_skull.asc ]
+if [ ! -f ${FS}/${SUBJ_ID}/bem/inner_skull.asc ]
 then
 echo "importing bem surface from freesurfer"
-mris_convert $FS/$SUBJ_ID/bem/inner_skull.surf $FS/$SUBJ_ID/inner_skull.asc
-mris_convert $FS/$SUBJ_ID/bem/outer_skull.surf $FS/$SUBJ_ID/outer_skull.asc
-mris_convert $FS/$SUBJ_ID/bem/outer_skin.surf $FS/$SUBJ_ID/outer_skin.asc
+mris_convert $FS/$SUBJ_ID/bem/inner_skull.surf $FS/$SUBJ_ID/bem/inner_skull.asc
+mris_convert $FS/$SUBJ_ID/bem/outer_skull.surf $FS/$SUBJ_ID/bem/outer_skull.asc
+mris_convert $FS/$SUBJ_ID/bem/outer_skin.surf $FS/$SUBJ_ID/bem/outer_skin.asc
 fi
 
 # triangles and vertices bem
@@ -420,24 +423,30 @@ then
 echo "extracting bem vertices and triangles"
 python extract_bem.py inner_skull 
 python extract_bem.py outer_skull 
-python extract_bem.py outer_skull 
+python extract_bem.py outer_skin 
 fi
 
-if [ ! -f ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif
+if [ ! -f ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif ]
 then
-
 mkheadsurf -s $SUBJ_ID
-
-
 mne_surf2bem --surf ${FS}/${SUBJ_ID}/surf/lh.seghead --id 4 --check --fif ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif 
-
 fi
 
 if [ "$CHECK" = "yes" ]
 then
-tkmedit ${SUBJ_ID} T1.mgz -surface ${FS}/${SUBJ_ID}/bem/inner_skull.surf ${FS}/${SUBJ_ID}/bem/outer_skull.surf ${FS}/${SUBJ_ID}/bem/outer_skin.surf
+echo "check bem surfaces"
+freeview -v ${FS}/${SUBJ_ID}/mri/T1.mgz -f ${FS}/${SUBJ_ID}/bem/inner_skull.surf:color=yellow:edgecolor=yellow ${FS}/${SUBJ_ID}/bem/outer_skull.surf:color=blue:edgecolor=blue ${FS}/${SUBJ_ID}/bem/outer_skin.surf:color=red:edgecolor=red
 fi
 
 # Setup BEM
-if 
-mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4
+if [ ! -f ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-5120-5120-5120-bem.fif ]
+then
+worked=0
+outershift=0
+while [ $worked==0 ]
+do
+worked=1
+mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift $outershift || echo 'you can try using a different shifting value for outer skull, please enter a value in mm'; read outershift; worked=0
+done
+fi
+
