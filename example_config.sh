@@ -71,9 +71,9 @@ export lmax=6
 # This parameter is important for the correction of the region mapping. Between 0 and 1. The bigger it is, the bigger is the correction. (only import for the surface pipeline: main_surface.sh)
 export region_mapping_corr="0.42"
 
-# number of tracks (divided by 100.000) used in the tractography step.
+# number of tracks used in the tractography step.
 # note that you will have less tracks at the end.
-export number_tracks=10
+export number_tracks=5000000
 
 # if you want subdivided parcellations, you can set the folowing value
 # according to the following table
@@ -91,4 +91,5 @@ export number_tracks=10
 export act=yes
 
 # using Spherical-deconvolution informed filtering of tractograms
+# note that the number of tracts will be divided by 2
 export sift=yes

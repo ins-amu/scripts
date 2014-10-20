@@ -158,7 +158,7 @@ fi
 
 # zip to put in final format
 pushd .
-cd $PRD/$SUBJ_ID/surface
+cd $PRD/$SUBJ_ID/surface > /dev/null
 zip $PRD/$SUBJ_ID/surface.zip vertices.txt triangles.txt
 cp region_mapping.txt ..
 popd
@@ -181,9 +181,9 @@ mkdir -p $PRD/$SUBJ_ID/connectivity
 # mrconvert
 if [ ! -f $PRD/connectivity/dwi.mif ]
 then
-if [ -f $PRD/data/DWI/*.nii ]
+if [ -f $PRD/data/DWI/*.nii.gz ]
 then
-ls $PRD/data/DWI/ | grep '.nii$' | xargs -I {} mrconvert $PRD/data/DWI/{} $PRD/connectivity/dwi.mif 
+ls $PRD/data/DWI/ | grep '.nii.gz$' | xargs -I {} mrconvert $PRD/data/DWI/{} $PRD/connectivity/dwi.mif 
 else
 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.mif
 fi
@@ -200,56 +200,56 @@ then
 dwi2mask $PRD/connectivity/dwi.mif $PRD/connectivity/mask.mif -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals
 fi
 
-if [ ! -f $PRD/connectivity/lowb.nii ]
+if [ ! -f $PRD/connectivity/lowb.nii.gz ]
 then
-if [ -f $PRD/data/DWI/*.nii ]
+if [ -f $PRD/data/DWI/*.nii.gz ]
 then
 dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif -bzero -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals
-mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii 
+mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz 
 else
 dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif -bzero
-mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii 
+mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz 
 fi
 fi
 
 # FLIRT registration
 #Diff to T1
-if [ ! -f $PRD/connectivity/T1.nii ]
+if [ ! -f $PRD/connectivity/T1.nii.gz ]
 then
 echo "generating good orientation for T1"
-mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/T1.mgz $PRD/connectivity/T1.nii
+mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/T1.mgz $PRD/connectivity/T1.nii.gz
 fi
-if [ ! -f $PRD/connectivity/aparc+aseg.nii ]
+if [ ! -f $PRD/connectivity/aparc+aseg.nii.gz ]
 then
 echo " getting aparc+aseg"
-mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/aparc+aseg.mgz $PRD/connectivity/aparc+aseg.nii
+mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/aparc+aseg.mgz $PRD/connectivity/aparc+aseg.nii.gz
 fi
 
 
-if [ ! -f $PRD/connectivity/aparc+aseg_reorient.nii ]
+if [ ! -f $PRD/connectivity/aparc+aseg_reorient.nii.gz ]
 then
 echo "reorienting the region parcellation"
-fslreorient2std $PRD/connectivity/aparc+aseg.nii $PRD/connectivity/aparc+aseg_reorient.nii
+fslreorient2std $PRD/connectivity/aparc+aseg.nii.gz $PRD/connectivity/aparc+aseg_reorient.nii.gz
 # check parcellation to T1
 if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
 then
 echo "check parcellation"
 echo " if it's correct, just close the window. Otherwise... well, it should be correct anyway"
-fslview $PRD/connectivity/T1.nii $PRD/connectivity/aparc+aseg_reorient -l "Cool"
+fslview $PRD/connectivity/T1.nii.gz $PRD/connectivity/aparc+aseg_reorient.nii.gz -l "Cool"
 fi
 fi
 
-if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii ]
+if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
 then
 echo " register aparc+aseg to diff"
-flirt -in $PRD/connectivity/lowb.nii -ref $PRD/connectivity/T1.nii -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
+flirt -in $PRD/connectivity/lowb.nii.gz -ref $PRD/connectivity/T1.nii.gz -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii.gz -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
 convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
-flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/aparcaseg_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
 
-if [ ! -f $PRD/connectivity/T1_2_diff.nii ]
+if [ ! -f $PRD/connectivity/T1_2_diff.nii.gz ]
 then
 echo " register aparc+aseg to diff"
-flirt -applyxfm -in $PRD/connectivity/T1.nii -ref $PRD/connectivity/lowb.nii -out $PRD/connectivity/T1_2_diff.nii -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+flirt -applyxfm -in $PRD/connectivity/T1.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/T1_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
 fi
 
 # check parcellation to diff
@@ -258,7 +258,7 @@ then
 echo "check parcellation registration to diffusion space"
 echo "if it's correct, just close the window. Otherwise you will have to
 do the registration by hand"
-fslview $PRD/connectivity/lowb.nii $PRD/connectivity/aparcaseg_2_diff -l "Cool"
+fslview $PRD/connectivity/lowb.nii.gz $PRD/connectivity/aparcaseg_2_diff -l "Cool"
 fi
 fi
 
@@ -266,7 +266,7 @@ fi
 if [ ! -f $PRD/connectivity/response.txt ]
 then
 echo "estimating response"
-if [ -f $PRD/data/DWI/*.nii ]
+if [ -f $PRD/data/DWI/*.nii.gz ]
 then
 dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals
 else
@@ -286,7 +286,7 @@ fi
 if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]
 then
 echo "prepare files for act"
-/home/tim/Work/Soft/mrtrix3/scripts/act_anat_prepare_fsl $PRD/connectivity/T1_2_diff.nii $PRD/connectivity/act.mif
+/home/tim/Work/Soft/mrtrix3/scripts/act_anat_prepare_fsl $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/act.mif -verbose
 fi
 
 # tractography
@@ -295,11 +295,11 @@ then
 if [ "$act" = "yes" ]
 then
 echo "generating tracks using act" 
-5tt2gmwmi $PRD/connectivity/act.mif $PRD/connectivity/gmwmi_mask.mif
-tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 150
+5tt2gmwmi --info $PRD/connectivity/act.mif $PRD/connectivity/gmwmi_mask.mif
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 150
 else
 echo "generating tracks without using act" 
-tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals -mask $PRD/connectivity/mask.mif -maxlength 150 -num $number_tracks
+tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii -mask $PRD/connectivity/mask.mif -maxlength 150 -num $number_tracks
 fi
 fi
 
@@ -347,7 +347,7 @@ fi
 
 # zip to put in final format
 pushd .
-cd $PRD/$SUBJ_ID/connectivity
+cd $PRD/$SUBJ_ID/connectivity > /dev/null
 zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt weights.txt tract_lengths.txt cortical.txt centres.txt
 popd
 
@@ -390,7 +390,54 @@ python compute_connectivity_sub.py
 fi
 
 pushd .
-cd $PRD/$SUBJ_ID/connectivity_"$curr_K"
+cd $PRD/$SUBJ_ID/connectivity_"$curr_K" > /dev/null
 zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt orientations.txt
 popd
 fi
+
+# compute MEG and EEG forward projection matrices
+# make BEM surfaces
+if [ ! -f ${FS}/${SUBJ_ID}/bem/inner-skull.surf ]
+then
+mne_watershed_bem -subject ${SUBJ_ID}
+ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_inner_skull_surface ${FS}/${SUBJ_ID}/bem/inner_skull.surf
+ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skin_surface  ${FS}/${SUBJ_ID}/bem/outer_skin.surf
+ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skull_surface ${FS}/${SUBJ_ID}/bem/outer_skull.surf
+fi
+
+# export to ascii
+if [ ! -f ${FS}/${SUBJ_ID}/bem/rh.inner_skull.asc ]
+then
+echo "importing bem surface from freesurfer"
+mris_convert $FS/$SUBJ_ID/bem/inner_skull.surf $FS/$SUBJ_ID/inner_skull.asc
+mris_convert $FS/$SUBJ_ID/bem/outer_skull.surf $FS/$SUBJ_ID/outer_skull.asc
+mris_convert $FS/$SUBJ_ID/bem/outer_skin.surf $FS/$SUBJ_ID/outer_skin.asc
+fi
+
+# triangles and vertices bem
+if [ ! -f $PRD/$SUBJ_ID/surface/inner_skull.txt ]
+then
+echo "extracting bem vertices and triangles"
+python extract_bem.py inner_skull 
+python extract_bem.py outer_skull 
+python extract_bem.py outer_skull 
+fi
+
+if [ ! -f ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif
+then
+
+mkheadsurf -s $SUBJ_ID
+
+
+mne_surf2bem --surf ${FS}/${SUBJ_ID}/surf/lh.seghead --id 4 --check --fif ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif 
+
+fi
+
+if [ "$CHECK" = "yes" ]
+then
+tkmedit ${SUBJ_ID} T1.mgz -surface ${FS}/${SUBJ_ID}/bem/inner_skull.surf ${FS}/${SUBJ_ID}/bem/outer_skull.surf ${FS}/${SUBJ_ID}/bem/outer_skin.surf
+fi
+
+# Setup BEM
+if 
+mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4
