@@ -159,7 +159,7 @@ fi
 # zip to put in final format
 pushd . > /dev/null
 cd $PRD/$SUBJ_ID/surface > /dev/null
-zip $PRD/$SUBJ_ID/surface.zip vertices.txt triangles.txt
+zip $PRD/$SUBJ_ID/surface.zip vertices.txt triangles.txt -q
 cp region_mapping.txt ..
 popd > /dev/null
 
@@ -286,7 +286,7 @@ fi
 if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]
 then
 echo "prepare files for act"
-/home/tim/Work/Soft/mrtrix3/scripts/act_anat_prepare_fsl $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/act.mif -verbose
+/home/tim/Work/Soft/mrtrix3/scripts/act_anat_prepare_fsl $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/act.mif
 fi
 
 # tractography
@@ -295,7 +295,7 @@ then
 if [ "$act" = "yes" ]
 then
 echo "generating tracks using act" 
-5tt2gmwmi --info $PRD/connectivity/act.mif $PRD/connectivity/gmwmi_mask.mif
+5tt2gmwmi $PRD/connectivity/act.mif $PRD/connectivity/gmwmi_mask.mif
 tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 150
 else
 echo "generating tracks without using act" 
@@ -348,7 +348,7 @@ fi
 # zip to put in final format
 pushd . > /dev/null
 cd $PRD/$SUBJ_ID/connectivity > /dev/null
-zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt weights.txt tract_lengths.txt cortical.txt centres.txt
+zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt weights.txt tract_lengths.txt cortical.txt centres.txt -q
 popd > /dev/null 
 
 ###################################################
@@ -393,11 +393,11 @@ fi
 
 pushd . > /dev/null
 cd $PRD/$SUBJ_ID/connectivity_"$curr_K" > /dev/null
-zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt orientations.txt
+zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt average_orientations.txt -q 
 popd > /dev/null
 fi
 
-# compute MEG and EEG forward projection matrices
+######################## compute MEG and EEG forward projection matrices
 # make BEM surfaces
 if [ ! -f ${FS}/${SUBJ_ID}/bem/inner_skull.surf ]
 then
@@ -418,7 +418,7 @@ mris_convert $FS/$SUBJ_ID/bem/outer_skin.surf $FS/$SUBJ_ID/bem/outer_skin.asc
 fi
 
 # triangles and vertices bem
-if [ ! -f $PRD/$SUBJ_ID/surface/inner_skull.txt ]
+if [ ! -f $PRD/$SUBJ_ID/surface/inner_skull_vertices.txt ]
 then
 echo "extracting bem vertices and triangles"
 python extract_bem.py inner_skull 
@@ -428,25 +428,34 @@ fi
 
 if [ ! -f ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif ]
 then
+echo "generating head bem"
 mkheadsurf -s $SUBJ_ID
 mne_surf2bem --surf ${FS}/${SUBJ_ID}/surf/lh.seghead --id 4 --check --fif ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif 
 fi
 
-if [ "$CHECK" = "yes" ]
+if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
 then
 echo "check bem surfaces"
 freeview -v ${FS}/${SUBJ_ID}/mri/T1.mgz -f ${FS}/${SUBJ_ID}/bem/inner_skull.surf:color=yellow:edgecolor=yellow ${FS}/${SUBJ_ID}/bem/outer_skull.surf:color=blue:edgecolor=blue ${FS}/${SUBJ_ID}/bem/outer_skin.surf:color=red:edgecolor=red
 fi
 
 # Setup BEM
-if [ ! -f ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-5120-5120-5120-bem.fif ]
+if [ ! -f ${FS}/${SUBJ_ID}/bem/*-bem-sol.fif ]
 then
 worked=0
 outershift=0
-while [ $worked==0 ]
+while [ "$worked" == 0 ]
 do
 worked=1
-mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift $outershift || echo 'you can try using a different shifting value for outer skull, please enter a value in mm'; read outershift; worked=0
+mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift $outershift || worked=0 
+if [ "$worked" == 0 ]
+then
+echo 'you can try using a different shifting value for outer skull, please enter a value in mm'
+read outershift;
+echo $outershift
+else
+    echo "success!"
+fi
 done
 fi
 
