@@ -275,7 +275,7 @@ fi
 if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]
 then
 echo "prepare files for act"
-/home/tim/Work/Soft/mrtrix3/scripts/act_anat_prepare_fsl $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/act.mif
+act_anat_prepare_fsl $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/act.mif
 fi
 
 # tractography
