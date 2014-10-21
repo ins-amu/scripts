@@ -183,7 +183,7 @@ if [ ! -f $PRD/connectivity/dwi.mif ]
 then
 if [ -f $PRD/data/DWI/*.nii.gz ]
 then
-ls $PRD/data/DWI/ | grep '.nii.gz$' | xargs -I {} mrconvert $PRD/data/DWI/{} $PRD/connectivity/dwi.mif 
+ls $PRD/data/DWI/ | grep '.nii.gz$' | xargs -I {} mrconvert $PRD/data/DWI/{} $PRD/connectivity/dwi.mif -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals
 else
 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.mif
 fi
@@ -197,19 +197,13 @@ fi
 
 if [ ! -f $PRD/connectivity/mask.mif ]
 then
-dwi2mask $PRD/connectivity/dwi.mif $PRD/connectivity/mask.mif -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals
+dwi2mask $PRD/connectivity/dwi.mif $PRD/connectivity/mask.mif
 fi
 
 if [ ! -f $PRD/connectivity/lowb.nii.gz ]
 then
-if [ -f $PRD/data/DWI/*.nii.gz ]
-then
-dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif -bzero -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals
-mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz 
-else
 dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif -bzero
 mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz 
-fi
 fi
 
 # FLIRT registration
@@ -266,12 +260,7 @@ fi
 if [ ! -f $PRD/connectivity/response.txt ]
 then
 echo "estimating response"
-if [ -f $PRD/data/DWI/*.nii.gz ]
-then
-dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals -mask $PRD/connectivity/mask.mif
-else
 dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -mask $PRD/connectivity/mask.mif 
-fi
 fi
 
 
@@ -279,7 +268,7 @@ fi
 if [ ! -f $PRD/connectivity/CSD$lmax.mif ]
 then
 echo "calculating fod"
-dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif -fslgrad $PRD/data/DWI/bvecs  $PRD/data/DWI/bvals -bvalue_scaling yes
+dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif
 fi
 
 # prepare file for act
