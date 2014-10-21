@@ -1,3 +1,5 @@
+FS = getenv('FS')
+
 if (~isdeployed)
     addpath([FS, 'matlab'])
 end
@@ -12,7 +14,6 @@ end
 
 PRD = getenv('PRD')
 corr_right = load([rl, '_hemi_ref_table.txt']);
-FS = getenv('FS')
 SUBJ_ID = getenv('SUBJ_ID')
 [v, L, ct] = read_annotation([FS,'/',SUBJ_ID, '/label/', rl, '.aparc.annot']);
 cd(PRD)

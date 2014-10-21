@@ -1,0 +1,17 @@
+Brain-Stem
+Left-Cerebellum-Cortex
+Left-Thalamus-Proper
+Left-Caudate
+Left-Putamen
+Left-Pallidum
+Left-Hippocampus
+Left-Amygdala
+Left-Accumbens-Area
+Right-Cerebellum-Cortex
+Right-Thalamus-Proper
+Right-Caudate
+Right-Putamen
+Right-Pallidum
+Right-Hippocampus
+Right-Amygdala
+Right-Accumbens-Area
