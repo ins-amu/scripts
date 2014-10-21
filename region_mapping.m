@@ -2,6 +2,14 @@ if (~isdeployed)
     addpath([FS, 'matlab'])
 end
 
+if ~exist('rl', 'var')
+    if ~exist([PRD, '/surface/', 'rh.pial.asc'])
+        rl='lh'
+    else
+        rl='rh'
+    end
+end
+
 PRD = getenv('PRD')
 corr_right = load([rl, '_hemi_ref_table.txt']);
 FS = getenv('FS')
