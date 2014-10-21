@@ -1,8 +1,9 @@
+FREESURFER_HOME = getenv('FREESURFER_HOME')
 FS = getenv('FS')
 PRD = getenv('PRD')
 
 if (~isdeployed)
-    addpath([FS, '/matlab'])
+    addpath([FREESURFER_HOME, '/matlab'])
 end
 
 if ~exist('rl', 'var')
