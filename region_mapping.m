@@ -1,7 +1,7 @@
 FS = getenv('FS')
 
 if (~isdeployed)
-    addpath([FS, 'matlab'])
+    addpath([FS, '/matlab'])
 end
 
 if ~exist('rl', 'var')
@@ -13,7 +13,7 @@ if ~exist('rl', 'var')
 end
 
 PRD = getenv('PRD')
-corr_right = load([rl, '_hemi_ref_table.txt']);
+corr_right = load([rl, '_ref_table.txt']);
 SUBJ_ID = getenv('SUBJ_ID')
 [v, L, ct] = read_annotation([FS,'/',SUBJ_ID, '/label/', rl, '.aparc.annot']);
 cd(PRD)
