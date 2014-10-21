@@ -84,7 +84,7 @@ if [ -n "$matlab" ]
 then
 $matlab -r "rl='lh';run region_mapping.m; quit;" -nodesktop -nodisplay
 else
-sh left_region_mapping/distrib/run_left_region_mapping.sh $MCR
+sh region_mapping/distrib/run_region_mapping.sh $MCR
 fi
 fi
 
@@ -132,7 +132,7 @@ if [ -n "$matlab" ]
 then
 $matlab -r "rl='rh'; run region_mapping.m; quit;" -nodesktop -nodisplay
 else
-sh right_region_mapping/distrib/run_right_region_mapping.sh $MCR
+sh region_mapping/distrib/run_region_mapping.sh $MCR
 fi
 fi
 
