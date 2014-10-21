@@ -82,7 +82,7 @@ def check_region_mapping(texture, vert, trian, ilab):
     for itri in ipos[0].tolist():
         itrian.extend(trian[np.nonzero(trian==itri)[0]])
     itrian = np.array(itrian).astype('int')
-    bool_itrian = np.in1d(itrian, ipos).reshape(itrian.shape[0], 3)
+    bool_itrian = np.in1d(itrian, ipos[0]).reshape(itrian.shape[0], 3)
     itrian[np.nonzero(bool_itrian == False)] = 0
     citri = vstack([vstack([itrian[:,0], itrian[:,1]]).T, vstack([itrian[:,1],itrian[:,2]]).T, vstack([itrian[:,2],itrian[:,0]]).T])
     bcitri = (citri!=0).sum(1)
