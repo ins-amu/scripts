@@ -268,9 +268,9 @@ then
 echo "estimating response"
 if [ -f $PRD/data/DWI/*.nii.gz ]
 then
-dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals
+dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals -mask $PRD/connectivity/mask.mif
 else
-dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt
+dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -mask $PRD/connectivity/mask.mif 
 fi
 fi
 
