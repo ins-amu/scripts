@@ -61,12 +61,12 @@ def correct_sub_region(texture, trian, Vw):
     icount = 0
     while len(Vw)>0:
         iVw = Vw.pop()
-        itrian = trian[np.nonzero(trian==iVw)[0]].flatten().tolist()
+        itrian = trian[np.nonzero(trian==iVw)[0]].flatten().astype('int').tolist()
         ir = filter(lambda x : new_texture[x] != new_texture[iVw], itrian)
         if len(ir)>0:
-            new_texture[iVw] = Counter(ir).most_common(1)[0][0] 
+            new_texture[iVw] = new_texture[Counter(ir).most_common(1)[0][0]] 
         else:
-            if icount<10: 
+            if icount<50: 
                 Vw.insert(0, iVw)
                 icount +=1
             else:

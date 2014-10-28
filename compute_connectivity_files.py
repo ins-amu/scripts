@@ -168,7 +168,6 @@ if __name__ == '__main__':
 
     # compute centers
     centers = compute_region_center_cortex(verts, region_mapping)
-    import pdb; pdb.set_trace()
 
     # calculate average orientations
     number_of_vertices = int(verts.shape[0])
