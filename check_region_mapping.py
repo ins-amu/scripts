@@ -92,9 +92,8 @@ def check_region_mapping(texture, vert, trian, ilab):
     ax = fig.add_subplot(111, projection='3d') 
     xlabel('x')
     ylabel('y')
-    for iv in np.nditer(valp, flags=['external_loop'], order='C'):
-        ax.plot(vert[iv, 0], vert[iv, 1], vert[iv, 2])
-
+    for iv in np.arange(valp.shape[0]):
+        ax.plot(vert[valp[iv], 0], vert[valp[iv], 1], vert[valp[iv], 2])
     # old function
     # xitrians = vert[np.hstack((itrian, itrian[:,0][:, newaxis])), 0]
     # yitrians = vert[np.hstack((itrian, itrian[:,0][:, newaxis])), 1]
@@ -110,6 +109,7 @@ def check_region_mapping(texture, vert, trian, ilab):
 if __name__ == '__main__':
 
     rl = sys.argv[1]
+    
     vert = loadtxt(rl+'_vertices_low.txt')
     trian = loadtxt(rl+'_triangles_low.txt')
     texture = loadtxt(rl + '_region_mapping_low.txt')
