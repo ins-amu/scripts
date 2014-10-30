@@ -126,25 +126,32 @@ if __name__ == '__main__':
             if CHECK =="yes" and len(DISPLAY)>0:
                 print "checking"
                 check_region_mapping(texture, vert, trian, iwrong)
-                try:
-                    choice_user = int(raw_input("""Do you want to get rid of region with:\n\
-                                        1) {0} nodes\n\
-                                        2) {1} nodes\n\
-                                        3) continue the pipeline anyway\n\
-                                        (answer: 1, 2, or 3)? \n"""
-                                        .format(len(V1), len(V2))))
-                    print "you chose " + choice_user
-                except:
-                    print 'please choose an integer'
+                i=0
+                while True and i<10:
+                    try:
+                        choice_user = raw_input("""Do you want to get rid of region with:
+                                            1) {0} nodes
+                                            2) {1} nodes
+                                            3) continue the pipeline anyway
+                                            (answer: 1, 2, or 3)? \n""".format(len(V1), len(V2)))
+                        print "you chose " + choice_user
+                        choice_user = int(choice_user)
+                        break 
+                    except ValueError:
+                        print 'please choose an integer'
+                        i += 1
+                        continue
+                else:
+                    print 'failure total, no check mode'
             else:
                 print "no check, selecting automatically the smallest components"
                 choice_user=argmin((len(V1), len(V2)))+1
-            if int(choice_user)==3:
+            if choice_user==3:
                 print "keep that correction"
                 savetxt(rl + '_region_mapping_low.txt', new_texture)
-            elif int(choice_user)==1:
+            elif choice_user==1:
                 texture  =  correct_sub_region(texture, trian, V1)
-            elif  int(choice_user)==2:
+            elif  choice_user==2:
                 texture =  correct_sub_region(texture, trian, V2)
             else: 
                 print('please choose 1, 2, or 3')

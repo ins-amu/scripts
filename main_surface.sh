@@ -192,7 +192,7 @@ fi
 # topup and eddy correction
 if [ "$topup" = "yes" ]
 then
-echo "not implemented yes"
+echo "topup and eddy not implemented yes"
 fi
 
 if [ ! -f $PRD/connectivity/mask.mif ]
