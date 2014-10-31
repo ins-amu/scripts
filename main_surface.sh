@@ -437,11 +437,18 @@ while [ "$worked" == 0 ]
 do
 worked=1
 mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift $outershift || worked=0 
-if [ "$worked" == 0 ]
+if ["$worked" == 0 ]
+then
+mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift 1 || worked=0 
+fi
+if [ "$worked" == 0 ] && [ "$CHECK" = "yes" ]
 then
 echo 'you can try using a different shifting value for outer skull, please enter a value in mm'
 read outershift;
 echo $outershift
+elif [ "$worked" == 0 ]
+then
+echo "bem did not worked"
 else
     echo "success!"
 fi
