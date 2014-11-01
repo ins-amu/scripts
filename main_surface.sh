@@ -67,13 +67,13 @@ fi
 # decimation using brainvisa
 if [ ! -f $PRD/surface/lh_vertices_low.txt ]
 then
-echo "left decimation using brainvisa"
+echo "left decimation using remesher"
 # -> to mesh
-$BV/bin/python transform_mesh_high.py lh
+python txt2off.py $PRD/surface/lh_vertices_high.txt $PRD/surface/lh_triangles_high.txt $PRD/surface/lh_high.off
 #  decimation
-$BV/bin/AimsMeshDecimation $PRD/surface/lh_mesh_high.mesh $PRD/surface/lh_mesh_low.mesh
+./remesher/cmdremesher/cmdremesher $PRD/surface/lh_high.off $PRD/surface/lh_low.off
 # export to list vertices triangles
-$BV/bin/python export_to_vertices.py lh
+python off2txt.py $PRD/surface/lh_low.off $PRD/surface/lh_vertices_low.txt $PRD/surface/lh_triangles_low.txt
 fi
 
 # create left the region mapping
@@ -115,13 +115,13 @@ fi
 # decimation using brainvisa
 if [ ! -f $PRD/surface/rh_vertices_low.txt ]
 then
-echo "right decimation using brainvisa"
+echo "right decimation using remesher"
 # -> to mesh
-$BV/bin/python transform_mesh_high.py rh
+python txt2off.py $PRD/surface/rh_vertices_high.txt $PRD/surface/rh_triangles_high.txt $PRD/surface/rh_high.off
 #  decimation
-$BV/bin/AimsMeshDecimation $PRD/surface/rh_mesh_high.mesh $PRD/surface/rh_mesh_low.mesh
+./remesher/cmdremesher/cmdremesher $PRD/surface/rh_high.off $PRD/surface/rh_low.off
 # export to list vertices triangles
-$BV/bin/python export_to_vertices.py rh
+python off2txt.py $PRD/surface/rh_low.off $PRD/surface/rh_vertices_low.txt $PRD/surface/rh_triangles_low.txt
 fi
 
 if [ ! -f $PRD/surface/rh_region_mapping_low_not_corrected.txt ]
@@ -437,7 +437,7 @@ while [ "$worked" == 0 ]
 do
 worked=1
 mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift $outershift || worked=0 
-if ["$worked" == 0 ]
+if [ "$worked" == 0 ]
 then
 mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift 1 || worked=0 
 fi
