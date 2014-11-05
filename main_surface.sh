@@ -342,8 +342,10 @@ popd > /dev/null
 
 ###################################################
 # compute sub parcellations connectivity if asked
-if [ -n "$K" ]
+if [ -n "$K_list" ]
 then
+for K in $K_list
+do
 export curr_K=$(( 2**K ))
 mkdir -p $PRD/$SUBJ_ID/connectivity_"$curr_K"
 
@@ -384,6 +386,7 @@ pushd . > /dev/null
 cd $PRD/$SUBJ_ID/connectivity_"$curr_K" > /dev/null
 zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt average_orientations.txt -q 
 popd > /dev/null
+done
 fi
 
 ######################## compute MEG and EEG forward projection matrices
@@ -429,29 +432,34 @@ freeview -v ${FS}/${SUBJ_ID}/mri/T1.mgz -f ${FS}/${SUBJ_ID}/bem/inner_skull.surf
 fi
 
 # Setup BEM
-if [ ! -f ${FS}/${SUBJ_ID}/bem/*-bem-sol.fif ]
+if [ ! -f ${FS}/${SUBJ_ID}/bem/*-bem.fif ]
 then
-worked=0
-outershift=0
-while [ "$worked" == 0 ]
-do
-worked=1
-mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift $outershift || worked=0 
-if [ "$worked" == 0 ]
-then
-mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift 1 || worked=0 
-fi
-if [ "$worked" == 0 ] && [ "$CHECK" = "yes" ]
-then
-echo 'you can try using a different shifting value for outer skull, please enter a value in mm'
-read outershift;
-echo $outershift
-elif [ "$worked" == 0 ]
-then
-echo "bem did not worked"
-else
-    echo "success!"
-fi
-done
+    worked=0
+    outershift=0
+    while [ "$worked" == 0 ]
+    do
+        echo "try generate forward model with 0 shift"
+        worked=1
+        mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift $outershift || worked=0 
+        if [ "$worked" == 0 ]
+        then
+            echo "try generate foward model with 1 shift"
+            worked=1
+            mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift 1 || worked=0 
+        fi
+        if [ "$worked" == 0 ] && [ "$CHECK" = "yes" ]
+        then
+            echo 'you can try using a different shifting value for outer skull, please enter a value in mm'
+            read outershift;
+            echo $outershift
+        elif [ "$worked" == 0 ]
+        then
+            echo "bem did not worked"
+            worked=1
+        elif [ "$worked" == 1 ]
+        then
+            echo "success!"
+        fi
+    done
 fi
 

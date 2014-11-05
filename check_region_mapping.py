@@ -2,7 +2,10 @@ import os
 import sys
 PRD = os.environ['PRD']
 CHECK = os.environ['CHECK']
-DISPLAY = os.environ['DISPLAY']
+if "DISPLAY" in os.environ:
+    DISPLAY = os.environ['DISPLAY']
+else:
+    DISPLAY = ""
 region_mapping_corr = float(os.environ['region_mapping_corr'])
 os.chdir(os.path.join(PRD, 'surface'))
 from copy import deepcopy
