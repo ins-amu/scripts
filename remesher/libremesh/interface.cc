@@ -262,6 +262,24 @@ Interface::clean_reference_mesh (void)
 /* ---------------------------------------------------------------- */
 
 void
+Interface::clean_evolving_mesh (void)
+{
+  this->assure_evolving_mesh();
+  if (this->evolving_vinfo->empty())
+    this->evolving_vinfo->calc_for_mesh(this->evolving_mesh);
+
+  MeshCleanup mc(this->evolving_mesh);
+  mc.set_vertex_info(this->evolving_vinfo);
+  mc.cleanup_mesh(MY_FLT_EPS);
+
+  this->evolving_vinfo->clear();
+  this->evolving_mesh->ensure_normals();
+}
+
+
+/* ---------------------------------------------------------------- */
+
+void
 Interface::clean_duplicated_vertices (void)
 {
   this->assure_reference_mesh();

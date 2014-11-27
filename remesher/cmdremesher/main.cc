@@ -138,7 +138,10 @@ main (int argc, char** argv)
         iface.exec_lloyd();
         lloyd_time = t_lloyd.get_elapsed();
     }
-
+    // reclean resulting mesh
+    {
+        iface.clean_evolving_mesh();
+    }
     // Saving
     {
         Remesher::TriangleMeshPtr mesh(iface.get_evolving_mesh());

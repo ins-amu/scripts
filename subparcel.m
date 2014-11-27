@@ -108,12 +108,12 @@ end
 last_reg = max(vol(:));
 mask_unprocessed = load_untouch_nii([PRD, '/connectivity/aparcaseg_2_diff.nii.gz']); 
 dat = mask_unprocessed.img;
-vol(ind2sub(size(dat), find(dat ==   8)))=last_reg +1;
-vol(ind2sub(size(dat), find(dat ==  10)))=last_reg +2;
-vol(ind2sub(size(dat), find(dat ==  11)))=last_reg +3;
-vol(ind2sub(size(dat), find(dat ==  12)))=last_reg +4;
-vol(ind2sub(size(dat), find(dat ==  13)))=last_reg +5;
-vol(ind2sub(size(dat), find(dat ==  16)))=last_reg +6;
+vol(ind2sub(size(dat), find(dat ==  16)))=last_reg +1;
+vol(ind2sub(size(dat), find(dat ==   8)))=last_reg +2;
+vol(ind2sub(size(dat), find(dat ==  10)))=last_reg +3;
+vol(ind2sub(size(dat), find(dat ==  11)))=last_reg +4;
+vol(ind2sub(size(dat), find(dat ==  12)))=last_reg +5;
+vol(ind2sub(size(dat), find(dat ==  13)))=last_reg +6;
 vol(ind2sub(size(dat), find(dat ==  17)))=last_reg +7;
 vol(ind2sub(size(dat), find(dat ==  18)))=last_reg +8;
 vol(ind2sub(size(dat), find(dat ==  26)))=last_reg +9;

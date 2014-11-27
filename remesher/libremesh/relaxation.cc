@@ -124,7 +124,7 @@ Relaxation::handle_all_vertices_parallel (void)
     if (t + 1 == REMESHER_RELAXATION_THREADS)
       end = vamount;
     //std::cout << "Launching thread " << t << " with bounds ["
-        //<< start << ", " << end << "[" << std::endl;
+    //    << start << ", " << end << "[" << std::endl;
     threads[t] = new RelaxationThread(this, start, end);
     threads[t]->pt_create();
   }

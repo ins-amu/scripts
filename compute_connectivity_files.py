@@ -101,7 +101,6 @@ def compute_triangle_normals(triangles, vertices):
     """Calculates triangle normals."""
     tri_u = vertices[triangles[:, 1], :] - vertices[triangles[:, 0], :]
     tri_v = vertices[triangles[:, 2], :] - vertices[triangles[:, 0], :]
-
     tri_norm = numpy.cross(tri_u, tri_v)
 
     try:
@@ -162,7 +161,12 @@ if __name__ == '__main__':
     weights = np.loadtxt(os.path.join(PRD, 'connectivity', 'weights.csv'))
     tract_lengths = np.loadtxt(os.path.join(PRD, 'connectivity', 'tract_lengths.csv'))
     weights = weights + weights.transpose() - np.diag(np.diag(weights))
+    # add the first region
+    weights = np.vstack([np.zeros((1, weights.shape[0])), weights])
+    weights = np.hstack([np.zeros((weights.shape[0], 1)), weights])
     tract_lengths = tract_lengths + tract_lengths.transpose() # because diagonal nul 
+    tract_lengths = np.vstack([np.zeros((1, tract_lengths.shape[0])), tract_lengths]) 
+    tract_lengths = np.hstack([np.zeros((tract_lengths.shape[0], 1)), tract_lengths])
     np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity', 'weights.txt'), weights, fmt='%d')
     np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity', 'tract_lengths.txt'), tract_lengths, fmt='%.3f')
 

@@ -87,6 +87,9 @@ class Interface
     /* Executing the mesh cleanup. */
     void clean_reference_mesh (void);
 
+    /* Executing the evolving mesh cleanup. */
+    void clean_evolving_mesh (void);
+
     /* Remove duplicated vertices. */
     void clean_duplicated_vertices (void);
 

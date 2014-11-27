@@ -39,6 +39,7 @@ end
 clear coor_surf
 
 %Seed nodes
+%pair = datasample(ind_surf, 2, 'Replace', false)
 ind1=find(pair(1)==ind);
 ind2=find(pair(2)==ind);
 

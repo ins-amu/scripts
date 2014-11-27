@@ -361,7 +361,7 @@ MicroDelaunay::get_face_and_bary (Vec2f const& pnt, Vec2f& bary) const
     }
   }
 
-  /* throw Exception("Point not inside a triangle!"); */
+   throw Exception("Point not inside a triangle!"); 
 }
 
 /* ---------------------------------------------------------------- */

@@ -151,7 +151,7 @@ Relocation::get_patch (std::size_t f1, std::size_t f2, std::size_t f3)
     patch2d = Patch2d::create((Patch3dPtr)patch3d);
   }
   catch (Exception& e)
-  { 
+  {
     throw Exception("Error creating 2D patch: " + e);
   }
 
