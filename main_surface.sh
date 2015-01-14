@@ -178,21 +178,28 @@ fi
 mkdir -p $PRD/connectivity
 mkdir -p $PRD/$SUBJ_ID/connectivity
 
+
 # mrconvert
-if [ ! -f $PRD/connectivity/dwi.mif ]
+if [ ! -f $PRD/connectivity/dwi.nii.gz ]
 then
 if [ -f $PRD/data/DWI/*.nii.gz ]
 then
-ls $PRD/data/DWI/ | grep '.nii.gz$' | xargs -I {} mrconvert $PRD/data/DWI/{} $PRD/connectivity/dwi.mif -fslgrad $PRD/data/DWI/bvecs $PRD/data/DWI/bvals
+echo "use already existing nii files"
+ls $PRD/data/DWI/ | grep '.nii.gz$' | xargs -I {} cp $PRD/data/DWI/{} $PRD/connectivity/dwi.nii.gz
 else
-mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.mif
+echo "generate dwi.nii.gz"
+mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.nii.gz
+echo "extract bvecs and bvals"
+mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs $PRD/connectivity/bvals
 fi
 fi
 
-# topup and eddy correction
-if [ "$topup" = "yes" ]
+# eddy correct
+if [ ! -f $PRD/connectivity/dwi.mif ]
 then
-echo "topup and eddy not implemented yes"
+echo "eddy correct data"
+eddy_correct $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi_eddy_corrected.nii.gz 0
+mrconvert $PRD/connectivity/dwi_eddy_corrected.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
 fi
 
 if [ ! -f $PRD/connectivity/mask.mif ]
@@ -236,7 +243,7 @@ fi
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
 then
 echo " register aparc+aseg to diff"
-flirt -in $PRD/connectivity/lowb.nii.gz -ref $PRD/connectivity/T1.nii.gz -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii.gz -dof 6 -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -cost mutualinfo
+flirt -in $PRD/connectivity/lowb.nii.gz -ref $PRD/connectivity/T1.nii.gz -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii.gz -dof 12 -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -cost mutualinfo
 convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
 flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
 
@@ -252,7 +259,7 @@ then
 echo "check parcellation registration to diffusion space"
 echo "if it's correct, just close the window. Otherwise you will have to
 do the registration by hand"
-fslview $PRD/connectivity/lowb.nii.gz $PRD/connectivity/aparcaseg_2_diff -l "Cool"
+fslview $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/lowb.nii.gz $PRD/connectivity/aparcaseg_2_diff -l "Cool"
 fi
 fi
 

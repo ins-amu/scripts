@@ -146,7 +146,7 @@ name_region_subcortical = name_region{1}(find(cortical==0));
 name_region_subcortical = name_region_subcortical(2:end);
 name_region_cortical = name_region{1}(find(cortical==1));
 
-load([PRD, SUBJ_ID, '/connectivity/average_orientations.txt']);
+load([PRD,'/', SUBJ_ID, '/connectivity/average_orientations.txt']);
 average_orientations = reshape(average_orientations, [88,3]);
 average_orientations_subcortical = average_orientations(find(cortical==0), :);
 average_orientations_subcortical = average_orientations_subcortical(2:end, :);
