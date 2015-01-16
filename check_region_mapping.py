@@ -138,10 +138,13 @@ if __name__ == '__main__':
                                             3) continue the pipeline anyway
                                             (answer: 1, 2, or 3)? \n""".format(len(V1), len(V2)))
                         print "you chose " + choice_user
+
                         choice_user = int(choice_user)
+                        if choice_user not in [1, 2, 3]:
+                            raise ValueError
                         break 
                     except ValueError:
-                        print 'please choose an integer'
+                        print 'please choose 1, 2 or 3'
                         i += 1
                         continue
                 else:
@@ -157,6 +160,6 @@ if __name__ == '__main__':
             elif  choice_user==2:
                 texture =  correct_sub_region(texture, trian, V2)
             else: 
-                print('please choose 1, 2, or 3')
+                print('failure of the choice')
 
         savetxt(rl + '_region_mapping_low.txt', texture)
