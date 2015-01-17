@@ -195,11 +195,16 @@ then
 fi
 
 # eddy correct
-if [ ! -f $PRD/connectivity/dwi.mif ]
+if [ ! -f $PRD/connectivity/dwi.mif ] && [ "eddy_correct" = "simple" ]
 then
-    echo "eddy correct data"
-    eddy_correct $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi_eddy_corrected.nii.gz 0
-    mrconvert $PRD/connectivity/dwi_eddy_corrected.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
+    if [ "eddy_correct" =  "simple" ]
+    then
+        echo "eddy correct data"
+        "$FSL"eddy_correct $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi_eddy_corrected.nii.gz 0
+        mrconvert $PRD/connectivity/dwi_eddy_corrected.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
+    else
+        mrconvert $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
+    fi
 fi
 
 if [ ! -f $PRD/connectivity/mask.mif ]
@@ -237,21 +242,21 @@ then
     then
         echo "check parcellation"
         echo " if it's correct, just close the window. Otherwise... well, it should be correct anyway"
-        fslview $PRD/connectivity/T1.nii.gz $PRD/connectivity/aparc+aseg_reorient.nii.gz -l "Cool"
+        "$FSL"fslview $PRD/connectivity/T1.nii.gz $PRD/connectivity/aparc+aseg_reorient.nii.gz -l "Cool"
     fi
 fi
 
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
 then
     echo " register aparc+aseg to diff"
-    flirt -in $PRD/connectivity/lowb.nii.gz -ref $PRD/connectivity/T1.nii.gz -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii.gz -dof 12 -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -cost mutualinfo
-    convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
-    flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+    "$FSL"flirt -in $PRD/connectivity/lowb.nii.gz -ref $PRD/connectivity/T1.nii.gz -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii.gz -dof 12 -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -cost mutualinfo
+    "$FSL"convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
+    "$FSL"flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
 
     if [ ! -f $PRD/connectivity/T1_2_diff.nii.gz ]
     then
         echo " register aparc+aseg to diff"
-        flirt -applyxfm -in $PRD/connectivity/T1.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/T1_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+        "$FSL"flirt -applyxfm -in $PRD/connectivity/T1.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/T1_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
     fi
 
     # check parcellation to diff
@@ -260,7 +265,7 @@ then
         echo "check parcellation registration to diffusion space"
         echo "if it's correct, just close the window. Otherwise you will have to
         do the registration by hand"
-        fslview $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/lowb.nii.gz $PRD/connectivity/aparcaseg_2_diff -l "Cool"
+        "$FSL"fslview $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/lowb.nii.gz $PRD/connectivity/aparcaseg_2_diff -l "Cool"
     fi
 fi
 

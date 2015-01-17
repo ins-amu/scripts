@@ -8,7 +8,7 @@
 # and change the relevant options  #
 ####################################
 
-#### Running the pipeline ####
+#### Path configurations ####
 # to run the pipeline, do:
 # for region pipeline:
 # sh path_to_scripts/main_region.sh -c path_to_config/config.sh
@@ -30,8 +30,9 @@ export FS=$SUBJECTS_DIR
 # in brainvisa and in the final directory
 export SUBJ_ID=name_subj
 
-# brainvisa directory
-export BV=/path_to_brainvisa/
+# FSL prepend in case of use of fsl5.0
+# for instance FSL="fsl5.0-" or FSL="" otherwise
+export FSL=""
 
 # Matlab Runtime Compiler path
 # if you have matlab, do mcrinstaller at the matlab prompt
@@ -50,7 +51,7 @@ export MCR=/path_to_matlab_runtime_compiler/
 # (you need a display) (no/yes)
 export CHECK=no
 
-########## Important parameters
+########## Pipeline parameters
 # This parameter modify the mask for diffusion processing
 # check for different values with mrview
 export percent_value_mask=10
@@ -86,6 +87,8 @@ export number_tracks=5000000
 # export parcel=AAL
 
 # use topup and eddy distortion correction
+# to use a simple eddy correction use simple
+export eddy_correct=simple
 
 # use Anatomically Constrained Tractography
 export act=yes
