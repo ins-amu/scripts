@@ -7,4 +7,6 @@ Please see the [wiki](https://github.com/timpx/scripts/wiki)
 This poject use the MIT License.
 The full license is in LICENSE.txt in the SCRIPTS distribution.
 
+Copyright (c) [2014] [The SCRIPTS Developers]
+
 
