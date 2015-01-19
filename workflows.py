@@ -6,6 +6,35 @@ import nipype.pipeline.engine as pe
 from nipype.workflows.dmri.fsl.artifacts import ecc_pipeline 
 import scripts.utility as su 
 
+def ReconAll():
+
+
+def Surface(name='surface'):
+    inputnode = pe.Node(interface=niu.IdentityInterface(fields=['pial']), name='inputnode')
+    pial2asc = pe.MapNode(interface=fs.utils.MRIsConvert(), name='pial2asc',
+            iterfield = ['surface', 'rl'])
+    pial2asc.
+    extract_high = pe.Node(interface=niu.Function(input_names=['surface', 'rl'],
+                                                  output_names=['vertices_high', 'triangles_high'],
+                                                  function=su.extract_high)
+    txt2off = pe.Node(interface=niu.Function(input_names=['vertices', 'triangles', 'rl'],
+                                             output_names=['high.off'],
+                                             function=su.txt2off)
+    remesher = pe.Node(interface=niu.Remesher(), name='remesher') 
+    off2txt = pe.Node(interface=niu.Function(input_names=['surface', 'rl'],
+                                             output_names=['vertices_low', 'triangles_low'],
+                                             function=su.off2txt)
+    region_mapping = pe.
+    correct_region_mapping = pe.Node(interface=niu.Function(input_names=[
+        'region_mapping_not_corrected', 'vertices', 'triangles', 'rl', 'region_mapping_corr'), 
+        output_names = ['region_mapping_low'],
+        function=su.correct_region_mapping)
+    check_region_mapping = pe.Node(interface=niu.CheckRegionMapping(), name='check_region_mapping') 
+    reunify_both_regions
+
+
+
+
 def SubcorticalSurface(name="subcorticalsurfaces"):
     """ extraction of the subcortical surfaces from FreeSurfer"""
     inputnode = pe.Node(interface=niu.IdentityInterface(fields=['in_subject_id']), name='inputnode')
