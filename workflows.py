@@ -45,14 +45,49 @@ def DiffusionTractography(name="connectivity"):
         (
 
 def Coregistration(name='coregistration'):
-    T1_mgz2nii = pe.Node(interface=fsl.MRIConvert, name='T1_mgz2nii')
+    inputnode = pe.Node(niu.IdentityInterface(fields=['in_T1.mgz', 'in_lowb.nii',
+                        'in_aparcaseg.mgz']), name='inputnode')
+    T1_mgz2nii = pe.Node(interface=fs.preprocess.MRIConvert, name='T1_mgz2nii')
+    T1_mgz2nii.inputs.in_type = 'mgz'
+    T1_mgz2nii.inputs.out_type = 'nii'
+    T1_mgz2nii.inputs.out_orientation = 'RAS'
     aparcaseg_mgz2nii = pe.Node(interface=fs.preprocess.MRIConvert, name='aparcaseg_mgz2nii')
+    aparcaseg_mgz2nii.inputs.in_type = 'mgz'
+    aparcaseg_mgz2nii.inputs.out_type = 'nii'
+    aparcaseg_mgz2nii.inputs.out_orientation = 'RAS'
     reorient2std = pe.Node(interface=fsl.utils.Reorient2Std, name='reorient2std')
     diff2struct = pe.Node(interface=fsl.preprocess.FLIRT, name='diff2struct')
-    convertxfm = pe.Node(interface=fsl.utils.ConvertXF, name='convertXFM')
+    diff2struct.inputs.searchr_x = [180, 180]
+    diff2struct.inputs.searchr_y = [180, 180]
+    diff2struct.inputs.searchr_z = [180, 180]
+    diff2struct.inputs.cost = 'mutualinfo'
+    convertxfm = pe.Node(interface=fsl.utils.ConvertXFM, name='convertXFM')
+    convertxfm.inputs.invert_xfm = True
     aparcaseg2diff = pe.Node(interface=fsl.preprocess.ApplyXFM, name='aparcaseg2diff')
+    aparcaseg2diff.inputs.apply_xfm = True
+    aparcaseg2diff.inputs.interp = 'nearestneighbour'
     T12diff = pe.Node(interface=fsl.preprocess.ApplyXFM, name='T12diff')
+    T12diff.inputs.apply_xfm = True
     T12diff.inputs.interp = 'nearestneighbour'
+    outputnode = pe.Node(niu.IdentityInterface(fields=['out_file'], name='outputnode'))
+    
+    wf = pe.Workflow(name=name)
+    wf.connect([
+        (inputnode, T1_mgz2nii, [('in_T1.mgz', 'in_file')]),
+        (inputnode, aparcaseg_mgz2nii, [('in_aparcaseg.mgz', 'in_file')]),
+        (aparcaseg_mgz2nii, reorient2std, [('out_file', 'in_file')]),
+        (inputnode, diff2struct, [('in_lowb.nii', 'in_file')]),
+        (T1_mgz2nii, diff2struct, [('out_file', 'reference')]),
+        (diff2struct, convertxfm, [('out_matrix_file', 'in_file')]),
+        (aparcaseg_mgz2nii, aparcaseg2diff, [('out_file', 'in_file')]),
+        (inputnode, aparcaseg2diff, [('in_lowb.nii', 'reference')]),
+        (convertxfm, aparcaseg2diff, [('out_file', 'in_matrix_file')]),
+        (T1_mgz2nii, T12diff, [('out_file', 'in_file')]),
+        (inputnode, T12diff, [('in_lowb.nii', 'reference')]),
+        (convertxfm, T12diff, [('out_file', 'in_matrix_file')]),
+
+    return wf
+
 
 
 
