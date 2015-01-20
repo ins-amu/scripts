@@ -195,9 +195,9 @@ then
 fi
 
 # eddy correct
-if [ ! -f $PRD/connectivity/dwi.mif ] && [ "eddy_correct" = "simple" ]
+if [ ! -f $PRD/connectivity/dwi.mif ]
 then
-    if [ "eddy_correct" =  "simple" ]
+    if [ "$eddy_correct" =  "simple" ]
     then
         echo "eddy correct data"
         "$FSL"eddy_correct $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi_eddy_corrected.nii.gz 0
