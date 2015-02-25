@@ -79,6 +79,34 @@ Msk= [PRD, '/connectivity/aparcaseg_2_diff_cortical_only.nii'];
 %Read mask
 [hdr,data]=read(Msk);
 
+% check that the whole cortex is in the pcture, otherwise add a o borderline
+if sum(sum(data(1, :, :)))~=0
+    'zeroed first x'
+    data(1, :, :) = zeros(size(data(1, :, :)));
+end
+if sum(sum(data(end, :, :)))~=0
+    'zeroed end x'
+    data(end, :, :) = zeros(size(data(end, :, :)));
+end
+if sum(sum(data(:, 1, :)))~=0
+    'zeroed first y'
+    data(:, 1, :) = zeros(size(data(:, 1, :)));
+end
+if sum(sum(data(:, end, :)))~=0
+    'zeroed end y'
+    data(:, end, :) = zeros(size(data(:, end, :)));
+end
+if sum(sum(data(:, :,  1)))~=0
+    'zeroed first z'
+    data(:, :, 1) = zeros(size(data(:, :, 1)));
+end
+if sum(sum(data(:, :, end)))~=0
+    'zeroed end z'
+    data(:, :, end) = zeros(size(data(:, :, end)));
+end
+
+
+
 %Uncomment this to constrain mask to one hemishere:
 regions = unique(data);
 

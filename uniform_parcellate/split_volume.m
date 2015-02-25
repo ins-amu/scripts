@@ -3,7 +3,13 @@ function [vol1,vol2]=split_volume(vol)
 
 ind=find(vol);
 sz=size(vol);
-ind_surf=get_surface_voxels(vol); 
+ind_surf=get_surface_voxels(vol);
+% fix if only one point in the region
+if length(ind_surf)==1
+[a1, b1, c1] = ind2sub(sz, ind_surf);
+vol(a1, b1, c1+1) = vol(a1, b1, c1);
+ind_surf=get_surface_voxels(vol);
+end
 coor_surf=zeros(length(ind_surf),3);
 [coor_surf(:,1),coor_surf(:,2),coor_surf(:,3)]=ind2sub(sz,ind_surf);
 
@@ -38,8 +44,7 @@ else
 end
 clear coor_surf
 
-%Seed nodes
-%pair = datasample(ind_surf, 2, 'Replace', false)
+%Seed
 ind1=find(pair(1)==ind);
 ind2=find(pair(2)==ind);
 
