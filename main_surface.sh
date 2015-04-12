@@ -55,6 +55,8 @@ if [ ! -f $PRD/surface/lh.pial.asc ]
 then
     echo "importing left pial surface from freesurfer"
     mris_convert $FS/$SUBJ_ID/surf/lh.pial $PRD/surface/lh.pial.asc
+    # take care of the c_(ras) shift which is not done by FS (thks FS!)
+    mris_info $FS/$SUBJ_ID/surf/lh.pial >& $PRD/surface/lhinfo.txt
 fi
 
 # triangles and vertices high
@@ -103,6 +105,8 @@ if [ ! -f $PRD/surface/rh.pial.asc ]
 then
     echo "importing right pial surface from freesurfer"
     mris_convert $FS/$SUBJ_ID/surf/rh.pial $PRD/surface/rh.pial.asc
+    # take care of the c_(ras) shift which is not done by FS (thks FS!)
+    mris_info $FS/$SUBJ_ID/surf/rh.pial >& $PRD/surface/rhinfo.txt
 fi
 
 # triangles and vertices high
