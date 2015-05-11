@@ -34,6 +34,15 @@ then
     exit 1
 fi
 
+if [ ! -n "$SUBJECTS_DIR" ]
+then
+    echo "you have to set the SUBJECTS_DIR environnement
+    variable for FreeSurfer"
+    exit 1
+else
+    export FS=$SUBJECTS_DIR
+fi
+
 ######### build cortical surface and region mapping
 if [ ! -f $PRD/data/T1/T1.nii.gz ]
 then

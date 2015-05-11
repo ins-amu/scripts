@@ -20,11 +20,6 @@
 # we advice to also put this config file in this directory
 export PRD=/path_to_root_dir/
 
-# path for subjects for freesurfer 
-# $SUBJECTS_DIR should be in your .bashrc as you put
-# it during freesurfer installation
-export FS=$SUBJECTS_DIR
-
 # subject name
 # this will determine the name of your subject
 # in brainvisa and in the final directory
