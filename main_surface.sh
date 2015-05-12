@@ -480,3 +480,4 @@ then
     done
 fi
 
+# Calculate forward solutions with OpenMEEG
