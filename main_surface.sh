@@ -193,18 +193,17 @@ mkdir -p $PRD/$SUBJ_ID/connectivity
 
 
 # if single acquisition
-if [ "$acquisition" = "bi" ]
+if [ "$topup" = "reversed" ]
 then
+    echo "use topup and eddy from fsl to correct EPI distortions"
+
     if [ ! -f $PRD/connectivity/dwi_1.nii.gz ]
     then
-        echo "generate the two dwi files"
-
         mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi_1.nii.gz
-
         mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs_1 $PRD/connectivity/bvals_1
         mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi_2.nii.gz
         mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs_2 $PRD/connectivity/bvals_2
-        mrconvert $PRD/connectivity/dwi_1.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs_1 $PRD/connectivity/bvals_1
+        mrconvert $PRD/connectivity/dwi_1.nii.gz $PRD/connectivity/dwi_1.mif -fslgrad $PRD/connectivity/bvecs_1 $PRD/connectivity/bvals_1
         mrconvert $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi_2.mif -fslgrad $PRD/connectivity/bvecs_2 $PRD/connectivity/bvals_2
     fi
     if [ ! -f $PRD/connectivity/dwi.mif ]
@@ -229,7 +228,7 @@ else
     # eddy correct
     if [ ! -f $PRD/connectivity/dwi.mif ]
     then
-        if [ "$eddy_correct" =  "simple" ]
+        if [ "$topup" =  "eddy_correct" ]
         then
             echo "eddy correct data"
             "$FSL"eddy_correct $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi_eddy_corrected.nii.gz 0
