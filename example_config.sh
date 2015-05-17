@@ -20,19 +20,10 @@
 # we advice to also put this config file in this directory
 export PRD=/path_to_root_dir/
 
-# path for subjects for freesurfer 
-# $SUBJECTS_DIR should be in your .bashrc as you put
-# it during freesurfer installation
-export FS=$SUBJECTS_DIR
-
 # subject name
 # this will determine the name of your subject
 # in brainvisa and in the final directory
 export SUBJ_ID=name_subj
-
-# FSL prepend in case of use of fsl5.0
-# for instance FSL="fsl5.0-" or FSL="" otherwise
-export FSL=""
 
 # Matlab Runtime Compiler path
 # if you have matlab, do mcrinstaller at the matlab prompt
@@ -72,6 +63,9 @@ export lmax=6
 # This parameter is important for the correction of the region mapping. Between 0 and 1. The bigger it is, the bigger is the correction. (only import for the surface pipeline: main_surface.sh)
 export region_mapping_corr="0.42"
 
+# for computing subconnectivity
+export K_list="0 1 2 3 4 5"
+
 # number of tracks used in the tractography step.
 # note that you will have less tracks at the end.
 export number_tracks=5000000
@@ -87,8 +81,12 @@ export number_tracks=5000000
 # export parcel=AAL
 
 # use topup and eddy distortion correction
-# to use a simple eddy correction use simple
-export eddy_correct=simple
+# this depends of you images
+# possible choice right now are:
+# ["no", "reversed", "eddy_correct"]
+# be careful with "reversed", depending on your data, 
+# you may have to change the main_surface script
+export topup="no"
 
 # use Anatomically Constrained Tractography
 export act=yes

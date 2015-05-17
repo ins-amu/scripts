@@ -34,6 +34,15 @@ then
     exit 1
 fi
 
+if [ ! -n "$SUBJECTS_DIR" ]
+then
+    echo "you have to set the SUBJECTS_DIR environnement
+    variable for FreeSurfer"
+    exit 1
+else
+    export FS=$SUBJECTS_DIR
+fi
+
 ######### build cortical surface and region mapping
 if [ ! -f $PRD/data/T1/T1.nii.gz ]
 then
@@ -183,31 +192,50 @@ mkdir -p $PRD/connectivity
 mkdir -p $PRD/$SUBJ_ID/connectivity
 
 
-# mrconvert
-if [ ! -f $PRD/connectivity/dwi.nii.gz ]
+# if single acquisition
+if [ "$topup" = "reversed" ]
 then
-    if [ -f $PRD/data/DWI/*.nii.gz ]
-    then
-        echo "use already existing nii files"
-        ls $PRD/data/DWI/ | grep '.nii.gz$' | xargs -I {} cp $PRD/data/DWI/{} $PRD/connectivity/dwi.nii.gz
-    else
-        echo "generate dwi.nii.gz"
-        mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.nii.gz
-        echo "extract bvecs and bvals"
-        mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs $PRD/connectivity/bvals
-    fi
-fi
+    echo "use topup and eddy from fsl to correct EPI distortions"
 
-# eddy correct
-if [ ! -f $PRD/connectivity/dwi.mif ]
-then
-    if [ "$eddy_correct" =  "simple" ]
+    if [ ! -f $PRD/connectivity/dwi_1.nii.gz ]
     then
-        echo "eddy correct data"
-        "$FSL"eddy_correct $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi_eddy_corrected.nii.gz 0
-        mrconvert $PRD/connectivity/dwi_eddy_corrected.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
-    else
-        mrconvert $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
+        mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi_1.nii.gz
+        mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs_1 $PRD/connectivity/bvals_1
+        mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi_2.nii.gz
+        mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs_2 $PRD/connectivity/bvals_2
+        mrconvert $PRD/connectivity/dwi_1.nii.gz $PRD/connectivity/dwi_1.mif -fslgrad $PRD/connectivity/bvecs_1 $PRD/connectivity/bvals_1
+        mrconvert $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi_2.mif -fslgrad $PRD/connectivity/bvecs_2 $PRD/connectivity/bvals_2
+    fi
+    if [ ! -f $PRD/connectivity/dwi.mif ]
+    then
+        revpe_dwicombine $PRD/connectivity/dwi_1.mif $PRD/connectivity/dwi_2.mif 1 $PRD/connectivity/dwi.mif
+    fi
+else
+    # mrconvert
+    if [ ! -f $PRD/connectivity/dwi.nii.gz ]
+    then
+        if [ -f $PRD/data/DWI/*.nii.gz ]
+        then
+            echo "use already existing nii files"
+            ls $PRD/data/DWI/ | grep '.nii.gz$' | xargs -I {} cp $PRD/data/DWI/{} $PRD/connectivity/dwi.nii.gz
+        else
+            echo "generate dwi.nii.gz"
+            mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.nii.gz
+            echo "extract bvecs and bvals"
+            mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs $PRD/connectivity/bvals
+        fi
+    fi
+    # eddy correct
+    if [ ! -f $PRD/connectivity/dwi.mif ]
+    then
+        if [ "$topup" =  "eddy_correct" ]
+        then
+            echo "eddy correct data"
+            "$FSL"eddy_correct $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi_eddy_corrected.nii.gz 0
+            mrconvert $PRD/connectivity/dwi_eddy_corrected.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
+        else
+            mrconvert $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
+        fi
     fi
 fi
 
