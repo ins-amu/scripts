@@ -8,7 +8,7 @@ end
 curr_K = getenv('curr_K')
 curr_K = str2num(curr_K);
 K = log(curr_K)/log(2) 
-PRD = getenv('PRD')
+PRD = fullfile(getenv('PRD'), '/')
 SUBJ_ID = getenv('SUBJ_ID')
 
 % get rid of subcortical regions and white matter
