@@ -1,13 +1,13 @@
 if (~isdeployed)
 addpath('read_and_write_func');
 end
-PRD = getenv('PRD')
+PRD = fullfile(getenv('PRD'), '/')
 SUBJ_ID = getenv('SUBJ_ID')
-parcel = getenv('parcel')
+parcel = fullfile(getenv('parcel'), '/')
 
-g = load_nii([PRD, '/connectivity_regions/region_parcellation.nii'], [], [], [], [], [], 0.5);
+g = load_nii(fullfile(PRD, 'connectivity_regions', 'region_parcellation.nii'], [], [], [], [], [], 0.5);
 % h = load_untouch_nii([PRD, '/connectivity_regions/region_parcellation.nii']);
-corr_mat = load(['parcellations/correspondance_mat_', parcel, '.txt']);
+corr_mat = load(fullfile('parcellations', ['/correspondance_mat_', parcel, '.txt']));
 data = g.img;
 % datah = h.img;
 
@@ -42,6 +42,6 @@ end
 % end
 
 % save([PRD, '/', SUBJ_ID, '_regions/connectivity/centres.txt'], 'centres', '-ascii');
-fid = fopen([PRD, '/', SUBJ_ID, '_regions/connectivity/centres.txt'], 'w');
+fid = fopen(fullfile(PRD, [SUBJ_ID, '_regions'], 'connectivity', 'centres.txt'), 'w');
 fprintf(fid, '%d %.3f %.3f %.3f\n', centres');
 fclose(fid);  

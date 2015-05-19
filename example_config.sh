@@ -25,6 +25,10 @@ export PRD=/path_to_root_dir/
 # in brainvisa and in the final directory
 export SUBJ_ID=name_subj
 
+#  FSL prefix in case of use of fsl5.0 
+# for instance FSL="fsl5.0' or FSL="" otherwise
+export FSL=""
+
 # Matlab Runtime Compiler path
 # if you have matlab, do mcrinstaller at the matlab prompt
 # to find the location of the MCR

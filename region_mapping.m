@@ -1,13 +1,13 @@
-FREESURFER_HOME = getenv('FREESURFER_HOME')
-FS = getenv('FS')
-PRD = getenv('PRD')
+FREESURFER_HOME = fullfile(getenv('FREESURFER_HOME'), '/')
+FS = fullfile(getenv('FS'), '/')
+PRD = fullfile(getenv('PRD'), '/')
 
 if (~isdeployed)
-    addpath([FREESURFER_HOME, '/matlab'])
+    addpath(fullfile(FREESURFER_HOME, 'matlab'))
 end
 
 if ~exist('rl', 'var')
-    if ~exist([PRD, '/surface/', 'rh.pial.asc'])
+    if ~exist(fullfile(PRD, 'surface', 'rh.pial.asc'))
         rl='lh'
     else
         rl='rh'
@@ -16,11 +16,11 @@ end
 
 corr_right = load([rl, '_ref_table.txt']);
 SUBJ_ID = getenv('SUBJ_ID')
-[v, L, ct] = read_annotation([FS,'/',SUBJ_ID, '/label/', rl, '.aparc.annot']);
+[v, L, ct] = read_annotation(fullfile(FS,SUBJ_ID, 'label', [rl, '.aparc.annot']));
 cd(PRD)
-a = load(['surface/',rl ,'_vertices_low.txt']);
-b = load(['surface/', rl, '_triangles_low.txt']);
-c = load(['surface/', rl, '_vertices_high.txt']);
+a = load(fullfile('surface', [rl ,'_vertices_low.txt']));
+b = load(fullfile('surface', [rl, '_triangles_low.txt']));
+c = load(fullfile('surface', [rl, '_vertices_high.txt']));
 reg_map = zeros(size(a,1),1);
 not_found = [];
 for i=1:size(a,1)
@@ -34,4 +34,4 @@ for i=1:size(a,1)
     end
 end
 not_found
-save(['surface/', rl, '_region_mapping_low_not_corrected.txt'],'reg_map', '-ascii' );
+save(fullfile('surface', [rl, '_region_mapping_low_not_corrected.txt']),'reg_map', '-ascii' );

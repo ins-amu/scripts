@@ -192,17 +192,25 @@ mkdir -p $PRD/connectivity
 mkdir -p $PRD/$SUBJ_ID/connectivity
 
 
-# if single acquisition
+# if single acquisition  with reversed directions
+function mrchoose () {
+    choice=$1
+    shift
+    $@ << EOF
+$choice
+EOF
+}
+
 if [ "$topup" = "reversed" ]
 then
     echo "use topup and eddy from fsl to correct EPI distortions"
 
     if [ ! -f $PRD/connectivity/dwi_1.nii.gz ]
     then
-        mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi_1.nii.gz
-        mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs_1 $PRD/connectivity/bvals_1
-        mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi_2.nii.gz
-        mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs_2 $PRD/connectivity/bvals_2
+        mrchoose 0 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi_1.nii.gz
+        mrchoose 0 mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs_1 $PRD/connectivity/bvals_1
+        mrchoose 1 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi_2.nii.gz
+        mrchoose 1 mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs_2 $PRD/connectivity/bvals_2
         mrconvert $PRD/connectivity/dwi_1.nii.gz $PRD/connectivity/dwi_1.mif -fslgrad $PRD/connectivity/bvecs_1 $PRD/connectivity/bvals_1
         mrconvert $PRD/connectivity/dwi_2.nii.gz $PRD/connectivity/dwi_2.mif -fslgrad $PRD/connectivity/bvecs_2 $PRD/connectivity/bvals_2
     fi

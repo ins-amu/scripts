@@ -13,7 +13,7 @@ SUBJ_ID = getenv('SUBJ_ID')
 
 % get rid of subcortical regions and white matter
 
-mask_unprocessed = load_untouch_nii([PRD, '/connectivity/aparcaseg_2_diff.nii.gz']); 
+mask_unprocessed = load_untouch_nii(fullfile(PRD, 'connectivity', 'aparcaseg_2_diff.nii.gz')); 
 dat = mask_unprocessed.img;
 dat(ind2sub(size(dat), find(dat ==   0)))=0;
 dat(ind2sub(size(dat), find(dat ==   2)))=0;
@@ -61,8 +61,8 @@ dat(ind2sub(size(dat), find(dat == 254)))=0;
 dat(ind2sub(size(dat), find(dat == 255)))=0;
 Msk = mask_unprocessed;
 Msk.img = dat;
-save_untouch_nii(Msk, [PRD, '/connectivity/aparcaseg_2_diff_cortical_only.nii']); 
-Msk= [PRD, '/connectivity/aparcaseg_2_diff_cortical_only.nii']; 
+save_untouch_nii(Msk, [PRD, fullfile('connectivity', 'aparcaseg_2_diff_cortical_only.nii')); 
+Msk= fullfile(PRD, 'connectivity', 'aparcaseg_2_diff_cortical_only.nii'); 
 
 
 %Value of K in 2^K
@@ -134,7 +134,7 @@ end
 
 % Re add subcortical regions
 last_reg = max(vol(:));
-mask_unprocessed = load_untouch_nii([PRD, '/connectivity/aparcaseg_2_diff.nii.gz']); 
+mask_unprocessed = load_untouch_nii(fullfile(PRD, '/connectivity/aparcaseg_2_diff.nii.gz')); 
 dat = mask_unprocessed.img;
 vol(ind2sub(size(dat), find(dat ==  16)))=last_reg +1;
 vol(ind2sub(size(dat), find(dat ==   8)))=last_reg +2;
@@ -155,7 +155,7 @@ vol(ind2sub(size(dat), find(dat ==  54)))=last_reg +16;
 vol(ind2sub(size(dat), find(dat ==  58)))=last_reg +17;
 
 %Output nii file
-Out=[PRD, '/connectivity/aparcaseg_2_diff_', num2str(curr_K), '.nii'];
+Out=fullfile(PRD, 'connectivity', ['aparcaseg_2_diff_', num2str(curr_K), '.nii']);
 
 
 fprintf('Total nodes: %d',number_nodes);

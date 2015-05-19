@@ -1,5 +1,5 @@
 addpath('read_and_write_func')
-PRD = getenv('PRD')
+PRD = fullfile(getenv('PRD'), '/')
 SUBJ_ID = getenv('SUBJ_ID')
 res = zeros(96,96);
 res_length = zeros(96,96);
