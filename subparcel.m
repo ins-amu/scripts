@@ -61,7 +61,7 @@ dat(ind2sub(size(dat), find(dat == 254)))=0;
 dat(ind2sub(size(dat), find(dat == 255)))=0;
 Msk = mask_unprocessed;
 Msk.img = dat;
-save_untouch_nii(Msk, [PRD, fullfile('connectivity', 'aparcaseg_2_diff_cortical_only.nii')); 
+save_untouch_nii(Msk, fullfile(PRD, 'connectivity', 'aparcaseg_2_diff_cortical_only.nii')); 
 Msk= fullfile(PRD, 'connectivity', 'aparcaseg_2_diff_cortical_only.nii'); 
 
 

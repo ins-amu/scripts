@@ -5,7 +5,7 @@ PRD = fullfile(getenv('PRD'), '/')
 SUBJ_ID = getenv('SUBJ_ID')
 parcel = fullfile(getenv('parcel'), '/')
 
-g = load_nii(fullfile(PRD, 'connectivity_regions', 'region_parcellation.nii'], [], [], [], [], [], 0.5);
+g = load_nii(fullfile(PRD, 'connectivity_regions', 'region_parcellation.nii'), [], [], [], [], [], 0.5);
 % h = load_untouch_nii([PRD, '/connectivity_regions/region_parcellation.nii']);
 corr_mat = load(fullfile('parcellations', ['/correspondance_mat_', parcel, '.txt']));
 data = g.img;
