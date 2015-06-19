@@ -338,10 +338,10 @@ then
     then
         echo "generating tracks using act" 
         5tt2gmwmi $PRD/connectivity/act.mif $PRD/connectivity/gmwmi_mask.mif
-        tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 150
+        tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 250 -step 0.5
     else
         echo "generating tracks without using act" 
-        tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii.gz -mask $PRD/connectivity/mask.mif -maxlength 150 -num $number_tracks
+        tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii.gz -mask $PRD/connectivity/mask.mif -maxlength 250 -step 0.5 -num $number_tracks
     fi
 fi
 

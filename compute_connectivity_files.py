@@ -165,6 +165,9 @@ if __name__ == '__main__':
     weights = np.vstack([np.zeros((1, weights.shape[0])), weights])
     weights = np.hstack([np.zeros((weights.shape[0], 1)), weights])
     tract_lengths = tract_lengths + tract_lengths.transpose() # because diagonal nul 
+    # tck2connectome produces the number of steps in the tracking file
+    # so we have to multiply by the step size in mm which is 0.5
+    tract_lengths *= 0.5
     tract_lengths = np.vstack([np.zeros((1, tract_lengths.shape[0])), tract_lengths]) 
     tract_lengths = np.hstack([np.zeros((tract_lengths.shape[0], 1)), tract_lengths])
     np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity', 'weights.txt'), weights, fmt='%d')
