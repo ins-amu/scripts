@@ -48,12 +48,13 @@ do
 done
 
 # Prepare a random string to save temporary files
-if hash md5 2> /dev/null ; then
-  RND0=$(head -n 1 /dev/random | md5)
-elif hash md5sum 2> /dev/null ; then
-  RND0=$(head -n 1 /dev/random | md5sum)
-fi
-RNDSTR=${RND0:0:12}
+#if hash md5 2> /dev/null ; then
+#  RND0=$(head -n 1 /dev/random | md5)
+#elif hash md5sum 2> /dev/null ; then
+#  RND0=$(head -n 1 /dev/random | md5sum)
+#fi
+#RNDSTR=${RND0:0:12}
+RNDSTR=${RANDOM:0:12}
 
 # Define a function for Ctrl+C as soon as the RNDSTR is defined
 trap bashtrap INT
