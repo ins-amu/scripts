@@ -226,6 +226,8 @@ else
         then
             echo "use already existing nii files"
             ls $PRD/data/DWI/ | grep '.nii.gz$' | xargs -I {} cp $PRD/data/DWI/{} $PRD/connectivity/dwi.nii.gz
+            cp $PRD/data/DWI/bvecs $PRD/connectivity/bvecs
+            cp $PRD/data/DWI/bvals $PRD/connectivity/bvals
         else
             echo "generate dwi.nii.gz"
             mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.nii.gz
