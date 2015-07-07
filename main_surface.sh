@@ -446,7 +446,7 @@ fi
 
 ######################## compute MEG and EEG forward projection matrices
 # make BEM surfaces
-if [ ! -f ${FS}/${SUBJ_ID}/bem/inner_skull.surf ]
+if [ ! -h ${FS}/${SUBJ_ID}/bem/inner_skull.surf ]
 then
     echo "generating bem surfaces"
     mne_watershed_bem --subject ${SUBJ_ID}
