@@ -333,6 +333,14 @@ then
     act_anat_prepare_fsl $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/act.mif
 fi
 
+# produce the new aparcaseg and the better subcortical meshes
+if [ ! -f $PRD/connectivity/aparcaseg_2_diff_better_sgm.nii.gz ]
+then
+    echo "better subcortical structures"
+    mkdir $PRD/surface/subcortical_2 
+    fs_parc_replace_sgm_first $PRD/connectivity/aparcaseg_2_diff.nii.gz T1_2_diff.nii.gz /soft/freesurfer/FreeSurferColorLUT.txt 
+fi
+
 # tractography
 if [ ! -f $PRD/connectivity/whole_brain.tck ]
 then
