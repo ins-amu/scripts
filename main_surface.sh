@@ -75,7 +75,7 @@ then
     python extract_high.py lh
 fi
 
-# decimation using brainvisa
+# decimation using remesher
 if [ ! -f $PRD/surface/lh_vertices_low.txt ]
 then
     echo "left decimation using remesher"
