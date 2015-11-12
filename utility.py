@@ -1,6 +1,6 @@
 from nipype.interfaces.base import (TraitedSpec, BaseInterfaceInputSpec,
                                     File, BaseInterface, traits,
-                                    CommandLineInputSpec, Directory, 
+                                    CommandLineInputSpec, Directory,
                                     CommandLine, isdefined)
 from nipype.interfaces.freesurfer.base import FSTraitedSpec, FSCommand
 from nipype.interfaces.matlab import MatlabCommand
@@ -17,22 +17,22 @@ class MRIsConvertInputSpec(FSTraitedSpec):
     Uses Freesurfer's mris_convert to convert surface files to various formats
     """
     annot_file = File(exists=True, argstr="--annot %s",
-    desc="input is annotation or gifti label data")
+                      desc="input is annotation or gifti label data")
 
     parcstats_file = File(exists=True, argstr="--parcstats %s",
-    desc="infile is name of text file containing label/val pairs")
+                          desc="infile is name of text file containing label/val pairs")
 
     label_file = File(exists=True, argstr="--label %s",
-    desc="infile is .label file, label is name of this label")
+                      desc="infile is .label file, label is name of this label")
 
     scalarcurv_file = File(exists=True, argstr="-c %s",
-    desc="input is scalar curv overlay file (must still specify surface)")
+                           desc="input is scalar curv overlay file (must still specify surface)")
 
     functional_file = File(exists=True, argstr="-f %s",
-    desc="input is functional time-series or other multi-frame data (must specify surface)")
+                           desc="input is functional time-series or other multi-frame data (must specify surface)")
 
     labelstats_outfile = File(exists=False, argstr="--labelstats %s",
-    desc="outfile is name of gifti file to which label stats will be written")
+                              desc="outfile is name of gifti file to which label stats will be written")
 
     patch = traits.Bool(argstr="-p", desc="input is a patch, not a full surface")
     rescale = traits.Bool(argstr="-r", desc="rescale vertex xyz so total area is same as group average")
@@ -48,11 +48,11 @@ class MRIsConvertInputSpec(FSTraitedSpec):
 
     in_file = File(exists=True, mandatory=True, position=-2, argstr='%s', desc='File to read/convert')
     out_file = File(argstr='./%s', position=-1, genfile=True, desc='output filename or True to generate one')
-    #Not really sure why the ./ is necessary but the module fails without it
+    # Not really sure why the ./ is necessary but the module fails without it
 
     out_datatype = traits.Enum("ico", "tri", "stl", "vtk", "gii", "mgh", "mgz", "asc", mandatory=True,
-    desc="These file formats are supported:  ASCII:       .asc" \
-    "ICO: .ico, .tri GEO: .geo STL: .stl VTK: .vtk GIFTI: .gii MGH surface-encoded 'volume': .mgh, .mgz")
+                               desc="These file formats are supported:  ASCII:       .asc" \
+                                    "ICO: .ico, .tri GEO: .geo STL: .stl VTK: .vtk GIFTI: .gii MGH surface-encoded 'volume': .mgh, .mgz")
 
 
 class MRIsConvertOutputSpec(TraitedSpec):
@@ -131,15 +131,15 @@ class Fs2Txt(BaseInterface):
         # TODO: check if it is the right way (newpath), or use split_filename
         if not isdefined(out_file_vertices):
             out_file_vertices = fname_presuffix(self.inputs.surface,
-                                      newpath=os.getcwd(),
-                                      suffix='_vertices.txt',
-                                      use_ext=False)
+                                                newpath=os.getcwd(),
+                                                suffix='_vertices.txt',
+                                                use_ext=False)
         out_file_triangles = self.inputs.out_file_triangles
         if not isdefined(out_file_triangles):
             out_file_triangles = fname_presuffix(self.inputs.surface,
-                                      newpath=os.getcwd(),
-                                      suffix='_triangles.txt',
-                                      use_ext=False)
+                                                 newpath=os.getcwd(),
+                                                 suffix='_triangles.txt',
+                                                 use_ext=False)
         return (os.path.abspath(out_file_triangles), os.path.abspath(out_file_vertices))
 
     def _run_interface(self, runtime):
@@ -148,15 +148,15 @@ class Fs2Txt(BaseInterface):
             f.readline()
             nb_vert = f.readline().split(' ')[0]
             read_data = [[np.double(line.rstrip('\n').split()[0]),
-                         np.double(line.rstrip('\n').split()[1]),
-                         np.double(line.rstrip('\n').split()[2])] for line in f]
+                          np.double(line.rstrip('\n').split()[1]),
+                          np.double(line.rstrip('\n').split()[2])] for line in f]
         a = np.array(read_data)
         vert_high = a[0:int(nb_vert), 0:3]
         tri_high = a[int(nb_vert):, 0:3]
         np.savetxt(out_file_vertices, vert_high, fmt='%.6f %.6f %.6f')
         tri_high = a[int(nb_vert):, 0:3]
         np.savetxt(out_file_triangles, tri_high, fmt='%d %d %d')
-        return runtime 
+        return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
@@ -171,7 +171,7 @@ class Txt2OffInputSpec(BaseInterfaceInputSpec):
     triangles = File(exists=True, mandatory=True)
     out_file_off = File(genfile=True,
                         desc='output filename for off file or True to generate one')
-    
+
 
 class Txt2OffOutputSpec(TraitedSpec):
     surface_off = File(exists=True)
@@ -187,23 +187,23 @@ class Txt2Off(BaseInterface):
     def _get_outfilename(self):
         out_file_off = self.inputs.out_file_off
         if not isdefined(out_file_off):
-            out_file_off= fname_presuffix(self.inputs.vertices,
-                                      newpath=os.getcwd(),
-                                      suffix='.off',
-                                      use_ext=False)
+            out_file_off = fname_presuffix(self.inputs.vertices,
+                                           newpath=os.getcwd(),
+                                           suffix='.off',
+                                           use_ext=False)
         return os.path.abspath(out_file_off)
 
     def _run_interface(self, runtime):
         vert = np.loadtxt(self.inputs.vertices)
         tri = np.loadtxt(self.inputs.triangles)
         out_file_off = self._get_outfilename()
-        with open(out_file_off, 'w') as f: 
-            f.write('OFF\n') 
-            f.write('{} {} {}\n'.format(int(vert.shape[0]), int(tri.shape[0]), 0)) 
+        with open(out_file_off, 'w') as f:
+            f.write('OFF\n')
+            f.write('{} {} {}\n'.format(int(vert.shape[0]), int(tri.shape[0]), 0))
         with open(out_file_off, 'a') as f:
             np.savetxt(f, vert, fmt='%.6f')
-            np.savetxt(f, np.hstack([np.ones((tri.shape[0],1))*3, tri]), fmt='%d')
-        return runtime 
+            np.savetxt(f, np.hstack([np.ones((tri.shape[0], 1)) * 3, tri]), fmt='%d')
+        return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
@@ -213,7 +213,7 @@ class Txt2Off(BaseInterface):
 
 
 class RemesherInputSpec(CommandLineInputSpec):
-    in_file = File(desc="Input surface", argstr='%s', exists=True, 
+    in_file = File(desc="Input surface", argstr='%s', exists=True,
                    mandatory=True, position=0)
     out_file = File(desc="Remeshed surface", argstr='%s',
                     genfile=True, position=1)
@@ -221,7 +221,7 @@ class RemesherInputSpec(CommandLineInputSpec):
 
 
 class RemesherOutputSpec(TraitedSpec):
-    out_file = File(desc = "Remeshed surface", exists = True)
+    out_file = File(desc="Remeshed surface", exists=True)
 
 
 class Remesher(CommandLine):
@@ -236,7 +236,7 @@ class Remesher(CommandLine):
     def __init__(self, *args, **kwargs):
         super(Remesher, self).__init__(*args, **kwargs)
         self._cmd = self.get_scripts_dir() + "/remesher/cmdremesher/cmdremesher"
-    
+
     def get_scripts_dir(self):
         if isdefined(self.inputs.scripts_directory):
             return self.inputs.scripts_directory
@@ -248,13 +248,13 @@ class Remesher(CommandLine):
             return self._gen_outfilename()
         else:
             return None
-            
+
     def _gen_outfilename(self):
         if isdefined(self.inputs.out_file):
             return self.inputs.out_file
         else:
             _, name, ext = split_filename(self.inputs.in_file)
-            return name[:2] + "_decimated" + ext 
+            return name[:2] + "_decimated" + ext
 
     def _list_outputs(self):
         outputs = self._outputs().get()
@@ -265,10 +265,10 @@ class Remesher(CommandLine):
 class Off2TxtInputSpec(BaseInterfaceInputSpec):
     surface_off = File(exists=True, mandatory=True)
     out_file_vertices_txt = File(genfile=True,
-                        desc='output filename for off file or True to generate one')
+                                 desc='output filename for off file or True to generate one')
     out_file_triangles_txt = File(genfile=True,
-                        desc='output filename for off file or True to generate one')
-    
+                                  desc='output filename for off file or True to generate one')
+
 
 class Off2TxtOutputSpec(TraitedSpec):
     vertices_txt = File(exists=True)
@@ -287,14 +287,14 @@ class Off2Txt(BaseInterface):
         out_file_triangles_txt = self.inputs.out_file_triangles_txt
         if not isdefined(out_file_triangles_txt):
             out_file_triangles_txt = fname_presuffix(self.inputs.surface_off,
-                                      newpath=os.getcwd(),
-                                      suffix='_triangles.txt',
-                                      use_ext=False)
+                                                     newpath=os.getcwd(),
+                                                     suffix='_triangles.txt',
+                                                     use_ext=False)
         if not isdefined(out_file_vertices_txt):
             out_file_vertices_txt = fname_presuffix(self.inputs.surface_off,
-                                      newpath=os.getcwd(),
-                                      suffix='_vertices.txt',
-                                      use_ext=False)
+                                                    newpath=os.getcwd(),
+                                                    suffix='_vertices.txt',
+                                                    use_ext=False)
         return (os.path.abspath(out_file_triangles_txt), os.path.abspath(out_file_vertices_txt))
 
     def _run_interface(self, runtime):
@@ -302,33 +302,34 @@ class Off2Txt(BaseInterface):
         with open(self.inputs.surface_off) as f:
             f.readline()
             num = f.readline().split(' ')
-            vert = np.loadtxt(self.inputs.surface_off, skiprows=2, usecols=(0,1,2))  
+            vert = np.loadtxt(self.inputs.surface_off, skiprows=2, usecols=(0, 1, 2))
             vert = vert[:int(num[0]), :]
-            tri = np.loadtxt(self.inputs.surface_off, skiprows=int(num[0])+2, usecols=(1,2,3))  
+            tri = np.loadtxt(self.inputs.surface_off, skiprows=int(num[0]) + 2, usecols=(1, 2, 3))
         np.savetxt(out_file_vertices_txt, vert, fmt='%.4f')
         np.savetxt(out_file_triangles_txt, tri, fmt='%d')
-        return runtime 
+        return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
-        out_file_triangles_txt, out_file_vertices_txt = self._get_outfilename()        
+        out_file_triangles_txt, out_file_vertices_txt = self._get_outfilename()
         outputs['vertices_txt'] = out_file_vertices_txt
         outputs['triangles_txt'] = out_file_triangles_txt
         return outputs
 
 
 class RegionMappingInputSpect(BaseInterfaceInputSpec):
-    aparc_annot = File(exists = True, mandatory = True)
-    ref_table = File(exists = True, mandatory = True)
-    vertices_downsampled = File(exists = True, mandatory = True)
-    triangles_downsampled = File(exists = True, mandatory = True)
-    vertices = File(exists = True, mandatory = True)
+    aparc_annot = File(exists=True, mandatory=True)
+    ref_table = File(exists=True, mandatory=True)
+    vertices_downsampled = File(exists=True, mandatory=True)
+    triangles_downsampled = File(exists=True, mandatory=True)
+    vertices = File(exists=True, mandatory=True)
     # try with getcwd
     scripts_directory = Directory(desc="scripts directory", exists=True)
     out_file = File(desc="Region mapping")
 
+
 class RegionMappingOutputSpect(TraitedSpec):
-    out_file = File(exists = True)
+    out_file = File(exists=True)
 
 
 class RegionMapping(BaseInterface):
@@ -344,7 +345,7 @@ class RegionMapping(BaseInterface):
         else:
             _, name, ext = split_filename(self.inputs.vertices)
             return os.path.abspath(name + "_region_mapping" + ext)
-    
+
     def get_scripts_dir(self):
         if isdefined(self.inputs.scripts_directory):
             return self.inputs.scripts_directory
@@ -352,13 +353,13 @@ class RegionMapping(BaseInterface):
             return os.getcwd()
 
     def _run_interface(self, runtime):
-        d = dict(vertices_downsampled = self.inputs.vertices_downsampled,
-                 triangles_downsampled = self.inputs.triangles_downsampled,
-                 vertices = self.inputs.vertices,
-                 ref_tables = self.inputs.ref_table,
-                 aparc_annot = self.inputs.aparc_annot,
-                 out_file = self._gen_outfilename(),
-                 scripts_dir = os.path.abspath(self.get_scripts_dir())
+        d = dict(vertices_downsampled=self.inputs.vertices_downsampled,
+                 triangles_downsampled=self.inputs.triangles_downsampled,
+                 vertices=self.inputs.vertices,
+                 ref_tables=self.inputs.ref_table,
+                 aparc_annot=self.inputs.aparc_annot,
+                 out_file=self._gen_outfilename(),
+                 scripts_dir=os.path.abspath(self.get_scripts_dir())
                  )
         script = Template("""
             vertices_downsampled = '$vertices_downsampled';
@@ -390,7 +391,7 @@ class CorrectRegionMappingInputSpec(BaseInterfaceInputSpec):
 
 
 class CorrectRegionMappingOutputSpec(TraitedSpec):
-    texture_corrected= File(exists=True)
+    texture_corrected = File(exists=True)
 
 
 class CorrectRegionMapping(BaseInterface):
@@ -418,7 +419,7 @@ class CorrectRegionMapping(BaseInterface):
             labels = np.unique(texture)
             for ilab in labels:
                 iverts = (np.nonzero(texture == ilab)[0]).tolist()
-                if len(iverts)>0:
+                if len(iverts) > 0:
                     for inode in iverts:
                         iall = trian[np.nonzero(trian == inode)[0]].flatten().tolist()
                         ineig = np.unique(filter(lambda x: x != inode, iall)).astype('int')
@@ -429,9 +430,9 @@ class CorrectRegionMapping(BaseInterface):
                         elif ivals[np.nonzero(ivals[:, 0] == ilab), 1][0, 0] < 0.42 * len(ineig):
                             new_texture[inode] = Counter(texture[ineig]).most_common(1)[0][0]
             texture = deepcopy(new_texture)
-        
+
         np.savetxt(out_file_region_mapping_corr, new_texture)
-        return runtime 
+        return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
@@ -457,8 +458,9 @@ class CheckRegionMappingOutputSpect(TraitedSpec):
 class CheckRegionMapping(BaseInterface):
     input_spec = CheckRegionMappingInputSpect
     output_spec = CheckRegionMappingOutputSpect
+
     # TODO: more generic
-    #_terminal_output = 'stream'
+    # _terminal_output = 'stream'
 
     def _get_outfilename(self):
         if isdefined(self.inputs.out_file):
@@ -499,12 +501,12 @@ class CheckRegionMapping(BaseInterface):
         for ilab in labels:
             ipos = np.nonzero(texture == ilab)
             ivert = vert[ipos]
-            itrian=[]
+            itrian = []
             for itri in np.nonzero(texture == ilab)[0].tolist():
                 itrian.extend(trian[np.nonzero(trian == itri)[0]])
             itrian = np.array(itrian).astype('int')
             V = self.breadth_first_search(ipos[0][0], itrian, ilab, texture)
-            res.append((ilab, ivert.shape[0]-len(V)))
+            res.append((ilab, ivert.shape[0] - len(V)))
         return res
 
     def find_both_components(self, texture, vert, trian, ilab):
@@ -518,7 +520,7 @@ class CheckRegionMapping(BaseInterface):
         """
         ipos = np.nonzero(texture == ilab)
         # ivert = vert[ipos]
-        itrian=[]
+        itrian = []
         for itri in ipos[0].tolist():
             itrian.extend(trian[np.nonzero(trian == itri)[0]])
         itrian = np.array(itrian).astype('int')
@@ -539,12 +541,12 @@ class CheckRegionMapping(BaseInterface):
         :param trian: list
         :param Vw: list
         """
-        new_texture = deepcopy.copy(texture)
+        new_texture = deepcopy(texture)
         icount = 0
-        while len(Vw)>0:
+        while len(Vw) > 0:
             iVw = Vw.pop()
             itrian = trian[np.nonzero(trian == iVw)[0]].flatten().astype('int').tolist()
-            ir = filter(lambda x : new_texture[x] != new_texture[iVw], itrian)
+            ir = filter(lambda x: new_texture[x] != new_texture[iVw], itrian)
             if len(ir) > 0:
                 new_texture[iVw] = new_texture[Counter(ir).most_common(1)[0][0]]
             else:
@@ -568,7 +570,7 @@ class CheckRegionMapping(BaseInterface):
         :param ilab: list
         """
         ipos = np.nonzero(texture == ilab)
-        itrian=[]
+        itrian = []
         for itri in ipos[0].tolist():
             itrian.extend(trian[np.nonzero(trian == itri)[0]])
         itrian = np.array(itrian).astype('int')
@@ -606,7 +608,7 @@ class CheckRegionMapping(BaseInterface):
                 if self.inputs.check and len(self.inputs.display) > 0:
                     print "checking"
                     self.check_region_mapping(texture, vert, trian, iwrong)
-                    i=0
+                    i = 0
                     while True and i < 10:
                         try:
                             choice_user = raw_input("""Do you want to get rid of region with:
@@ -627,7 +629,7 @@ class CheckRegionMapping(BaseInterface):
                         print 'failure total, no check mode'
                 else:
                     print "no check, selecting automatically the smallest components"
-                    choice_user = np.argmin((len(V1), len(V2)))+1
+                    choice_user = np.argmin((len(V1), len(V2))) + 1
                 if choice_user == 3:
                     print "keep that correction"
                     np.savetxt(self._get_outfilename(), texture)
@@ -648,11 +650,11 @@ class CheckRegionMapping(BaseInterface):
 
 
 class ReunifyBothHemisphereInputSpec(BaseInterfaceInputSpec):
-    vertices = traits.List(traits=File, exists=True, mandatory=True, minlen=2, maxlen=2, 
+    vertices = traits.List(traits=File, exists=True, mandatory=True, minlen=2, maxlen=2,
                            desc='right and left hemispheres for vertices')
-    triangles = traits.List(traits=File, exists=True, mandatory=True, minlen=2, maxlen=2, 
+    triangles = traits.List(traits=File, exists=True, mandatory=True, minlen=2, maxlen=2,
                             desc='right and left hemispheres for triangles')
-    textures = traits.List(traits=File, exists=True, mandatory=True, minlen=2, maxlen=2, 
+    textures = traits.List(traits=File, exists=True, mandatory=True, minlen=2, maxlen=2,
                            desc='right and left hemispheres for texture')
     out_file_vertices = File(genfile=True,
                              desc='output filename for vertices file or True to generate one')
@@ -688,7 +690,7 @@ class ReunifyBothHemisphere(BaseInterface):
         if not isdefined(out_file_texture):
             out_file_texture = fname_presuffix(self.inputs.textures[0], newpath=os.getcwd(),
                                                suffix='_texture', use_ext=True)
-        return (os.path.abspath(out_file_triangles), 
+        return (os.path.abspath(out_file_triangles),
                 os.path.abspath(out_file_vertices),
                 os.path.abspath(out_file_texture))
 
@@ -701,12 +703,12 @@ class ReunifyBothHemisphere(BaseInterface):
         lh_trian = np.loadtxt(self.inputs.triangles[0])
         rh_trian = np.loadtxt(self.inputs.triangles[1])
         vertices = np.vstack([lh_vert, rh_vert])
-        triangles = np.vstack([lh_trian,  rh_trian + lh_vert.shape[0]])
+        triangles = np.vstack([lh_trian, rh_trian + lh_vert.shape[0]])
         region_mapping = np.hstack([lh_reg_map, rh_reg_map])
         np.savetxt(out_file_texture, region_mapping, fmt='%d', newline=" ")
         np.savetxt(out_file_vertices, vertices, fmt='%.2f')
         np.savetxt(out_file_triangles, triangles, fmt='%d %d %d')
-        return runtime 
+        return runtime
 
     def _list_outputs(self):
         outputs = self._outputs().get()
@@ -765,7 +767,7 @@ class Aseg2Srf(CommandLine):
             sd = self.inputs.subjects_dir
         else:
             sd = os.environ('SUBJECTS_DIR')
-        out_files = [os.path.join(sd, self.inputs.subject_id, 'ascii', 'aseg_0'+ ilabel +'.srf')
+        out_files = [os.path.join(sd, self.inputs.subject_id, 'ascii', 'aseg_0' + ilabel + '.srf')
                      for ilabel in self.inputs.label.split(" ")]
         outputs['subcortical_surf_list_files'] = out_files
         return outputs
@@ -791,10 +793,10 @@ class ListSubcortical(BaseInterface):
         out_file_triangles_sub = self.inputs.out_file_triangles_sub
         if not isdefined(out_file_triangles_sub):
             out_file_triangles_sub = os.path.join(os.getcwd(), in_file +
-                                                 '_triangles_sub.txt')
+                                                  '_triangles_sub.txt')
         if not isdefined(out_file_vertices_sub):
             out_file_vertices_sub = os.path.join(os.getcwd(), in_file +
-                                                '_vertices_sub.txt')
+                                                 '_vertices_sub.txt')
         return (os.path.abspath(out_file_triangles_sub),
                 os.path.abspath(out_file_vertices_sub))
 
@@ -807,7 +809,7 @@ class ListSubcortical(BaseInterface):
             nb_vert = int(g[0])
             # nb_tri = int(g[1].split('\n')[0])
             f.close()
-            a = np.loadtxt(in_file, skiprows=2, usecols=(0,1,2))
+            a = np.loadtxt(in_file, skiprows=2, usecols=(0, 1, 2))
             vert = a[:nb_vert]
             tri = a[nb_vert:].astype('int')
             (out_file_triangles_sub, out_file_vertices_sub) = self._get_outfilename(in_file)
@@ -820,3 +822,285 @@ class ListSubcortical(BaseInterface):
         outputs['triangles_sub_list'] = [self._get_outfilename(in_file)[0] for in_file in self.inputs.in_files]
         outputs['vertices_sub_list'] = [self._get_outfilename(in_file)[0] for in_file in self.inputs.in_files]
         return outputs
+
+
+class ComputeConnectivityFilesInputSpec():
+    verts = File(exists=True, mandatory=True, desc='surface vertices')
+    tri = File(exists=True, mandatory=True, desc='surface triangles')
+    region_mapping = File(exists=True, mandatory=True, desc='region mapping')
+    weights = File(exists=True, mandatory=True, desc='weight matrix')
+    tract_lengths = File(exists=True, mandatory=True, desc='tract length matrix')
+    vertices_sub_list = traits.List(File(exists=True, mandatory=True))
+    triangles_sub_list = traits.List(File(exists=True, mandatory=True))
+    out_file_weigths = File(desc='resulting weights')
+    out_file_tract_lengths = File(desc='resulting tract lengths')
+    out_file_areas = File(desc='resulting areas')
+    out_file_average_orientations = File(desc='resulting average orientations')
+    out_file_centres = File(desc='resulting centres')
+
+
+class ComputeConnectivityFilesOutputSpec():
+    out_file_weigths = File(exists=True, desc='resulting weights')
+    out_file_tract_lengths = File(exists=True, desc='resulting tract lengths')
+    out_file_areas = File(exists=True, desc='resulting areas')
+    out_file_average_orientations = File(exists=True, desc='resulting average orientations')
+    out_file_centres = File(exists=True, desc='resulting centres')
+
+
+class ComputeConnectivityFiles():
+    def compute_triangle_areas(self, vertices, triangles):
+        """Calculates the area of triangles making up a surface."""
+        tri_u = vertices[triangles[:, 1], :] - vertices[triangles[:, 0], :]
+        tri_v = vertices[triangles[:, 2], :] - vertices[triangles[:, 0], :]
+        tri_norm = np.cross(tri_u, tri_v)
+        triangle_areas = np.sqrt(np.sum(tri_norm ** 2, axis=1)) / 2.0
+        triangle_areas = triangle_areas[:, np.newaxis]
+        return triangle_areas
+
+    def compute_region_areas(self, triangles_areas, vertex_triangles):
+        avt = np.array(vertex_triangles)
+        # NOTE: Slightly overestimates as it counts overlapping border triangles,
+        #      but, not really a problem provided triangle-size << region-size.
+        regs = map(set, avt)
+        region_triangles = set.union(*regs)
+        region_surface_area = triangles_areas[list(region_triangles)].sum()
+        return region_surface_area
+
+    def compute_region_orientation(self, vertex_normals):
+        average_orientation = np.zeros((1, 3))
+        # Average orientation of the region
+        orient = vertex_normals[:, :]
+        avg_orient = np.mean(orient, axis=0)
+        average_orientation = avg_orient / np.sqrt(np.sum(avg_orient ** 2))
+        region_orientation = average_orientation
+        return region_orientation
+
+    def compute_vertex_triangles(self, number_of_vertices, number_of_triangles, triangles):
+        vertex_triangles = [[] for _ in xrange(number_of_vertices)]
+        for k in xrange(number_of_triangles):
+            vertex_triangles[triangles[k, 0]].append(k)
+            vertex_triangles[triangles[k, 1]].append(k)
+            vertex_triangles[triangles[k, 2]].append(k)
+        return vertex_triangles
+
+    def compute_vertex_normals(self, number_of_vertices, vertex_triangles, triangles,
+                               triangle_angles, triangle_normals, vertices):
+        """
+        Estimates vertex normals, based on triangle normals weighted by the
+        angle they subtend at each vertex...
+        """
+        vert_norms = np.zeros((number_of_vertices, 3))
+        bad_normal_count = 0
+        for k in xrange(number_of_vertices):
+            try:
+                tri_list = list(vertex_triangles[k])
+                angle_mask = triangles[tri_list, :] == k
+                angles = triangle_angles[tri_list, :]
+                angles = angles[angle_mask][:, np.newaxis]
+                angle_scaling = angles / np.sum(angles, axis=0)
+                vert_norms[k, :] = np.mean(angle_scaling * triangle_normals[tri_list, :], axis=0)
+                # Scale by angle subtended.
+                vert_norms[k, :] = vert_norms[k, :] / np.sqrt(np.sum(vert_norms[k, :] ** 2, axis=0))
+                # Normalise to unit vectors.
+            except (ValueError, FloatingPointError):
+                # If normals are bad, default to position vector
+                # A nicer solution would be to detect degenerate triangles and ignore their
+                # contribution to the vertex normal
+                vert_norms[k, :] = vertices[k] / np.sqrt(vertices[k].dot(vertices[k]))
+                bad_normal_count += 1
+        if bad_normal_count:
+            print(" %d vertices have bad normals" % bad_normal_count)
+        return vert_norms
+
+    def compute_triangle_angles(self, vertices, number_of_triangles, triangles):
+        """
+        Calculates the inner angles of all the triangles which make up a surface
+        """
+        verts = vertices
+        # TODO: Should be possible with arrays, ie not nested loops...
+        # A short profile indicates this function takes 95% of the time to compute normals
+        # (this was a direct translation of some old matlab code)
+        angles = np.zeros((number_of_triangles, 3))
+        for tt in xrange(number_of_triangles):
+            triangle = triangles[tt, :]
+            for ta in xrange(3):
+                ang = np.roll(triangle, -ta)
+                angles[tt, ta] = np.arccos(np.dot(
+                    (verts[ang[1], :] - verts[ang[0], :]) /
+                    np.sqrt(np.sum((verts[ang[1], :] - verts[ang[0], :]) ** 2, axis=0)),
+                    (verts[ang[2], :] - verts[ang[0], :]) /
+                    np.sqrt(np.sum((verts[ang[2], :] - verts[ang[0], :]) ** 2, axis=0))))
+
+        return angles
+
+    def compute_triangle_normals(self, triangles, vertices):
+        """Calculates triangle normals."""
+        tri_u = vertices[triangles[:, 1], :] - vertices[triangles[:, 0], :]
+        tri_v = vertices[triangles[:, 2], :] - vertices[triangles[:, 0], :]
+        tri_norm = np.cross(tri_u, tri_v)
+
+        try:
+            triangle_normals = tri_norm / np.sqrt(np.sum(tri_norm ** 2, axis=1))[:, np.newaxis]
+        except FloatingPointError:
+            # TODO: NaN generation would stop execution, however for normals this case could maybe be
+            # handled in a better way.
+            triangle_normals = tri_norm
+        return triangle_normals
+
+    def compute_region_areas_cortex(self, triangle_areas, vertex_triangles, region_mapping):
+        regions = np.unique(region_mapping)
+        region_surface_area = np.zeros((np.max(np.unique(regions)) + 1, 1))
+        avt = np.array(vertex_triangles)
+        # NOTE: Slightly overestimates as it counts overlapping border triangles,
+        #      but, not really a problem provided triangle-size << region-size.
+        for k in regions:
+            regs = map(set, avt[region_mapping == k])
+            region_triangles = set.union(*regs)
+            region_surface_area[k] = triangle_areas[list(region_triangles)].sum()
+
+        return region_surface_area
+
+    def compute_region_orientation_cortex(self, vertex_normals, region_mapping):
+        regions = np.unique(region_mapping)
+        average_orientation = np.zeros((np.max(np.unique(regions)) + 1, 3))
+        # Average orientation of the region
+        for k in regions:
+            orient = vertex_normals[region_mapping == k, :]
+            avg_orient = np.mean(orient, axis=0)
+            average_orientation[k, :] = avg_orient / np.sqrt(np.sum(avg_orient ** 2))
+
+        return average_orientation
+
+    def compute_region_center_cortex(vertices, region_mapping):
+        regions = np.unique(region_mapping)
+        region_center = np.zeros((np.max(np.unique(region_mapping)) + 1, 3))
+        # Average orientation of the region
+        for k in regions:
+            vert = vertices[region_mapping == k, :]
+            region_center[k, :] = np.mean(vert, axis=0)
+
+        return region_center
+
+    def _get_outfilename(self):
+        out_file_weights = self.inputs.out_file_weights
+        out_file_tract_lengths = self.inputs.out_file_tract_lengths
+        out_file_areas = self.inputs.out_file_areas
+        out_file_average_orientations = self.inputs.out_file_average_orientations
+        out_file_centres = self.inputs.out_file_tract_centres
+
+        if not isdefined(out_file_weights):
+            out_file_weights = os.path.join(os.getcwd(), self.inputs.weights +
+                                            '_weights.txt')
+        if not isdefined(out_file_tract_lengths):
+            out_file_tract_lengths = os.path.join(os.getcwd(), self.inputs.tract_lengths +
+                                                  '_tract_lengths.txt')
+        if not isdefined(out_file_areas):
+            out_file_areas = os.path.join(os.getcwd(), self.inputs.areas +
+                                          '_areas.txt')
+        if not isdefined(out_file_average_orientations):
+            out_file_average_orientations = os.path.join(os.getcwd(), self.inputs.average_orientations +
+                                                         '_average_orientations.txt')
+        if not isdefined(out_file_centres):
+            out_file_centres = os.path.join(os.getcwd(), self.inputs.centres +
+                                            '_centres.txt')
+
+        return (os.path.abspath(out_file_weights),
+                os.path.abspath(out_file_tract_lengths),
+                os.path.abspath(out_file_areas),
+                os.path.abspath(out_file_average_orientations),
+                os.path.abspath(out_file_centres))
+
+    def _run_interface(self, runtime):
+        # Cortex
+        (out_file_weights, out_file_tract_lengths, out_file_areas, out_file_average_orientations,
+         out_file_centres) = self._get_outfilename()
+        # import data
+        verts = self.verts
+        tri = self.tri.astype(int)
+        region_mapping = self.region_mapping
+        # save connectivity and tract length matrices
+        weights = self.weights
+        tract_lengths = self.tract_lengths
+        weights = weights + weights.transpose() - np.diag(np.diag(weights))
+        # add the first region
+        weights = np.vstack([np.zeros((1, weights.shape[0])), weights])
+        weights = np.hstack([np.zeros((weights.shape[0], 1)), weights])
+        tract_lengths = tract_lengths + tract_lengths.transpose()  # because diagonal nul
+        # tck2connectome produces the number of steps in the tracking file
+        # so we have to multiply by the step size in mm which is 0.5
+        tract_lengths *= 0.5
+        tract_lengths = np.vstack([np.zeros((1, tract_lengths.shape[0])), tract_lengths])
+        tract_lengths = np.hstack([np.zeros((tract_lengths.shape[0], 1)), tract_lengths])
+        np.savetxt(out_file_weights, weights, fmt='%d')
+        np.savetxt(out_file_tract_lengths, tract_lengths, fmt='%.3f')
+
+        # compute centers
+        centers = self.compute_region_center_cortex(verts, region_mapping)
+
+        # calculate average orientations
+        number_of_vertices = int(verts.shape[0])
+        number_of_triangles = int(tri.shape[0])
+        vertex_triangles = self.compute_vertex_triangles(number_of_vertices, number_of_triangles,
+                                                         tri)
+        triangle_normals = self.compute_triangle_normals(tri, verts)
+        triangle_angles = self.compute_triangle_angles(verts, number_of_triangles, tri)
+        vertex_normals = self.compute_vertex_normals(number_of_vertices, vertex_triangles,
+                                                     tri, triangle_angles,
+                                                     triangle_normals, verts)
+        orientations = self.compute_region_orientation_cortex(vertex_normals, region_mapping)
+
+        # compute areas
+        triangle_areas = self.compute_triangle_areas(verts, tri)
+        areas = self.compute_region_areas_cortex(triangle_areas, vertex_triangles, region_mapping)
+
+        # subcorticals
+        corr_table = np.loadtxt('correspondance_mat.txt')
+        for sub_verts, sub_tri in zip(self.inputs.vertices_sub_list, self.inputs.triangles_sub_list):
+            list_pos_val = ['16', '08', '10', '11', '12', '13', '17', '18', '26', '47', '49', '50', '51', '52', '53',
+                            '54', '58']
+            val = [iarg for iarg in list_pos_val if iarg in sub_verts]
+            verts = np.loadtxt(sub_verts)
+            tri = np.loadtxt(sub_tri)
+            tri = tri.astype(int)
+
+            curr_center = np.mean(verts, axis=0)
+            indx = int(corr_table[np.nonzero(corr_table[:, 0] == np.int(val)), 1] - 1)
+            centers[indx, :] = curr_center
+            # Now calculate average orientations
+            number_of_vertices = int(verts.shape[0])
+            number_of_triangles = int(tri.shape[0])
+            vertex_triangles = self.compute_vertex_triangles(number_of_vertices, number_of_triangles,
+                                                             tri)
+            triangle_normals = self.compute_triangle_normals(tri, verts)
+            triangle_angles = self.compute_triangle_angles(verts, number_of_triangles, tri)
+            vertex_normals = self.compute_vertex_normals(number_of_vertices, vertex_triangles,
+                                                         tri, triangle_angles,
+                                                         triangle_normals, verts)
+            average_orientation = self.compute_region_orientation(vertex_normals)
+            orientations[indx, :] = average_orientation
+
+            triangle_areas = self.compute_triangle_areas(verts, tri)
+            region_areas = self.compute_region_areas(triangle_areas, vertex_triangles)
+            areas[indx] = region_areas
+
+        # save orientations and areas
+        np.savetxt(out_file_areas, areas, fmt='%.2f')
+        np.savetxt(out_file_average_orientations,
+                   orientations, fmt='%.2f %.2f %.2f')
+
+        # add the name to centers
+        f = open('name_regions.txt', 'rb')
+        list_name = []
+        for line in f:
+            list_name.append(line)
+        f.close()
+
+        f = open(out_file_centres, 'w')
+        for i, name in enumerate(list_name):
+            f.write(str(name[:-1]) + ' ')
+            for j in range(3):
+                f.write('{:.4f} '.format(centers[i, j]))
+            f.write('\n')
+        f.close()
+
+        return runtime

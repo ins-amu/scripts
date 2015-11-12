@@ -98,14 +98,18 @@ def SubcorticalSurface(name="subcorticalsurfaces"):
     return wf
 
 
-def Connectivity(name="connectivity"):
-    inputnode = pe.Node(interface=niu.IdentityInterface(fields=['in_file']), name='inputnode')
-    # TODO: first import
-    convert_dicom2nii = pe.Node(interface=mrt.MRConvert(), name='convert_dicom2nii')
-    extract_bvecs_bvals = pe.Node(interface=mtr3.utils.MRInfo(), name='extract_bvecs_bvals')
-    # ecc = ecc_pipeline()
-    convert_nii2dwi = pe.Node(interface=mrt.MRConvert(), name='convert_nii2dwi')
-    # END TODO
+# def Connectivity(name="connectivity"):
+#     inputnode = pe.Node(interface=niu.IdentityInterface(fields=['in_file']), name='inputnode')
+#     # TODO: first import
+#     convert_dicom2nii = pe.Node(interface=mrt.MRConvert(), name='convert_dicom2nii')
+#     extract_bvecs_bvals = pe.Node(interface=mtr3.utils.MRInfo(), name='extract_bvecs_bvals')
+#     # ecc = ecc_pipeline()
+#     convert_nii2dwi = pe.Node(interface=mrt.MRConvert(), name='convert_nii2dwi')
+#     # END TODO
+
+def Tractography(name="tractography"):
+    inputnode = pe.Node(interface=niu.IdentityInterface(fields=['converted']), name='inputnode')
+    inputnode.inputs.converted = "/Users/timp/Work/data/af/connectivity/dwi.mif"
     create_mask = pe.Node(interface=mrt3.utils.BrainMask(), name='create_mask')
     dwi_extract_lowb = pe.Node(interface=mrt3u.DwiExtract(), name='dwi_extract_lowb')
     dwi_extract_lowb.inputs.bzero = True
@@ -122,9 +126,11 @@ def Connectivity(name="connectivity"):
     tckgen.inputs.algorithm = 'iFOD2'
     tckgen.inputs.maxlength = 250.
     tckgen.inputs.step_size = 0.5
-    tckgen.inputs.number = 5000000
+    # tckgen.inputs.number = 5000000
+    tckgen.inputs.number = 5000
     tcksift = pe.Node(interface=mrt3u.TckSift(), neame='tcksift')
-    tcksift.inputs.term_number = 2500000
+    #tcksift.inputs.term_number = 2500000
+    tcksift.inputs.term_number = 2500
     labelconfig = pe.Node(interface=mrt3.connectivity.LabelConfig(), name='labelconfig')
     tck2connectome_weights = pe.Node(interface=mrt3.connectivity.BuildConnectome(), name='tck2connectome_weights')
     tck2connectome_weights.inputs.search_radius = 2.
@@ -140,20 +146,21 @@ def Connectivity(name="connectivity"):
 
     wf = pe.Workflow(name=name)
     wf.connect([
-        (inputnode, convert_dicom2nii, [('in_file', 'in_file')]),
-        (convert_dicom2nii, extract_bvecs_bvals, [('converted', 'in_files')]),
-        (convert_dicom2nii, convert_nii2dwi, [('converted', 'in_file'),
-                                              ('bvecs', 'bvals', 'fslgrad')]),
-        (convert_nii2dwi, create_mask, [('converted', 'in_file')]),
-        (convert_nii2dwi, dwi_extract_lowb, [('converted', 'in_file')]),
+        #(inputnode, convert_dicom2nii, [('in_file', 'in_file')]),
+        #(convert_dicom2nii, extract_bvecs_bvals, [('converted', 'in_files')]),
+        #(convert_dicom2nii, convert_nii2dwi, [('converted', 'in_file'),
+        #                                      ('bvecs', 'bvals', 'fslgrad')]),
+        #(convert_nii2dwi, create_mask, [('converted', 'in_file')]),
+        (inputnode, create_mask, [('converted', 'in_file')]),
+        (inputnode, dwi_extract_lowb, [('converted', 'in_file')]),
         (create_mask, dwi_extract_lowb, [('out_file', 'in_file')]),
         (dwi_extract_lowb, lowb_mif2lowb_nii, [('out_file', 'in_file')]),
         (inputnode, cor, [('in_T1.mgz', 'in_T1.mgz')]),
         (inputnode, cor, [('in_aparcaseg.mgz', 'in_aparcaseg.mgz')]),
         (lowb_mif2lowb_nii, cor, [('out_file', 'in_aparcaseg.mgz')]),
-        (convert_nii2dwi, dwi2response, [('out_file', 'dwi')]),
+        (inputnode, dwi2response, [('converted', 'dwi')]),
         (create_mask, dwi2response, [('out_file', 'mask')]),
-        (convert_nii2dwi, dwi2fod, [('out_file', 'dwi')]),
+        (inputnode, dwi2fod, [('converted', 'dwi')]),
         (dwi2response, dwi2fod, [('response', 'response')]),
         (create_mask, dwi2fod, [('out_file', 'mask')]),
         (cor, act_anat_prepare_fsl, [('out_T1_diff', 'in_file')]),
