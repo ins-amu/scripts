@@ -47,8 +47,12 @@ class TestSurfaceNodes(unittest.TestCase):
         remesher.inputs.in_file = self.path_s + 'lh_high.off'
         remesher.inputs.out_file = self.path_pd + 'lh_low.off'
         remesher.run()
-        ref_surf = open(self.path_s + 'lh_low.off').readlines(2)
-        res_surf = open(self.path_pd + 'lh_low.off').readlines(2)
+        f = open(self.path_s + 'lh_low.off')
+        f.readline()
+        ref_surf = f.readline()
+        g = open(self.path_pd + 'lh_low.off')
+        g.realine()
+        res_surf = g.readline()
         self.assertEqual(ref_surf, res_surf)
 
     def test_off2txt(self):
@@ -90,7 +94,7 @@ class TestSurfaceNodes(unittest.TestCase):
         rm = ut.CheckRegionMapping()
         rm.inputs.vertices = self.path_s + 'lh_vertices_low.txt'
         rm.inputs.triangles = self.path_s + 'lh_triangles_low.txt'
-        rm.inputs.region_mapping = self.path_s + 'lh_region_mapping_low.txt'
+        rm.inputs.region_mapping = self.path_s + 'lh_region_mapping_low_not_corrected.txt'
         rm.inputs.scripts_directory = '.'
         rm.inputs.check = False
         rm.inputs.display = False
@@ -106,13 +110,13 @@ class TestSurfaceNodes(unittest.TestCase):
                               self.path_s + 'rh_vertices_low.txt']
         rm.inputs.triangles = [self.path_s + 'lh_triangles_low.txt',
                                self.path_s + 'rh_triangles_low.txt']
-        rm.inputs.textures = ['tests/test_data/subj/lh_region_mapping_low.txt',
-                              'tests/test_data/subj/rh_region_mapping_low.txt']
+        rm.inputs.textures = [self.path_s + 'lh_region_mapping_low.txt',
+                              self.path_s + 'rh_region_mapping_low.txt']
         rm.inputs.out_file_vertices = self.path_pd + 'vertices.txt'
         rm.inputs.out_file_triangles = self.path_pd + 'triangles.txt'
         rm.inputs.out_file_texture = self.path_pd + 'region_mapping.txt'
         rm.run()
-        ref_rm = np.loadtxt('tests/test_data/subj/region_mapping.txt')
+        ref_rm = np.loadtxt(self.path_d + 'region_mapping.txt')
         res_rm = np.loadtxt(self.path_pd + 'region_mapping.txt')
         np.testing.assert_array_equal(ref_rm, res_rm)
 
