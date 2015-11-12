@@ -4,8 +4,9 @@ import nipype.interfaces.mrtrix3 as mrt3
 import nipype.interfaces.freesurfer as fs
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
-from nipype.workflows.dmri.fsl.artifacts import ecc_pipeline 
-import utility as su 
+from nipype.workflows.dmri.fsl.artifacts import ecc_pipeline
+import utility as su
+
 
 def ReconAll():
     pass
@@ -23,8 +24,8 @@ def Surface(name='surface'):
                                       "/Users/timp/Work/data/af//surf/lh.pial"]),
                            ('annots', ["/Users/timp/Work/data/af/label/rh.aparc.annot",
                                        "/Users/timp/Work/data/af/label/lh.aparc.annot"]),
-                            ('ref_tables', ["/Users/timp/Desktop/scripts/rh_ref_table.txt",
-                                            "/Users/timp/Desktop/scripts/lh_ref_table.txt"])]
+                           ('ref_tables', ["/Users/timp/Desktop/scripts/rh_ref_table.txt",
+                                           "/Users/timp/Desktop/scripts/lh_ref_table.txt"])]
     inputnode.synchronize = True
 
     pial2asc = pe.Node(interface=su.MRIsConvert(), name='pial2asc')
@@ -47,26 +48,26 @@ def Surface(name='surface'):
     wf.connect([
         (inputnode, pial2asc, [('pials', 'in_file')]),
         (inputnode, region_mapping, [('annots', 'aparc_annot'),
-                       ('ref_tables', 'ref_table')]),
+                                     ('ref_tables', 'ref_table')]),
         (pial2asc, extract_high, [('converted', 'surface')]),
         (extract_high, txt2off, [('vertices', 'vertices'),
                                  ('triangles', 'triangles')]),
-        (extract_high, region_mapping,[('vertices', 'vertices')]),
+        (extract_high, region_mapping, [('vertices', 'vertices')]),
         (txt2off, remesher, [('surface_off', 'in_file')]),
         (remesher, off2txt, [('out_file', 'surface_off')]),
         # work to do on region mapping
         (off2txt, region_mapping, [('vertices_txt', 'vertices_downsampled'),
                                    ('triangles_txt', 'triangles_downsampled')]),
         (off2txt, correct_region_mapping, [('vertices_txt', 'vertices'),
-                                           ('triangles_txt','triangles')]),
+                                           ('triangles_txt', 'triangles')]),
         (off2txt, check_region_mapping, [('vertices_txt', 'vertices'),
                                          ('triangles_txt', 'triangles')]),
         (off2txt, reunify_both_hemi, [('vertices_txt', 'vertices'),
-                                         ('triangles_txt', 'triangles')]),
-        (region_mapping, correct_region_mapping,[('out_file', 'texture')]),
+                                      ('triangles_txt', 'triangles')]),
+        (region_mapping, correct_region_mapping, [('out_file', 'texture')]),
         (correct_region_mapping, check_region_mapping, [('texture_corrected', 'region_mapping')]),
         (check_region_mapping, reunify_both_hemi, [('region_mapping', 'textures')]),
-        ])
+    ])
 
     return wf
 
@@ -77,7 +78,8 @@ def SubcorticalSurface(name="subcorticalsurfaces"):
 
     Output a list of subcortical surfaces
     """
-    inputnode = pe.Node(interface=niu.IdentityInterface(fields=['subject_id', 'labels', 'subjects_dir']), name='inputnode')
+    inputnode = pe.Node(interface=niu.IdentityInterface(fields=['subject_id', 'labels', 'subjects_dir']),
+                        name='inputnode')
     inputnode.inputs.subject_id = '151526'
     inputnode.inputs.subjects_dir = '/Users/timp/Desktop/scripts/tests/test_data/freesurfer_dir/'
     # inputnode.iterables = [('labels', ['16', '08', '10', '11', '12', '13', '17', '18', '26', '47', '49', '50', '51',
@@ -100,7 +102,7 @@ def Connectivity(name="connectivity"):
     # TODO: first import
     convert_dicom2nii = pe.Node(interface=mrt.MRConvert(), name='convert_dicom2nii')
     extract_bvecs_bvals = pe.Node(interface=mtr3.utils.MRInfo(), name='extract_bvecs_bvals')
-# ecc = ecc_pipeline()
+    # ecc = ecc_pipeline()
     convert_nii2dwi = pe.Node(interface=mrt.MRConvert(), name='convert_nii2dwi')
     # END TODO
     create_mask = pe.Node(interface=mrt3.utils.BrainMask(), name='create_mask')
@@ -127,13 +129,15 @@ def Connectivity(name="connectivity"):
     labelconfig = pe.Node(interface=mrt3.connectivity.LabelConfig(), name='labelconfig')
     tck2connectome_weights = pe.Node(interface=mrt3.connectivity.BuildConnectome(), name='tck2connectome_weights')
     tck2connectome_weights.inputs.search_radius = 2.
-    tck2connectome_tract_lengths = pe.Node(interface=mrt3.connectivity.BuildConnectome(), name='tck2connectome_tract_lengths')
+    tck2connectome_tract_lengths = pe.Node(interface=mrt3.connectivity.BuildConnectome(),
+                                           name='tck2connectome_tract_lengths')
     tck2connectome_tract_lengths.inputs.assignement_radial_search = 2
     tck2connectome_tract_lengths.inputs.zero_diagonal = True
     tck2connectome_tract_lengths.inputs.metric = 'meanlength'
     # TODO: implement
     compute_connectivity = pe.Node(interface=su.ComputeConnectivityFiles(), name='compute_connecitivty')
-    output_node = pe.Node(interface=niu.IdentityInterface(fields=(['out_weights', 'out_tract_lengths']), name='outputnode'))
+    output_node = pe.Node(
+        interface=niu.IdentityInterface(fields=(['out_weights', 'out_tract_lengths']), name='outputnode'))
 
     wf = pe.Workflow(name=name)
     wf.connect([
@@ -162,27 +166,22 @@ def Connectivity(name="connectivity"):
         (cor, labelconfig, [('out_aparcaseg_diff', 'labels_in')]),
         (inputnode, labelconfig, [('fs_region.txt', 'config')]),
         (inputnode, labelconfig, [('FreeSurferColorLUT.txt', 'lut_freesurfer')]),
-        (tcksift, tck2connectome_weights, [('out_file', 'tracks_in')]), 
+        (tcksift, tck2connectome_weights, [('out_file', 'tracks_in')]),
         (labelconfig, tck2connectome_weights, [('labels_out', 'nodes_in')]),
-        (tcksift, tck2connectome_tract_lengths, [('out_file', 'tracks_in')]), 
+        (tcksift, tck2connectome_tract_lengths, [('out_file', 'tracks_in')]),
         (labelconfig, tck2connectome_tract_lengths, [('labels_out', 'nodes_in')]),
         (tck2connectome_weights, compute_connectivity, [('connectome_out', 'in_file')]),
         (tck2connectome_tract_lengths, compute_connectivity, [('connectome_out', 'in_file')]),
         (compute_connectivity, output_node, [('weights.txt', 'out_weights.txt'),
                                              ('tract_lengths.txt', 'out_tract_lengths.txt')])
-        ])
-
+    ])
 
     return wf
 
 
-        
-        
-
-
 def Coregistration(name='coregistration'):
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_T1.mgz', 'in_lowb.nii',
-                        'in_aparcaseg.mgz']), name='inputnode')
+                                                      'in_aparcaseg.mgz']), name='inputnode')
     T1_mgz2nii = pe.Node(interface=fs.preprocess.MRIConvert(), name='T1_mgz2nii')
     T1_mgz2nii.inputs.in_type = 'mgz'
     T1_mgz2nii.inputs.out_type = 'nii'
@@ -206,7 +205,7 @@ def Coregistration(name='coregistration'):
     T12diff.inputs.apply_xfm = True
     T12diff.inputs.interp = 'nearestneighbour'
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_aparcaseg_diff', 'out_T1_diff'], name='outputnode'))
-    
+
     wf = pe.Workflow(name=name)
     wf.connect([
         (inputnode, T1_mgz2nii, [('in_T1.mgz', 'in_file')]),
@@ -221,13 +220,6 @@ def Coregistration(name='coregistration'):
         (T1_mgz2nii, T12diff, [('out_file', 'in_file')]),
         (inputnode, T12diff, [('in_lowb.nii', 'reference')]),
         (convertxfm, T12diff, [('out_file', 'in_matrix_file')]),
-        ])
+    ])
 
     return wf
-
-
-
-
-
-
-
