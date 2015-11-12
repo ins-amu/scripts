@@ -4,6 +4,7 @@ python:
 install:
   - sudo apt-get update
   - sudo apt-get install libgsl0-dev
+  - sudo apt-get install build-essential
   - sudo apt-get install git g++ python libgsl0-dev zlib1g-dev libqt4-opengl-dev libgl1-mesa-dev
   - git clone https://github.com/MRtrix3/mrtrix3.git
   - cd mrtrix3
