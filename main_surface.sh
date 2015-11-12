@@ -239,8 +239,7 @@ else
     if [ ! -f $PRD/connectivity/dwi.mif ]
     then
         if [ "$topup" =  "eddy_correct" ]
-        then
-            echo "eddy correct data"
+        thenecho "eddy correct data"
             "$FSL"eddy_correct $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi_eddy_corrected.nii.gz 0
             mrconvert $PRD/connectivity/dwi_eddy_corrected.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
         else

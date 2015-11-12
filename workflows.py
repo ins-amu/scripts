@@ -6,6 +6,7 @@ import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 from nipype.workflows.dmri.fsl.artifacts import ecc_pipeline
 import utility as su
+import mrtrix3_utility as mrt3u
 
 
 def ReconAll():
@@ -106,8 +107,8 @@ def Connectivity(name="connectivity"):
     convert_nii2dwi = pe.Node(interface=mrt.MRConvert(), name='convert_nii2dwi')
     # END TODO
     create_mask = pe.Node(interface=mrt3.utils.BrainMask(), name='create_mask')
-    # TODO implement
-    dwi_extract_lowb = pe.Node(interface=mrt3.DwiExtract(), name='dwi_extract_lowb')
+    dwi_extract_lowb = pe.Node(interface=mrt3u.DwiExtract(), name='dwi_extract_lowb')
+    dwi_extract_lowb.inputs.bzero = True
     lowb_mif2lowb_nii = pe.Node(interface=mrt.MRConvert(), name='lowb_mif2lowb_nii')
     # TODO: check
     cor = Coregistration()
@@ -115,8 +116,7 @@ def Connectivity(name="connectivity"):
     dwi2fod = pe.Node(interface=mrt3.reconst.EstimateFOD, name='dwi2fod')
     dwi2fod.inputs.max_sh = 8
     act_anat_prepare_fsl = pe.node(interface=mrt3.preprocess.ACTPrepareFSL(), name='act_anat_prepare_fsl')
-    # TODO: implement
-    fivett2gmwmi = pe.Node(interface=mrt3.fivett2Gmwmi(), name='5tt2gmwmi')
+    fivett2gmwmi = pe.Node(interface=mrt3u.Fivett2Gmwmi(), name='5tt2gmwmi')
     tckgen = pe.node(interface=mrt3.tracking.Tractography(), name='tckgen')
     tckgen.inputs.unidirectional = True
     tckgen.inputs.algorithm = 'iFOD2'
