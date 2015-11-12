@@ -1,0 +1,3 @@
+COMPILER = g++
+CORES = $(shell grep processor /proc/cpuinfo | wc -l)
+GCC_FLAGS = -Wall -W -ansi -pedantic -Wcast-align -Wcast-qual -Wpointer-arith -Wundef -Wconversion -g -O3
