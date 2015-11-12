@@ -10,7 +10,7 @@ install:
   - sudo apt-get install git g++ python libgsl0-dev zlib1g-dev libqt4-opengl-dev libgl1-mesa-dev
   - git clone https://github.com/MRtrix3/mrtrix3.git
   - cd mrtrix3
-  - CXX=/usr/bin/g++-4.8 ./configure
+  - CXX=/usr/bin/g++-4.8 ./configure -nogui
   - ./build
   - PATH=$(pwd)/bin:\$PATH
   - cd ..
