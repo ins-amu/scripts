@@ -123,8 +123,7 @@ def Connectivity(name="connectivity"):
     tckgen.inputs.maxlength = 250.
     tckgen.inputs.step_size = 0.5
     tckgen.inputs.number = 5000000
-    # TODO: tcksift
-    tcksift = pe.Node(interface=mrt3.TckSift(), neame='tcksift')
+    tcksift = pe.Node(interface=mrt3u.TckSift(), neame='tcksift')
     tcksift.inputs.term_number = 2500000
     labelconfig = pe.Node(interface=mrt3.connectivity.LabelConfig(), name='labelconfig')
     tck2connectome_weights = pe.Node(interface=mrt3.connectivity.BuildConnectome(), name='tck2connectome_weights')

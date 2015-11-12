@@ -54,13 +54,13 @@ class Fivett2GmwmiInputSpec():
     mask_out = File(exists=True, genfile=True, position=-1, argstr='%s', desc='the output mask image')
 
 
-class Fivett2GmwmOutputSpec():
+class Fivett2GmwmiOutputSpec():
     out_file = File(exists=True, desc='the output mask image')
 
 
-class Fivett2Gmwm():
+class Fivett2Gmwmi():
     input_spec = Fivett2GmwmiInputSpec
-    output_spec = Fivett2GmwmOutputSpec
+    output_spec = Fivett2GmwmiOutputSpec
     _cmd = '5tt2gmwmi'
 
     def _gen_filename(self, name):
@@ -74,7 +74,7 @@ class Fivett2Gmwm():
             return self.inputs.out_file
         else:
             _, name, ext = split_filename(self.inputs.in_file)
-            return name + '_dwiextracted' + ext
+            return name + '_gmwmi' + ext
 
     def _list_outputs(self):
         outputs = self._outputs().get()
@@ -82,21 +82,23 @@ class Fivett2Gmwm():
         return outputs
 
 
-class DwiExtractInputSpec(CommandLineInputSpec):
-    in_file = File(exists=True, mandatory=True, position=-2, argstr='%s', desc='the input DW image.')
-    out_file = File(exists=True, genfile=True, position=-1, argstr='%s', desc='the output image (diffusion-weighted'
-                                                                              ' volumes by default.')
-    bzero = traits.Bool(argstr='bzero', desc='output b=0 volumes instead of the diffusion weighted volumes.')
+class TckSiftInputSpec(CommandLineInputSpec):
+    in_tracks = File(exists=True, mandatory=True, position=-3, argstr='%s', desc='the input track file.')
+    in_fod = File(exists=True, mandatory=True, position=-2, argstr='%s',
+                  desc='input image containing the spherical harmonics of the fibre orientation distributions')
+    out_tracks = File(exists=True, genfile=True, position=-1, argstr='%s', desc='the output filtered tracks file.')
+    term_number = traits.Int(argstr='-term_number %s',
+                             desc='number of streamlines - continue filtering until this number of'
+                                  'streamlines remain')
 
 
-class DwiExtractOutputSpec(TraitedSpec):
-    out_file = File(desc='the output image (diffusion-weighted'
-                         ' volumes by default.', exists=True)
+class TckSiftOutputSpec(TraitedSpec):
+    out_file = File(exists=True, desc='the output filtered tracks file.')
 
 
-class DwiExtract(CommandLine):
-    input_spec = DwiExtractInputSpec
-    output_spec = DwiExtractOutputSpec
+class TckSift(CommandLine):
+    input_spec = TckSiftInputSpec
+    output_spec = TckSiftOutputSpec
     _cmd = 'dwiextract'
 
     def _gen_filename(self, name):
@@ -110,10 +112,9 @@ class DwiExtract(CommandLine):
             return self.inputs.out_file
         else:
             _, name, ext = split_filename(self.inputs.in_file)
-            return name + '_dwiextracted' + ext
+            return name + '_tcksifted' + ext
 
     def _list_outputs(self):
         outputs = self._outputs().get()
         outputs['out_file'] = os.path.abspath(self._gen_outfilename())
         return outputs
-
