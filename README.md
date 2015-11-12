@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/timpx/scripts.svg?branch=nipype)](https://travis-ci.org/timpx/scripts)
+
 # Surface and Connectivity Reconstruction: Imaging Pipeline for TVB Simulations
 ## SCRIPTS 0.2
  
