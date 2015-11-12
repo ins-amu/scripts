@@ -86,22 +86,18 @@ class TestSurface(unittest.TestCase):
     #    res_rm = np.loadtxt(self.path_pd + 'region_mapping_low_not_corrected.txt')
     #    np.testing.assert_array_equal(ref_rm, res_rm)
 
-    # def test_correctregionmapping(self):
-    #     rm = ut.CorrectRegionMapping()
-    #     rm.inputs.vertices = self.path_s + 'lh_vertices_low.txt'
-    #     rm.inputs.triangles = self.path_s + 'lh_triangles_low.txt'
-    #     rm.inputs.texture = self.path_s + 'lh_region_mapping_low_not_corrected.txt'
-    #     rm.inputs.out_file_region_mapping_corr = self.path_pd + '/region_mapping_low.txt'
-    #     rm.run()
-    #     ref_rm = np.loadtxt(self.path_s + 'region_mapping_low.txt')
-    #     res_rm = np.loadtxt(self.path_pd + '/region_mapping_low.txt')
-    #     np.testing.assert_array_equal(ref_rm, res_rm)
 
-    def test_checkregionmapping(self):
+    def test_correctandcheckregionmapping(self):
+        rm = ut.CorrectRegionMapping()
+        rm.inputs.vertices = self.path_s + 'lh_vertices_low.txt'
+        rm.inputs.triangles = self.path_s + 'lh_triangles_low.txt'
+        rm.inputs.texture = self.path_s + 'lh_region_mapping_low_not_corrected.txt'
+        rm.inputs.out_file_region_mapping_corr = self.path_pd + '/region_mapping_low.txt'
+        rm.run()
         rm = ut.CheckRegionMapping()
         rm.inputs.vertices = self.path_s + 'lh_vertices_low.txt'
         rm.inputs.triangles = self.path_s + 'lh_triangles_low.txt'
-        rm.inputs.region_mapping = self.path_s + 'lh_region_mapping_low_not_corrected.txt'
+        rm.inputs.region_mapping = self.path_pd + 'region_mapping_low.txt'
         rm.inputs.scripts_directory = '.'
         rm.inputs.check = False
         rm.inputs.display = False
@@ -127,6 +123,9 @@ class TestSurface(unittest.TestCase):
         res_rm = np.loadtxt(self.path_pd + 'region_mapping.txt')
         np.testing.assert_array_equal(ref_rm, res_rm)
 
+    # TODO check single component for each region
+    # TODO check surface loose not too much area
+    # TODO check surface topologicaly equivalent to a sphere
 
 class TestSubcorticalSurface(unittest.TestCase):
     def test_aseg2srf(self):
