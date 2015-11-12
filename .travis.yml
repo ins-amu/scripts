@@ -15,7 +15,9 @@ install:
   - conda create -q -n nipype_test_env python=2.7 numpy scipy traits networkx
   - source activate nipype_test_env
   - pip install nipype
+script:
   - pwd
-script: python -m unittest -v tests.test
+  - mkdir -p /home/travis/build/timpx/scripts/tests/test_data/produced_data/
+  - python -m unittest -v tests.test
 notifications:
   email: false

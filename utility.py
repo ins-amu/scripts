@@ -235,7 +235,7 @@ class Remesher(CommandLine):
 
     def __init__(self, *args, **kwargs):
         super(Remesher, self).__init__(*args, **kwargs)
-        self._cmd = self.get_scripts_dir() + "/remesher-mac/cmdremesher/cmdremesher"
+        self._cmd = self.get_scripts_dir() + "/remesher/cmdremesher/cmdremesher"
     
     def get_scripts_dir(self):
         if isdefined(self.inputs.scripts_directory):

@@ -21,7 +21,7 @@ class TestSurfaceNodes(unittest.TestCase):
 
     def test_fs2txt(self):
         extract_high = ut.Fs2Txt()
-        extract_high.inputs.surface = self.path_td + 'lh.pial.asc'
+        extract_high.inputs.surface = self.path_pd + 'lh.pial.asc'
         extract_high.inputs.out_file_triangles = self.path_pd + 'lh_triangles_high.txt'
         extract_high.inputs.out_file_vertices = self.path_pd + 'lh_vertices_high.txt'
         extract_high.run()
@@ -39,7 +39,7 @@ class TestSurfaceNodes(unittest.TestCase):
         txt2off.inputs.out_file_off = self.path_pd + 'lh_high.off'
         txt2off.run()
         ref_surf = open(self.path_s + 'lh_high.off').readlines()
-        res_surf = open(self.path_pd + '/lh_high.off').readlines()
+        res_surf = open(self.path_pd + 'lh_high.off').readlines()
         self.assertEqual(ref_surf, res_surf)
 
     def test_remesher(self):
@@ -94,15 +94,14 @@ class TestSurfaceNodes(unittest.TestCase):
         rm.inputs.scripts_directory = '.'
         rm.inputs.check = False
         rm.inputs.display = False
-        rm.inputs.out_file = self.path_pd + 'region_mapping_low.txt'
+        rm.inputs.out_file = self.path_pd + 'lh_region_mapping_low.txt'
         rm.run()
-        ref_rm = np.loadtxt(self.path_s + 'region_mapping_low.txt')
-        res_rm = np.loadtxt(self.path_pd + 'region_mapping_low.txt')
+        ref_rm = np.loadtxt(self.path_s + 'lh_region_mapping_low.txt')
+        res_rm = np.loadtxt(self.path_pd + 'lh_region_mapping_low.txt')
         np.testing.assert_array_equal(ref_rm, res_rm)
 
     def test_reunifybothhemisphere(self):
         rm = ut.RegionMapping()
-        rm.inputs.aparc_annot = 'tests/test_data/label/lh.aparc.annot'
         rm.inputs.vertices = [self.path_s + 'lh_vertices_low.txt',
                               self.path_s + 'rh_vertices_low.txt']
         rm.inputs.triangles = [self.path_s + 'lh_triangles_low.txt',
