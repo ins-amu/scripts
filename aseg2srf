@@ -17,17 +17,19 @@ Options:
             e.g. "10 11 14 52 253", or a text file
             containing one label per line, or ignore
             this option to convert all labels.
+-sd <str> : Specify SUBJECTS_DIR of FreeSurfer, between quotes
+-fs <str> : Specify FREESURFER_HOME of FreeSurfer, between quotes
 -d          Debug mode. Leave all temporary files.
 
 Requirements:
-FreeSurfer must have been configured and the variables
-FREESURFER_HOME and SUBJECTS_DIR must have been correctly set.
-
+FreeSurfer must have been installed
 _____________________________________
 Anderson M. Winkler
 Institute of Living / Yale University
 Jul/2009
 http://brainder.org
+Modified by T. Proix
+Oct/2015
 EOU
 exit
 fi
@@ -38,12 +40,17 @@ LABLIST="4 5 7 8 10 11 12 13 14 15 16 17 18 26 28 43 44 46 47 49 50 51 52 53 54 
 # Check and accept arguments
 SBJLIST=""
 DEBUG=N
-while getopts 's:l:d' OPTION
+SUBJECTS_DIR=$SUBJECTS_DIR
+FREESURFER_HOME=$FREESURFER_HOME
+
+while getopts 's:l:d:f:e' OPTION
 do
   case ${OPTION} in
     s) SBJLIST=$( [[ -f ${OPTARG} ]] && cat ${OPTARG} || echo "${OPTARG}" ) ;;
     l) LABLIST=$( [[ -f ${OPTARG} ]] && cat ${OPTARG} || echo "${OPTARG}" ) ;;
-    d) DEBUG=Y ;;
+    d) SUBJECTS_DIR=$( [[ -f ${OPTARG} ]] && cat ${OPTARG} || echo "${OPTARG}" ) ;;
+    f) FREESURFER_HOME=$( [[ -f ${OPTARG} ]] && cat ${OPTARG} || echo "${OPTARG}" ) ;;
+    e) DEBUG=Y ;;
   esac
 done
 
@@ -109,7 +116,7 @@ for s in ${SBJLIST} ; do
   # Get rid of temp files
   if [ "${DEBUG}" == "Y" ] ; then
     echo "==> Temporary files for ${s} saved at:"
-    echo "${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}"
+    echo "{SUBJECTS_DIR}/${s}/tmp/${RNDSTR}"
   else
     echo "==> Removing temporary files for ${s}"
     rm -rf ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}
