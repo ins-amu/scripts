@@ -1,4 +1,18 @@
 language: python
 python:
- - "2.7"
+  - "2.7"
+install:
+  - sudo apt-get update
+  - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+  # Replace dep1 dep2 ... with your dependencies
+  - conda create -q -n nipype_test_env python=2.7 numpy scipy traits networkx
+  - source activate nipype_test_env
+  - pip install nipype
 script: python -m unittest -v tests.test
