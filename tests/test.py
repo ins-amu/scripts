@@ -14,7 +14,12 @@ import numpy as np
 # 		run extract_high lh
 
 
-class TestSurfaceNodes(unittest.TestCase):
+class TestSurface(unittest.TestCase):
+    """
+    Test for surface workflow
+
+    Test data are from HCP subject 151526
+    """
     path_s = 'tests/test_data/surface/'  # test data surface
     path_pd = 'tests/test_data/produced_data/'  # test produced data
     path_d = 'tests/test_data/subj/'  # test data subj
@@ -126,6 +131,64 @@ class TestSubcorticalSurface(unittest.TestCase):
         pass
 
     def test_listsubcortical(self):
+        pass
+
+
+class TestConnectivity(unittest.TestCase):
+    """
+    Test data for connecivity workflow
+
+    Test data are from subject af
+    """
+    def test_convert_dicom2nii(self):
+        pass
+
+    def test_extract_bvecs_bvals(self):
+        pass
+
+    def test_convert_nii2dwi(self):
+        pass
+
+    def test_create_mask(self):
+        pass
+
+    def test_dwi_extract_lowb(self):
+        pass
+
+    def test_lowb_mif2lowb_nii(self):
+        pass
+
+    def test_dwi2response(self):
+        pass
+
+    def test_dwi2fod(self):
+        pass
+
+    def test_act_anat_prepare_fsl(self):
+        pass
+
+    def test_fivett2gmwmi(self):
+        pass
+
+    def tckgen(self):
+        pass
+
+    def test_tcksif(self):
+        pass
+
+    def test_labelconfig(self):
+        pass
+
+    def test_tck2connectome(self):
+        pass
+
+    def test_compute_connectivity(self):
+        pass
+
+
+class TestCoregistration(unittest.TestCase):
+    # TODO finish implementation
+    def test_T1_mgz2nii(self):
         pass
 
 
