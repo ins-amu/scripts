@@ -3,9 +3,13 @@
 [//]: # ([![Coverage Status](https://coveralls.io/repos/timpx/scripts/badge.svg?branch=nipype&service=github)](https://coveralls.io/github/timpx/scripts?branch=nipype)
 
 # Surface and Connectivity Reconstruction: Imaging Pipeline for TVB Simulations
-## SCRIPTS 0.2
+## SCRIPTS 0.3
  
 Please see the [wiki](https://github.com/timpx/scripts/wiki)
+
+#### NEW in 0.3:
+- nipype
+- tests
 
 #### License
 This poject use the MIT License.
