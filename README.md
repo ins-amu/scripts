@@ -1,8 +1,7 @@
 .. image:: https://travis-ci.org/timpx/scripts.svg?branch=nipype
   :target: https://travis-ci.org/timpx/scripts
 
-.. image:: https://coveralls.io/repos/timpx/scripts/badge.svg?branch=master&service=github
-  :target: https://coveralls.io/github/timpx/scripts?branch=master
+[![Coverage Status](https://coveralls.io/repos/timpx/scripts/badge.svg?branch=master&service=github)](https://coveralls.io/github/timpx/scripts?branch=master)
 
 # Surface and Connectivity Reconstruction: Imaging Pipeline for TVB Simulations
 ## SCRIPTS 0.2
