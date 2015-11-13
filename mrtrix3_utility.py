@@ -16,7 +16,7 @@ class DwiExtractInputSpec(CommandLineInputSpec):
     in_file = File(exists=True, mandatory=True, position=-2, argstr='%s', desc='the input DW image.')
     out_file = File(exists=True, genfile=True, position=-1, argstr='%s', desc='the output image (diffusion-weighted'
                                                                               ' volumes by default.')
-    bzero = traits.Bool(argstr='bzero', desc='output b=0 volumes instead of the diffusion weighted volumes.')
+    bzero = traits.Bool(argstr='-bzero', desc='output b=0 volumes instead of the diffusion weighted volumes.')
 
 
 class DwiExtractOutputSpec(TraitedSpec):
@@ -48,32 +48,31 @@ class DwiExtract(CommandLine):
         return outputs
 
 
-class Fivett2GmwmiInputSpec():
+class Fivett2GmwmiInputSpec(CommandLineInputSpec):
     fivett_in = File(exists=True, mandatory=True, position=-2, argstr='%s',
                      desc='the input 5TT segmented anatomical image')
     mask_out = File(exists=True, genfile=True, position=-1, argstr='%s', desc='the output mask image')
 
-
-class Fivett2GmwmiOutputSpec():
+class Fivett2GmwmiOutputSpec(TraitedSpec):
     out_file = File(exists=True, desc='the output mask image')
 
 
-class Fivett2Gmwmi():
+class Fivett2Gmwmi(CommandLine):
     input_spec = Fivett2GmwmiInputSpec
     output_spec = Fivett2GmwmiOutputSpec
     _cmd = '5tt2gmwmi'
 
     def _gen_filename(self, name):
-        if name is 'out_file':
+        if name is 'mask_out':
             return self._gen_outfilename()
         else:
             return None
 
     def _gen_outfilename(self):
-        if isdefined(self.inputs.out_file):
-            return self.inputs.out_file
+        if isdefined(self.inputs.mask_out):
+            return self.inputs.mask_out
         else:
-            _, name, ext = split_filename(self.inputs.in_file)
+            _, name, ext = split_filename(self.inputs.fivett_in)
             return name + '_gmwmi' + ext
 
     def _list_outputs(self):
@@ -99,19 +98,19 @@ class TckSiftOutputSpec(TraitedSpec):
 class TckSift(CommandLine):
     input_spec = TckSiftInputSpec
     output_spec = TckSiftOutputSpec
-    _cmd = 'dwiextract'
+    _cmd = 'tcksift'
 
     def _gen_filename(self, name):
-        if name is 'out_file':
+        if name is 'out_tracks':
             return self._gen_outfilename()
         else:
             return None
 
     def _gen_outfilename(self):
-        if isdefined(self.inputs.out_file):
-            return self.inputs.out_file
+        if isdefined(self.inputs.out_tracks):
+            return self.inputs.out_tracks
         else:
-            _, name, ext = split_filename(self.inputs.in_file)
+            _, name, ext = split_filename(self.inputs.in_tracks)
             return name + '_tcksifted' + ext
 
     def _list_outputs(self):

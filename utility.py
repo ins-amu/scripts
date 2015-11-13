@@ -733,16 +733,16 @@ class Aseg2SrfInputSpec(CommandLineInputSpec):
 
 
 class Aseg2SrfOutputSpec(TraitedSpec):
-    subcortical_surf_list_files = traits.List(File(desc="Output subcortical surfaces",
-                                                   exists=True))
+    subcortical_surf_file = File(desc="Output subcortical surface", exists=True)
 
 
 class Aseg2Srf(CommandLine):
     input_spec = Aseg2SrfInputSpec
     output_spec = Aseg2SrfOutputSpec
-    label = "4, 5, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 26, 28, 43,\
-                  44, 46, 47, 49, 50, 51, 52, 53, 54, 58, 60, 251, 252, 253,\
-                  254, 255"
+    label = "4"
+    # "4, 5, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 26, 28, 43,\
+    #  44, 46, 47, 49, 50, 51, 52, 53, 54, 58, 60, 251, 252, 253,\
+    # 254, 255"
     _cmd = os.getcwd()
 
     def __init__(self, *args, **kwargs):
@@ -767,21 +767,20 @@ class Aseg2Srf(CommandLine):
             sd = self.inputs.subjects_dir
         else:
             sd = os.environ('SUBJECTS_DIR')
-        out_files = [os.path.join(sd, self.inputs.subject_id, 'ascii', 'aseg_0' + ilabel + '.srf')
-                     for ilabel in self.inputs.label.split(" ")]
-        outputs['subcortical_surf_list_files'] = out_files
+        out_files = os.path.join(sd, self.inputs.subject_id, 'ascii', 'aseg_0' + self.inputs.label + '.srf')
+        outputs['subcortical_surf_file'] = out_files
         return outputs
 
 
 class ListSubcorticalInputSpect(BaseInterfaceInputSpec):
-    in_files = traits.List(File(exists=True, mandatory=True))
+    in_file = File(exists=True, mandatory=True)
     out_file_vertices_sub = traits.Str(desc="output subcortical surfaces")
     out_file_triangles_sub = traits.Str(desc="output subcortical triangles")
 
 
 class ListSubcorticalOutputSpect(TraitedSpec):
-    triangles_sub_list = traits.List(File(exists=True))
-    vertices_sub_list = traits.List(File(exists=True))
+    triangles_sub = File(exists=True)
+    vertices_sub = File(exists=True)
 
 
 class ListSubcortical(BaseInterface):
@@ -801,30 +800,30 @@ class ListSubcortical(BaseInterface):
                 os.path.abspath(out_file_vertices_sub))
 
     def _run_interface(self, runtime):
-        for in_file in self.inputs.in_files:
-            f = open(in_file, 'r')
-            f.readline()
-            data = f.readline()
-            g = data.split(' ')
-            nb_vert = int(g[0])
-            # nb_tri = int(g[1].split('\n')[0])
-            f.close()
-            a = np.loadtxt(in_file, skiprows=2, usecols=(0, 1, 2))
-            vert = a[:nb_vert]
-            tri = a[nb_vert:].astype('int')
-            (out_file_triangles_sub, out_file_vertices_sub) = self._get_outfilename(in_file)
-            np.savetxt(out_file_vertices_sub, vert)
-            np.savetxt(out_file_triangles_sub, tri)
+        in_file = self.inputs.in_file
+        f = open(in_file, 'r')
+        f.readline()
+        data = f.readline()
+        g = data.split(' ')
+        nb_vert = int(g[0])
+        # nb_tri = int(g[1].split('\n')[0])
+        f.close()
+        a = np.loadtxt(in_file, skiprows=2, usecols=(0, 1, 2))
+        vert = a[:nb_vert]
+        tri = a[nb_vert:].astype('int')
+        (out_file_triangles_sub, out_file_vertices_sub) = self._get_outfilename(in_file)
+        np.savetxt(out_file_vertices_sub, vert)
+        np.savetxt(out_file_triangles_sub, tri)
         return runtime
 
     def _list_outputs(self):
         outputs = self.output_spec().get()
-        outputs['triangles_sub_list'] = [self._get_outfilename(in_file)[0] for in_file in self.inputs.in_files]
-        outputs['vertices_sub_list'] = [self._get_outfilename(in_file)[0] for in_file in self.inputs.in_files]
+        outputs['triangles_sub'] = self._get_outfilename(self.inputs.in_file)[0]
+        outputs['vertices_sub'] = self._get_outfilename(self.inputs.in_file)[1]
         return outputs
 
 
-class ComputeConnectivityFilesInputSpec():
+class ComputeConnectivityFilesInputSpec(BaseInterfaceInputSpec):
     verts = File(exists=True, mandatory=True, desc='surface vertices')
     tri = File(exists=True, mandatory=True, desc='surface triangles')
     region_mapping = File(exists=True, mandatory=True, desc='region mapping')
@@ -832,22 +831,27 @@ class ComputeConnectivityFilesInputSpec():
     tract_lengths = File(exists=True, mandatory=True, desc='tract length matrix')
     vertices_sub_list = traits.List(File(exists=True, mandatory=True))
     triangles_sub_list = traits.List(File(exists=True, mandatory=True))
-    out_file_weigths = File(desc='resulting weights')
+    corr_table = traits.File(exists=True, mandatory=True, desc='correspondance table')
+    name_regions = traits.File(exists=True, mandatory=True, desc='name regions')
+    out_file_weights = File(desc='resulting weights')
     out_file_tract_lengths = File(desc='resulting tract lengths')
     out_file_areas = File(desc='resulting areas')
     out_file_average_orientations = File(desc='resulting average orientations')
     out_file_centres = File(desc='resulting centres')
 
 
-class ComputeConnectivityFilesOutputSpec():
-    out_file_weigths = File(exists=True, desc='resulting weights')
-    out_file_tract_lengths = File(exists=True, desc='resulting tract lengths')
-    out_file_areas = File(exists=True, desc='resulting areas')
-    out_file_average_orientations = File(exists=True, desc='resulting average orientations')
-    out_file_centres = File(exists=True, desc='resulting centres')
+class ComputeConnectivityFilesOutputSpec(TraitedSpec):
+    weights = File(exists=True, desc='resulting weights')
+    tract_lengths = File(exists=True, desc='resulting tract lengths')
+    areas = File(exists=True, desc='resulting areas')
+    average_orientations = File(exists=True, desc='resulting average orientations')
+    centres = File(exists=True, desc='resulting centres')
 
 
-class ComputeConnectivityFiles():
+class ComputeConnectivityFiles(BaseInterface):
+    input_spec = ComputeConnectivityFilesInputSpec
+    output_spec = ComputeConnectivityFilesOutputSpec
+
     def compute_triangle_areas(self, vertices, triangles):
         """Calculates the area of triangles making up a surface."""
         tri_u = vertices[triangles[:, 1], :] - vertices[triangles[:, 0], :]
@@ -971,7 +975,7 @@ class ComputeConnectivityFiles():
 
         return average_orientation
 
-    def compute_region_center_cortex(vertices, region_mapping):
+    def compute_region_center_cortex(self, vertices, region_mapping):
         regions = np.unique(region_mapping)
         region_center = np.zeros((np.max(np.unique(region_mapping)) + 1, 3))
         # Average orientation of the region
@@ -986,23 +990,18 @@ class ComputeConnectivityFiles():
         out_file_tract_lengths = self.inputs.out_file_tract_lengths
         out_file_areas = self.inputs.out_file_areas
         out_file_average_orientations = self.inputs.out_file_average_orientations
-        out_file_centres = self.inputs.out_file_tract_centres
+        out_file_centres = self.inputs.out_file_centres
 
         if not isdefined(out_file_weights):
-            out_file_weights = os.path.join(os.getcwd(), self.inputs.weights +
-                                            '_weights.txt')
+            out_file_weights = os.path.join(os.getcwd(), 'weights.txt')
         if not isdefined(out_file_tract_lengths):
-            out_file_tract_lengths = os.path.join(os.getcwd(), self.inputs.tract_lengths +
-                                                  '_tract_lengths.txt')
+            out_file_tract_lengths = os.path.join(os.getcwd(), 'tract_lengths.txt')
         if not isdefined(out_file_areas):
-            out_file_areas = os.path.join(os.getcwd(), self.inputs.areas +
-                                          '_areas.txt')
+            out_file_areas = os.path.join(os.getcwd(), 'areas.txt')
         if not isdefined(out_file_average_orientations):
-            out_file_average_orientations = os.path.join(os.getcwd(), self.inputs.average_orientations +
-                                                         '_average_orientations.txt')
+            out_file_average_orientations = os.path.join(os.getcwd(), 'average_orientations.txt')
         if not isdefined(out_file_centres):
-            out_file_centres = os.path.join(os.getcwd(), self.inputs.centres +
-                                            '_centres.txt')
+            out_file_centres = os.path.join(os.getcwd(), 'centres.txt')
 
         return (os.path.abspath(out_file_weights),
                 os.path.abspath(out_file_tract_lengths),
@@ -1015,12 +1014,12 @@ class ComputeConnectivityFiles():
         (out_file_weights, out_file_tract_lengths, out_file_areas, out_file_average_orientations,
          out_file_centres) = self._get_outfilename()
         # import data
-        verts = self.verts
-        tri = self.tri.astype(int)
-        region_mapping = self.region_mapping
+        verts = np.loadtxt(self.inputs.verts)
+        tri = np.loadtxt(self.inputs.tri).astype(int)
+        region_mapping = np.loadtxt(self.inputs.region_mapping)
         # save connectivity and tract length matrices
-        weights = self.weights
-        tract_lengths = self.tract_lengths
+        weights = np.loadtxt(self.inputs.weights)
+        tract_lengths = np.loadtxt(self.inputs.tract_lengths)
         weights = weights + weights.transpose() - np.diag(np.diag(weights))
         # add the first region
         weights = np.vstack([np.zeros((1, weights.shape[0])), weights])
@@ -1054,16 +1053,17 @@ class ComputeConnectivityFiles():
         areas = self.compute_region_areas_cortex(triangle_areas, vertex_triangles, region_mapping)
 
         # subcorticals
-        corr_table = np.loadtxt('correspondance_mat.txt')
+        corr_table = np.loadtxt(self.inputs.corr_table)
         for sub_verts, sub_tri in zip(self.inputs.vertices_sub_list, self.inputs.triangles_sub_list):
             list_pos_val = ['16', '08', '10', '11', '12', '13', '17', '18', '26', '47', '49', '50', '51', '52', '53',
                             '54', '58']
-            val = [iarg for iarg in list_pos_val if iarg in sub_verts]
+            val = [iarg for iarg in list_pos_val if '_0'+iarg+'.' in sub_verts][0]
             verts = np.loadtxt(sub_verts)
             tri = np.loadtxt(sub_tri)
             tri = tri.astype(int)
 
             curr_center = np.mean(verts, axis=0)
+            #import pdb; pdb.set_trace()
             indx = int(corr_table[np.nonzero(corr_table[:, 0] == np.int(val)), 1] - 1)
             centers[indx, :] = curr_center
             # Now calculate average orientations
@@ -1089,7 +1089,7 @@ class ComputeConnectivityFiles():
                    orientations, fmt='%.2f %.2f %.2f')
 
         # add the name to centers
-        f = open('name_regions.txt', 'rb')
+        f = open(self.inputs.name_regions, 'rb')
         list_name = []
         for line in f:
             list_name.append(line)
@@ -1104,3 +1104,17 @@ class ComputeConnectivityFiles():
         f.close()
 
         return runtime
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        (out_file_weights,
+         out_file_tract_lengths,
+         out_file_areas,
+         out_file_average_orientations,
+         out_file_centres) = self._get_outfilename()
+        outputs['weights'] = out_file_weights
+        outputs['tract_lengths'] = out_file_tract_lengths
+        outputs['areas'] = out_file_areas
+        outputs['average_orientations'] = out_file_average_orientations
+        outputs['centres'] = out_file_centres
+        return outputs
