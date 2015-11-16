@@ -12,6 +12,51 @@ from collections import Counter
 from string import Template
 
 
+class GrabDataInputSpec(BaseInterfaceInputSpec):
+    subject_id = traits.Str(exists=True, mandatory=True)
+    freesurfer_directory = Directory(exists=True, mandatory=True)
+    scripts_directory = Directory(exists=True)
+    hemi = traits.Str(exists=True, mandatory=True)
+    out_file_pial = File(desc='output filename for pial file')
+    out_file_annot = File(desc='output filename for annot file')
+    out_file_ref_table = File(desc='output filename for ref table file')
+
+
+class GrabDataOutputSpec(TraitedSpec):
+    pial = File(desc='output filename for pial file')
+    annot = File(desc='output filename for annot file')
+    ref_table = File(desc='output filename for ref table file')
+
+
+class GrabData(BaseInterface):
+    """
+    grab the files produced by freesurfer.
+    """
+    input_spec = GrabDataInputSpec
+    output_spec = GrabDataOutputSpec
+
+    def _get_scripts_directory(self):
+        if not isdefined(self.inputs.scripts_directory):
+            out_file_scripts = self.inputs.scripts_directory
+        else:
+            out_file_scripts = os.getcwd()
+        return os.path.abspath(out_file_scripts)
+
+    def _run_interface(self, runtime):
+        return runtime
+
+    def _list_outputs(self):
+        path_fs_subj = os.path.join(os.path.abspath(self.inputs.freesurfer_directory), self.inputs.subject_id)
+        out_file_pial = os.path.join(path_fs_subj, 'surf', self.inputs.hemi + '.pial')
+        out_file_annot = os.path.join(path_fs_subj, 'label', self.inputs.hemi + '.aparc.annot')
+        out_file_ref_table = os.path.join(self._get_scripts_directory(), self.inputs.hemi + '_ref_table.txt')
+        outputs = self._outputs().get()
+        outputs['pial'] = out_file_pial
+        outputs['annot'] = out_file_annot
+        outputs['ref_table'] = out_file_ref_table
+        return outputs
+
+
 class MRIsConvertInputSpec(FSTraitedSpec):
     """
     Uses Freesurfer's mris_convert to convert surface files to various formats
@@ -51,8 +96,9 @@ class MRIsConvertInputSpec(FSTraitedSpec):
     # Not really sure why the ./ is necessary but the module fails without it
 
     out_datatype = traits.Enum("ico", "tri", "stl", "vtk", "gii", "mgh", "mgz", "asc", mandatory=True,
-                               desc="These file formats are supported:  ASCII:       .asc" \
-                                    "ICO: .ico, .tri GEO: .geo STL: .stl VTK: .vtk GIFTI: .gii MGH surface-encoded 'volume': .mgh, .mgz")
+                               desc="These file formats are supported:  ASCII: .asc"
+                                    "ICO: .ico, .tri GEO: .geo STL: .stl VTK: .vtk GIFTI: .gii"
+                                    "MGH surface-encoded 'volume': .mgh, .mgz")
 
 
 class MRIsConvertOutputSpec(TraitedSpec):
@@ -411,7 +457,7 @@ class CorrectRegionMapping(BaseInterface):
 
     def _run_interface(self, runtime):
         texture = np.loadtxt(self.inputs.texture)
-        vert = np.loadtxt(self.inputs.vertices)
+        # vert = np.loadtxt(self.inputs.vertices)
         trian = np.loadtxt(self.inputs.triangles)
         out_file_region_mapping_corr = self._get_outfilename()
         for _ in range(10):
@@ -823,6 +869,38 @@ class ListSubcortical(BaseInterface):
         return outputs
 
 
+class GrabDataCorInputSpec(BaseInterfaceInputSpec):
+    subject_id = traits.Str(exists=True, mandatory=True)
+    freesurfer_directory = Directory(exists=True, mandatory=True)
+    out_file_aparcaseg = File(desc='output filename for aparcaseg file')
+    out_file_t1 = File(desc='output filename for T1 file')
+
+
+class GrabDataCorOutputSpec(TraitedSpec):
+    aparcaseg = File(desc='output filename for aparcaseg file')
+    t1 = File(desc='output filename for t1')
+
+
+class GrabDataCor(BaseInterface):
+    """
+    grab the files produced by freesurfer.
+    """
+    input_spec = GrabDataCorInputSpec
+    output_spec = GrabDataCorOutputSpec
+
+    def _run_interface(self, runtime):
+        return runtime
+
+    def _list_outputs(self):
+        path_fs_subj = os.path.join(os.path.abspath(self.inputs.freesurfer_directory), self.inputs.subject_id)
+        out_file_aparcaseg = os.path.join(path_fs_subj, 'mri', 'aparcaseg.mgz')
+        out_file_t1 = os.path.join(path_fs_subj, 'mri', 'T1.mgz')
+        outputs = self._outputs().get()
+        outputs['aparcaseg'] = out_file_aparcaseg
+        outputs['T1'] = out_file_t1
+        return outputs
+
+
 class ComputeConnectivityFilesInputSpec(BaseInterfaceInputSpec):
     verts = File(exists=True, mandatory=True, desc='surface vertices')
     tri = File(exists=True, mandatory=True, desc='surface triangles')
@@ -1057,13 +1135,13 @@ class ComputeConnectivityFiles(BaseInterface):
         for sub_verts, sub_tri in zip(self.inputs.vertices_sub_list, self.inputs.triangles_sub_list):
             list_pos_val = ['16', '08', '10', '11', '12', '13', '17', '18', '26', '47', '49', '50', '51', '52', '53',
                             '54', '58']
-            val = [iarg for iarg in list_pos_val if '_0'+iarg+'.' in sub_verts][0]
+            val = [iarg for iarg in list_pos_val if '_0' + iarg + '.' in sub_verts][0]
             verts = np.loadtxt(sub_verts)
             tri = np.loadtxt(sub_tri)
             tri = tri.astype(int)
 
             curr_center = np.mean(verts, axis=0)
-            #import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             indx = int(corr_table[np.nonzero(corr_table[:, 0] == np.int(val)), 1] - 1)
             centers[indx, :] = curr_center
             # Now calculate average orientations
