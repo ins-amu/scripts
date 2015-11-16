@@ -31,12 +31,10 @@ def surface(name='surface'):
     remesher = pe.Node(interface=su.Remesher(), name='remesher')
     off2txt = pe.Node(interface=su.Off2Txt(), name='off2txt')
     region_mapping = pe.Node(interface=su.RegionMapping(), name='region_mapping')
-    # region_mapping.inputs.scripts_directory = '/Users/timp/Desktop/scripts/'
     correct_region_mapping = pe.Node(interface=su.CorrectRegionMapping(), name='correct_region_mapping')
     check_region_mapping = pe.Node(interface=su.CheckRegionMapping(), name='check_region_mapping')
-    check_region_mapping.inputs.check = False
-    check_region_mapping.inputs.display = False
-    # check_region_mapping.inputs.scripts_directory = '/Users/timp/Desktop/scripts/'
+    # check_region_mapping.inputs.check = False
+    # check_region_mapping.inputs.display = False
     reunify_both_hemi = pe.JoinNode(interface=su.ReunifyBothHemisphere(), joinsource="grabdata",
                                     joinfield=['vertices', 'triangles', 'textures'], name='reunify_both_hemi')
     output_node = pe.Node(interface=niu.IdentityInterface(fields=['texture', 'vertices', 'triangles']),
@@ -87,8 +85,6 @@ def subcorticalsurface(name="subcorticalsurfaces"):
     """
     inputnode = pe.Node(interface=niu.IdentityInterface(fields=['subject_id', 'labels', 'subjects_dir']),
                         name='inputnode')
-    # inputnode.inputs.subject_id = '151526'
-    # inputnode.inputs.subjects_dir = '/Users/timp/Desktop/scripts/tests/test_data/freesurfer_dir/'
     inputnode.iterables = [('labels', ['16', '08', '10', '11', '12', '13', '17', '18', '26', '47', '49', '50', '51',
                                        '52', '53', '54', '58'])]
     aseg2srf = pe.Node(interface=su.Aseg2Srf(), name='aseg2srf')
@@ -113,6 +109,9 @@ def preprocess(name="prepro_connectivity"):
     inputnode = pe.Node(interface=niu.IdentityInterface(fields=['DWI', 'bvecs', 'bvals']), name='inputnode')
     outputnode = pe.Node(interface=niu.IdentityInterface(fields=['converted']), name='outputnode')
     fsl2mrtrix = pe.Node(interface=mrt.FSL2MRTrix(),name='fsl2mrtrix')
+    # Because mrtrix use reversed x and y axis
+    fsl2mrtrix.inputs.invert_x = True
+    fsl2mrtrix.inputs.invert_y = True
     gunzip = pe.Node(interface=misc.Gunzip(), name='gunzip')
     dwi2tensor = pe.Node(interface=mrt.DWI2Tensor(),name='dwi2tensor')
     wf = pe.Workflow(name=name)
@@ -133,14 +132,6 @@ def tractography(name="tractography"):
         fields=['converted', 'verts', 'tri', 'region_mapping', 'vertices_sub_list', 'triangles_sub_list', 'in_T1',
                 'subject_dir', 'freesurfer_directory', 'in_lowb', 'subject_id']),
         name='inputnode')
-    # inputnode.inputs.converted = "/Users/timp/Work/data/af/connectivity/dwi.mif"
-    # inputnode.inputs.verts = "/Users/timp/Work/data/af/af/surface/vertices.txt"
-    # inputnode.inputs.tri = "/Users/timp/Work/data/af/af/surface/triangles.txt"
-    # inputnode.inputs.region_mapping = "/Users/timp/Work/data/af/af/surface/region_mapping.txt"
-    # inputnode.inputs.vertices_sub_list = "/Users/timp/Work/data/af/connectivity/dwi.mif"
-    # inputnode.inputs.triangles_sub_list = "/Users/timp/Work/data/af/connectivity/dwi.mif"
-    # inputnode.inputs.in_T1 = "/Users/timp/Work/data/af/mri/T1.mgz"
-    # inputnode.inputs.in_aparcaseg = "/Users/timp/Work/data/af/mri/aparc+aseg.mgz"
     create_mask = pe.Node(interface=mrt3.utils.BrainMask(), name='create_mask')
     dwi_extract_lowb = pe.Node(interface=mrt3u.DwiExtract(), name='dwi_extract_lowb')
     dwi_extract_lowb.inputs.bzero = True
@@ -149,7 +140,7 @@ def tractography(name="tractography"):
     cor = coregistration()
     dwi2response = pe.Node(interface=mrt3.preprocess.ResponseSD(), name='dwi2response')
     dwi2fod = pe.Node(interface=mrt3.reconst.EstimateFOD(), name='dwi2fod')
-    dwi2fod.inputs.max_sh = 8
+    # dwi2fod.inputs.max_sh = 8
     act_anat_prepare_fsl = pe.Node(interface=mrt3.preprocess.ACTPrepareFSL(), name='act_anat_prepare_fsl')
     fivett2gmwmi = pe.Node(interface=mrt3u.Fivett2Gmwmi(), name='5tt2gmwmi')
     tckgen = pe.Node(interface=mrt3.tracking.Tractography(), name='tckgen')
@@ -158,10 +149,8 @@ def tractography(name="tractography"):
     tckgen.inputs.max_length = 250.
     tckgen.inputs.step_size = 0.5
     # tckgen.inputs.n_tracks = 5000000
-    tckgen.inputs.n_tracks = 5000
     tcksift = pe.Node(interface=mrt3u.TckSift(), name='tcksift')
     # tcksift.inputs.term_number = 2500000
-    tcksift.inputs.term_number = 2500
     labelconfig = pe.Node(interface=mrt3.connectivity.LabelConfig(), name='labelconfig')
     labelconfig.inputs.in_config = '/Users/timp/Desktop/scripts/fs_region.txt'
     labelconfig.inputs.lut_fs = '/Applications/freesurfer/FreeSurferColorLUT.txt'
