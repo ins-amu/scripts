@@ -1,28 +1,27 @@
 from nipype import SelectFiles, Node
 import nipype.pipeline.engine as pe
 import nipype.interfaces.io as nio
+import nipype.interfaces.utility as niu
 import workflows as wf
 import os
 
 subject_id = 'af'
+data_directory = '/Users/timp/Work/data/'
 
 # inputs of the pipeline: DWI (nii, bvecs, bvals), T1, subject_id
 # you can use any directory hierarchy you want for your data
 # you just have to reflect it in the template
 # glob syntax is allowed, for instance * ? [0-3]
-
+sf = pe.Node(niu.IdentityInterface(fields=['T1', 'DWI', 'bvecs', 'bvals', 'scripts_directory', 'subject_id', 'subjects_dir', 'T1']), name='selectfiles')
 # Input data in nii format:
-templates = dict(T1="{subject_id}/data/T1/*.nii.gz",
-                 DWI="{subject_id}/data/DWI/*.nii*",
-                 bvecs="{subject_id}/data/DWI/bvecs",
-                 bvals="{subject_id}/data/DWI/bvals",
-                 subject_id="{subject_id}",
-                 scripts_directory=os.getcwd(),
-                 subjects_dir="/Users/timp/Work/freesurfer/")
-sf = Node(SelectFiles(templates), 'select_files')
+sf.inputs.T1 = os.path.join(data_directory, subject_id, 'data/T1/T1.nii.gz')
+sf.inputs.DWI = os.path.join(data_directory, subject_id, 'data/DWI/DWI.nii.gz')
+sf.inputs.bvecs = os.path.join(data_directory, subject_id, 'data/DWI/bvecs')
+sf.inputs.bvals = os.path.join(data_directory, subject_id, 'data/DWI/bvals')
 sf.inputs.subject_id = subject_id
-# Base directory for where are the data
-sf.inputs.base_directory = '/Users/timp/Work/data/'
+sf.inputs.scripts_directory="/Users/timp/Desktop/scripts/"
+sf.inputs.subjects_dir="/Users/timp/Work/freesurfer/"
+sf.inputs.subject_id = subject_id
 
 # if data in dcm format, please convert to nii format with mrconvert (mrtrix)
 # mrconvert DWI/ dwi.nii.gz
@@ -34,15 +33,15 @@ sc = wf.scripts()
 # options
 sc.inputs.surface.check_region_mapping.check = False
 sc.inputs.surface.check_region_mapping.display = False
-sc.inputs.tractography.dwi2fod.max_sh = 8
+sc.inputs.tractography.dwi2fod.max_sh = 6
 sc.inputs.tractography.tckgen.n_tracks = 1000
 sc.inputs.tractography.tcksift.term_number = 500
 
 # outputs of the pipeline: DataSink
 # collecting output data: DataSink
-ds = pe.Node(nio.DataSink(), name='sinker')
+ds = pe.Node(nio.DataSink(['lh', 'rh']), name='sinker')
 # Directory where data are going to be outputed
-ds.inputs.base_directory = '/Users/timp/Work/processed_data/{subject_id}/'
+ds.inputs.base_directory = os.path.join('/Users/timp/Work/processed_data', subject_id)
 
 
 

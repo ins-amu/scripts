@@ -36,7 +36,7 @@ class GrabData(BaseInterface):
     output_spec = GrabDataOutputSpec
 
     def _get_scripts_directory(self):
-        if not isdefined(self.inputs.scripts_directory):
+        if isdefined(self.inputs.scripts_directory):
             out_file_scripts = self.inputs.scripts_directory
         else:
             out_file_scripts = os.getcwd()
@@ -281,7 +281,7 @@ class Remesher(CommandLine):
 
     def __init__(self, *args, **kwargs):
         super(Remesher, self).__init__(*args, **kwargs)
-        self._cmd = self.get_scripts_dir() + "/remesher/cmdremesher/cmdremesher"
+        self._cmd = self.get_scripts_dir() + "/remesher-mac/cmdremesher/cmdremesher"
 
     def get_scripts_dir(self):
         if isdefined(self.inputs.scripts_directory):
@@ -813,7 +813,10 @@ class Aseg2Srf(CommandLine):
             sd = self.inputs.subjects_dir
         else:
             sd = os.environ('SUBJECTS_DIR')
-        out_files = os.path.join(sd, self.inputs.subject_id, 'ascii', 'aseg_0' + self.inputs.label + '.srf')
+        if len(self.inputs.label)==1:
+            out_files = os.path.join(sd, self.inputs.subject_id, 'ascii', 'aseg_00' + self.inputs.label + '.srf')
+        else:
+            out_files = os.path.join(sd, self.inputs.subject_id, 'ascii', 'aseg_0' + self.inputs.label + '.srf')
         outputs['subcortical_surf_file'] = out_files
         return outputs
 
@@ -877,8 +880,8 @@ class GrabDataCorInputSpec(BaseInterfaceInputSpec):
 
 
 class GrabDataCorOutputSpec(TraitedSpec):
-    aparcaseg = File(desc='output filename for aparcaseg file')
-    t1 = File(desc='output filename for t1')
+    aparcaseg = File(desc='output filename for aparcaseg file', exists=True)
+    t1 = File(desc='output filename for t1', exists=True)
 
 
 class GrabDataCor(BaseInterface):
@@ -893,11 +896,11 @@ class GrabDataCor(BaseInterface):
 
     def _list_outputs(self):
         path_fs_subj = os.path.join(os.path.abspath(self.inputs.freesurfer_directory), self.inputs.subject_id)
-        out_file_aparcaseg = os.path.join(path_fs_subj, 'mri', 'aparcaseg.mgz')
+        out_file_aparcaseg = os.path.join(path_fs_subj, 'mri', 'aparc+aseg.mgz')
         out_file_t1 = os.path.join(path_fs_subj, 'mri', 'T1.mgz')
         outputs = self._outputs().get()
         outputs['aparcaseg'] = out_file_aparcaseg
-        outputs['T1'] = out_file_t1
+        outputs['t1'] = out_file_t1
         return outputs
 
 

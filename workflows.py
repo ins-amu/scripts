@@ -85,7 +85,7 @@ def subcorticalsurface(name="subcorticalsurfaces"):
     """
     inputnode = pe.Node(interface=niu.IdentityInterface(fields=['subject_id', 'labels', 'subjects_dir']),
                         name='inputnode')
-    inputnode.iterables = [('labels', ['16', '08', '10', '11', '12', '13', '17', '18', '26', '47', '49', '50', '51',
+    inputnode.iterables = [('labels', ['16', '8', '10', '11', '12', '13', '17', '18', '26', '47', '49', '50', '51',
                                        '52', '53', '54', '58'])]
     aseg2srf = pe.Node(interface=su.Aseg2Srf(), name='aseg2srf')
     list_subcortical = pe.Node(interface=su.ListSubcortical(), name='list_subcortical')
@@ -113,15 +113,16 @@ def preprocess(name="prepro_connectivity"):
     fsl2mrtrix.inputs.invert_x = True
     fsl2mrtrix.inputs.invert_y = True
     gunzip = pe.Node(interface=misc.Gunzip(), name='gunzip')
-    dwi2tensor = pe.Node(interface=mrt.DWI2Tensor(),name='dwi2tensor')
+    mrconvert = pe.Node(interface=mrt3u.MRConvert(),name='mrconvert')
+    mrconvert.inputs.out_filename = 'dwi.mif'
     wf = pe.Workflow(name=name)
     wf.connect([
         (inputnode, fsl2mrtrix, [('bvecs', 'bvec_file'),
                                  ('bvals', 'bval_file')]),
         (inputnode, gunzip, [('DWI', 'in_file')]),
-        (gunzip, dwi2tensor, [('out_file', 'in_file')]),
-        (fsl2mrtrix, dwi2tensor, [('encoding_file', 'encoding_file')]),
-        (dwi2tensor, outputnode, [('tensor', 'converted')])
+        (gunzip, mrconvert, [('out_file', 'in_file')]),
+        (fsl2mrtrix, mrconvert, [('encoding_file', 'grad')]),
+        (mrconvert, outputnode, [('converted', 'converted')])
     ])
     return wf
 
