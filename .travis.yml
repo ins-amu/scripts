@@ -1,14 +1,14 @@
 language: python
 python:
   - "2.7"
-pre-install:
-
-install:
+before_install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get -qq update
-  - sudo apt-get -qq install g++-4.8
   - sudo apt-get install libgsl0-dev libqt4-opengl-dev libgl1-mesa-dev
-  #- git clone https://github.com/MRtrix3/mrtrix3.git
+  - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.8-dev; fi
+  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+
   #- cd mrtrix3
   #- CXX=/usr/bin/g++-4.8 ./configure -nogui
   #- ./build
@@ -27,6 +27,12 @@ install:
   - source activate nipype_test_env
   - pip install nipype
   #- pip install coveralls
+install:
+  - git clone https://github.com/MRtrix3/mrtrix3.git /home/travis/build/timpx/mrtrix3
+  - cd /home/travis/build/timpx/mrtrix3
+  - ./configure -nogui
+  - ./build
+  - cd -
 script:
   - pwd
   - mkdir -p /home/travis/build/timpx/scripts/tests/test_data/produced_data/
