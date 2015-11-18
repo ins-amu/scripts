@@ -25,8 +25,8 @@ install:
   - cd mrtrix3
   - pwd
   - ls
-  - ./configure -nogui -disablethreading
-  - ./build
+  - ./configure -nogui
+  - ./build  -disablethreading
   - PATH=$(pwd)/bin:\$PATH
   - cd -
 script:
