@@ -27,7 +27,7 @@ install:
   - ls
   - ./configure -nogui
   - ./build  -disablethreading
-  - PATH=$(pwd)/bin:\$PATH
+  - PATH=$(pwd)/bin:$PATH
   - cd -
 script:
   - pwd
