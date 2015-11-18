@@ -281,7 +281,12 @@ class Remesher(CommandLine):
 
     def __init__(self, *args, **kwargs):
         super(Remesher, self).__init__(*args, **kwargs)
-        self._cmd = self.get_scripts_dir() + "/remesher-mac/cmdremesher/cmdremesher"
+        if os.environ['OS']=='Darwin':
+            self._cmd = self.get_scripts_dir() + "/remesher-mac/cmdremesher/cmdremesher"
+        elif os.environ['OSTYPE']=='linux-gnu':
+            self._cmd = self.get_scripts_dir() + "/remesher-mac/cmdremesher/cmdremesher"
+        else:
+            raise NotImplementedError, 'only working on mac or linux'
 
     def get_scripts_dir(self):
         if isdefined(self.inputs.scripts_directory):
