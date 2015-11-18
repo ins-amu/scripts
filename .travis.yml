@@ -21,8 +21,8 @@ before_install:
   - pip install nipype
   #- pip install coveralls
 install:
-  - git clone https://github.com/MRtrix3/mrtrix3.git /home/travis/build/timpx/mrtrix3
-  - cd /home/travis/build/timpx/mrtrix3
+  - git clone https://github.com/MRtrix3/mrtrix3.git
+  - cd mrtrix3
   - pwd
   - ls
   - ./configure -nogui -disablethreading
