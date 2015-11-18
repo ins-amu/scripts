@@ -9,10 +9,12 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install libgsl0-dev libqt4-opengl-dev libgl1-mesa-dev
   - echo $CXX
-  - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.8-dev; fi
-  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
-  - echo $CXX
+  #- if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.8-dev; fi
+  #- if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
+  #- if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  -sudo apt-get install -qq g++-4.8
+  - export CXX="g++-4.8" CC="gcc-4.8"
+  - echo "$CXX"
   #- cd mrtrix3
   #- CXX=/usr/bin/g++-4.8 ./configure -nogui
   #- ./build
