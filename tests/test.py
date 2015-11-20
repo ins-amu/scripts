@@ -65,21 +65,18 @@ class TestSurface(unittest.TestCase):
         res_surf = np.loadtxt(self.path_pd + 'lh_vertices_low.txt')
         np.testing.assert_array_equal(ref_surf, res_surf)
 
-    # need matlab
-    # TODO: add matlab runtime compiler on travis
-    # def test_regionmapping(self):
-    #   rm = ut.RegionMapping()
-    #    rm.inputs.aparc_annot = 'tests/test_data/label/lh.aparc.annot'
-    #    rm.inputs.ref_table = 'lh_ref_table.txt'
-    #    rm.inputs.vertices_downsampled = self.path_s + 'lh_vertices_low.txt'
-    #    rm.inputs.triangles_downsampled = self.path_s + 'lh_triangles_low.txt'
-    #    rm.inputs.vertices = self.path_s + 'lh_vertices_high.txt'
-    #    rm.inputs.scripts_directory = '.'
-    #    rm.inputs.out_file = self.path_pd + 'region_mapping_low_not_corrected.txt'
-    #    rm.run()
-    #    ref_rm = np.loadtxt(self.path_s + 'region_mapping_low_not_corrected.txt')
-    #    res_rm = np.loadtxt(self.path_pd + 'region_mapping_low_not_corrected.txt')
-    #    np.testing.assert_array_equal(ref_rm, res_rm)
+    def test_regionmapping(self):
+        rm = ut.RegionMapping()
+        rm.inputs.vertices_downsampled = self.path_s + 'lh_vertices_low.txt'
+        rm.inputs.vertices = self.path_s + 'lh_vertices_high.txt'
+        rm.inputs.aparc_annot = 'tests/test_data/label/lh.aparc.annot'
+        rm.inputs.ref_table = 'lh_ref_table.txt'
+        rm.inputs.scripts_directory = '.'
+        rm.inputs.out_file = self.path_pd + 'region_mapping_low_not_corrected.txt'
+        rm.run()
+        ref_rm = np.loadtxt(self.path_s + 'lh_region_mapping_not_corrected.txt')
+        res_rm = np.loadtxt(self.path_pd + 'lh_region_mapping_not_corrected.txt')
+        np.testing.assert_array_equal(ref_rm, res_rm)
 
 
     def test_correctandcheckregionmapping(self):

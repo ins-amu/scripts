@@ -57,8 +57,7 @@ def surface(name='surface'):
         # work to do on region mapping
         (extract_high, region_mapping, [('vertices', 'vertices')]),
         (inputnode, region_mapping, [('scripts_directory', 'scripts_directory')]),
-        (off2txt, region_mapping, [('vertices_txt', 'vertices_downsampled'),
-                                   ('triangles_txt', 'triangles_downsampled')]),
+        (off2txt, region_mapping, [('vertices_txt', 'vertices_downsampled')]),
         (off2txt, correct_region_mapping, [('vertices_txt', 'vertices'),
                                            ('triangles_txt', 'triangles')]),
         (off2txt, check_region_mapping, [('vertices_txt', 'vertices'),
