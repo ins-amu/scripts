@@ -6,7 +6,7 @@ from nipype.interfaces.freesurfer.base import FSTraitedSpec, FSCommand
 from nipype.interfaces.matlab import MatlabCommand
 from nipype.utils.filemanip import fname_presuffix, split_filename
 import numpy as np
-import os
+import os, sys
 from copy import deepcopy
 from collections import Counter
 from string import Template
@@ -281,7 +281,12 @@ class Remesher(CommandLine):
 
     def __init__(self, *args, **kwargs):
         super(Remesher, self).__init__(*args, **kwargs)
-        self._cmd = self.get_scripts_dir() + "/remesher-mac/cmdremesher/cmdremesher"
+        if sys.platform=='darwin':
+            self._cmd = self.get_scripts_dir() + "/remesher-mac/cmdremesher/cmdremesher"
+        elif sys.platform=='linux2':
+            self._cmd = self.get_scripts_dir() + "/remesher-mac/cmdremesher/cmdremesher"
+        else:
+            raise NotImplementedError, 'only working on mac or linux'
 
     def get_scripts_dir(self):
         if isdefined(self.inputs.scripts_directory):
