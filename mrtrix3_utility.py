@@ -10,20 +10,25 @@ class MRConvertInputSpec(CommandLineInputSpec):
                    desc='voxel-order data filename')
     out_filename = File(genfile=True, argstr='%s', position=-1, desc='Output filename')
     extract_at_axis = traits.Enum(1, 2, 3, argstr='-coord %s', position=1,
-                                  desc='"Extract data only at the coordinates specified. This option specifies the Axis. Must be used in conjunction with extract_at_coordinate.')
+                                  desc='Extract data only at the coordinates specified. This option specifies the'
+                                       ' Axis. Must be used in conjunction with extract_at_coordinate.')
     extract_at_coordinate = traits.List(traits.Float, argstr='%s', sep=',', position=2, minlen=1, maxlen=3,
-                                        desc='"Extract data only at the coordinates specified. This option specifies the coordinates. Must be used in conjunction with extract_at_axis. Three comma-separated numbers giving the size of each voxel in mm.')
+                                        desc='"Extract data only at the coordinates specified. This option specifies '
+                                             'the coordinates. Must be used in conjunction with extract_at_axis. Three '
+                                             'comma-separated numbers giving the size of each voxel in mm.')
     voxel_dims = traits.List(traits.Float, argstr='-vox %s', sep=',',
                              position=3, minlen=3, maxlen=3,
                              desc='Three comma-separated numbers giving the size of each voxel in mm.')
     output_datatype = traits.Enum("nii", "float", "char", "short", "int", "long", "double", argstr='-output %s',
                                   position=2,
-                                  desc='"i.e. Bfloat". Can be "char", "short", "int", "long", "float" or "double"')  # , usedefault=True)
+                                  desc='"i.e. Bfloat". Can be "char", "short", "int", "long", "float" or "double"')
+    # , usedefault=True)
     extension = traits.Enum("mif", "nii", "float", "char", "short", "int", "long", "double", position=2,
                             desc='"i.e. Bfloat". Can be "char", "short", "int", "long", "float" or "double"',
                             usedefault=True)
     layout = traits.Enum("nii", "float", "char", "short", "int", "long", "double", argstr='-output %s', position=2,
-                         desc='specify the layout of the data in memory. The actual layout produced will depend on whether the output image format can support it.')
+                         desc='specify the layout of the data in memory. The actual layout produced will depend on '
+                              'whether the output image format can support it.')
     resample = traits.Float(argstr='-scale %d', position=3,
                             units='mm', desc='Apply scaling to the intensity values.')
     offset_bias = traits.Float(argstr='-scale %d', position=3,
@@ -41,12 +46,15 @@ class MRConvertOutputSpec(TraitedSpec):
 class MRConvert(CommandLine):
     """
     Perform conversion between different file types and optionally extract a subset of the input image.
+
     If used correctly, this program can be a very useful workhorse.
     In addition to converting images between different formats, it can
     be used to extract specific studies from a data set, extract a specific
     region of interest, flip the images, or to scale the intensity of the images.
+
     Example
     -------
+
     >>> import nipype.interfaces.mrtrix as mrt
     >>> mrconvert = mrt.MRConvert()
     >>> mrconvert.inputs.in_file = 'dwi_FA.mif'

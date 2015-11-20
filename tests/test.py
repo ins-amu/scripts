@@ -1,17 +1,12 @@
 import unittest
 import utility as ut
 import numpy as np
+import workflows as wf
 
 
-# run tests with
+# run tests with:
 # cd scripts
 # python -m unittest -v tests.test
-
-# test subject is HCP: 151526
-
-# class TestSurfaceBash(unittest.TestCase):
-# 	def test_bash_extract_high():
-# 		run extract_high lh
 
 
 class TestSurface(unittest.TestCase):
@@ -72,7 +67,7 @@ class TestSurface(unittest.TestCase):
 
     # need matlab
     # TODO: add matlab runtime compiler on travis
-    #def test_regionmapping(self):
+    # def test_regionmapping(self):
     #   rm = ut.RegionMapping()
     #    rm.inputs.aparc_annot = 'tests/test_data/label/lh.aparc.annot'
     #    rm.inputs.ref_table = 'lh_ref_table.txt'
@@ -122,10 +117,13 @@ class TestSurface(unittest.TestCase):
         ref_rm = np.loadtxt(self.path_d + 'region_mapping.txt')
         res_rm = np.loadtxt(self.path_pd + 'region_mapping.txt')
         np.testing.assert_array_equal(ref_rm, res_rm)
+        ref_verts = np.loadtxt(self.path_d + 'vertices.txt')
+        res_verts = np.loadtxt(self.path_pd + 'vertices.txt')
+        np.testing.assert_array_equal(ref_verts, res_verts)
+        ref_tri = np.loadtxt(self.path_d + 'triangles.txt')
+        res_tri = np.loadtxt(self.path_pd + 'triangles.txt')
+        np.testing.assert_array_equal(ref_tri, res_tri)
 
-    # TODO check single component for each region
-    # TODO check surface loose not too much area
-    # TODO check surface topologicaly equivalent to a sphere
 
 class TestSubcorticalSurface(unittest.TestCase):
     def test_aseg2srf(self):
@@ -135,61 +133,90 @@ class TestSubcorticalSurface(unittest.TestCase):
         pass
 
 
-class TestConnectivity(unittest.TestCase):
+class TestPreprocess(unittest.TestCase):
     """
-    Test data for connecivity workflow
+    Test data for preprocessing workflow
 
     Test data are from subject af
     """
-    def test_convert_dicom2nii(self):
+
+    def test_mrconvert(self):
         pass
 
-    def test_extract_bvecs_bvals(self):
-        pass
 
-    def test_convert_nii2dwi(self):
-        pass
+class TestConnectivity(unittest.TestCase):
+    """
+    Test data for preprocessing workflow
 
-    def test_create_mask(self):
-        pass
+    Test data are from subject af
+    """
 
+    # use mrtrix test data
     def test_dwi_extract_lowb(self):
         pass
 
-    def test_lowb_mif2lowb_nii(self):
-        pass
-
-    def test_dwi2response(self):
-        pass
-
-    def test_dwi2fod(self):
-        pass
-
-    def test_act_anat_prepare_fsl(self):
-        pass
-
     def test_fivett2gmwmi(self):
-        pass
-
-    def tckgen(self):
-        pass
-
-    def test_tcksif(self):
-        pass
-
-    def test_labelconfig(self):
-        pass
-
-    def test_tck2connectome(self):
         pass
 
     def test_compute_connectivity(self):
         pass
 
 
+class TestWorkflows(unittest.TestCase):
+    """
+    Test instantiation of the workflows
+    """
+
+    def test_scripts(self):
+        wf.scripts()
+
+    def test_coregistration(self):
+        wf.coregistration()
+
+    def test_tractography(self):
+        wf.tractography()
+
+    def test_preprocess(self):
+        wf.preprocess()
+
+    def test_subcortical(self):
+        wf.subcorticalsurface()
+
+    def test_surface(self):
+        wf.surface()
+
+
 class TestCoregistration(unittest.TestCase):
     # TODO finish implementation
     def test_T1_mgz2nii(self):
+        pass
+
+
+class TestSurfaceCorrectness(unittest.TestCase):
+    def test_single_component(self):
+        verts = np.loadtxt('tests/test_data/surface/lh_vertices_low.txt')
+        tri = np.loadtxt('tests/test_data/surface/lh_triangles_low.txt').astype(int)
+        rm = np.loadtxt('tests/test_data/surface/lh_region_mapping_low.txt')
+        crm = ut.CheckRegionMapping()
+        res = crm.calculate_connected(rm, verts, tri)
+        tt = np.sum(np.array(res)[:, 1])
+        self.assertEqual(tt, 0)
+        return res
+
+
+    def test_surface_downsampling_area(self):
+        verts = np.loadtxt('tests/test_data/surface/lh_vertices_low.txt')
+        tri = np.loadtxt('tests/test_data/surface/lh_triangles_low.txt').astype(int)
+        tri_area_low = ut.ComputeConnectivityFiles()
+        res_low = np.sum(tri_area_low.compute_triangle_areas(verts, tri))
+        verts_high = np.loadtxt('tests/test_data/surface/lh_vertices_high.txt')
+        tri_high = np.loadtxt('tests/test_data/surface/lh_triangles_high.txt').astype(int)
+        tri_area_high = ut.ComputeConnectivityFiles()
+        res_high = np.sum(tri_area_high.compute_triangle_areas(verts_high, tri_high))
+        self.assertGreater(res_low, .8*res_high)
+
+
+    def test_surface_sphere(self):
         pass
 
 

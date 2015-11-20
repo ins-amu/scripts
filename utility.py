@@ -728,14 +728,11 @@ class ReunifyBothHemisphere(BaseInterface):
         out_file_triangles = self.inputs.out_file_triangles
         out_file_texture = self.inputs.out_file_texture
         if not isdefined(out_file_triangles):
-            out_file_triangles = fname_presuffix(self.inputs.triangles[0], newpath=os.getcwd(),
-                                                 suffix='_triangles', use_ext=True)
+            out_file_triangles = 'triangles.txt'
         if not isdefined(out_file_vertices):
-            out_file_vertices = fname_presuffix(self.inputs.vertices[0], newpath=os.getcwd(),
-                                                suffix='_vertices', use_ext=True)
+            out_file_vertices = 'vertices.txt'
         if not isdefined(out_file_texture):
-            out_file_texture = fname_presuffix(self.inputs.textures[0], newpath=os.getcwd(),
-                                               suffix='_texture', use_ext=True)
+            out_file_texture = 'texture.txt'
         return (os.path.abspath(out_file_triangles),
                 os.path.abspath(out_file_vertices),
                 os.path.abspath(out_file_texture))
@@ -790,6 +787,7 @@ class Aseg2Srf(CommandLine):
     #  44, 46, 47, 49, 50, 51, 52, 53, 54, 58, 60, 251, 252, 253,\
     # 254, 255"
     _cmd = os.getcwd()
+    _version = '3.1'
 
     def __init__(self, *args, **kwargs):
         super(Aseg2Srf, self).__init__(*args, **kwargs)
@@ -813,7 +811,7 @@ class Aseg2Srf(CommandLine):
             sd = self.inputs.subjects_dir
         else:
             sd = os.environ('SUBJECTS_DIR')
-        if len(self.inputs.label)==1:
+        if len(self.inputs.label) == 1:
             out_files = os.path.join(sd, self.inputs.subject_id, 'ascii', 'aseg_00' + self.inputs.label + '.srf')
         else:
             out_files = os.path.join(sd, self.inputs.subject_id, 'ascii', 'aseg_0' + self.inputs.label + '.srf')

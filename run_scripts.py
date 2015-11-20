@@ -12,15 +12,17 @@ data_directory = '/Users/timp/Work/data/'
 # you can use any directory hierarchy you want for your data
 # you just have to reflect it in the template
 # glob syntax is allowed, for instance * ? [0-3]
-sf = pe.Node(niu.IdentityInterface(fields=['T1', 'DWI', 'bvecs', 'bvals', 'scripts_directory', 'subject_id', 'subjects_dir', 'T1']), name='selectfiles')
+sf = pe.Node(niu.IdentityInterface(
+    fields=['T1', 'DWI', 'bvecs', 'bvals', 'scripts_directory', 'subject_id', 'subjects_dir', 'T1']),
+             name='select_files')
 # Input data in nii format:
 sf.inputs.T1 = os.path.join(data_directory, subject_id, 'data/T1/T1.nii.gz')
 sf.inputs.DWI = os.path.join(data_directory, subject_id, 'data/DWI/DWI.nii.gz')
 sf.inputs.bvecs = os.path.join(data_directory, subject_id, 'data/DWI/bvecs')
 sf.inputs.bvals = os.path.join(data_directory, subject_id, 'data/DWI/bvals')
 sf.inputs.subject_id = subject_id
-sf.inputs.scripts_directory="/Users/timp/Desktop/scripts/"
-sf.inputs.subjects_dir="/Users/timp/Work/freesurfer/"
+sf.inputs.scripts_directory = "/Users/timp/Desktop/scripts/"
+sf.inputs.subjects_dir = "/Users/timp/Work/freesurfer/"
 sf.inputs.subject_id = subject_id
 
 # if data in dcm format, please convert to nii format with mrconvert (mrtrix)
@@ -42,8 +44,6 @@ sc.inputs.tractography.tcksift.term_number = 500
 ds = pe.Node(nio.DataSink(['lh', 'rh']), name='sinker')
 # Directory where data are going to be outputed
 ds.inputs.base_directory = os.path.join('/Users/timp/Work/processed_data', subject_id)
-
-
 
 # Main workflow
 main_wf = pe.Workflow(name='main')
@@ -71,4 +71,3 @@ main_wf.base_dir = '/Users/timp/Work/tmp_pip/'
 main_wf.write_graph()
 # Run the pipeline
 main_wf.run()
-
