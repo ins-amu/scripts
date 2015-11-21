@@ -21,7 +21,8 @@ before_install:
   # - pip install nipype
   - git clone git://github.com/nipy/nipype.git 
   - cd nipype
-  - sudo python setup.py install
+  - python -c 'import networkx'
+  - python setup.py install
   - cd ..
   #- pip install coveralls
 install:
