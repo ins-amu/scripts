@@ -20,6 +20,8 @@ before_install:
   - source activate nipype_test_env
   - pip install nipype
   - python -c 'import nipype; print nipype.__version__'
+  - python -c 'import workflows'
+  - python -c 'import utility'  
   #- pip install coveralls
 install:
   - git clone https://github.com/MRtrix3/mrtrix3.git
