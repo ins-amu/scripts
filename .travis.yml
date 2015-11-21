@@ -18,10 +18,11 @@ before_install:
   # Replace dep1 dep2 ... with your dependencies
   - conda create -q -n nipype_test_env python=2.7 numpy scipy traits networkx
   - source activate nipype_test_env
-  - pip install nipype
-  - python -c 'import nipype; print nipype.__version__'
-  - python -c 'import workflows'
-  - python -c 'import utility'  
+  # - pip install nipype
+  - git clone git://github.com/nipy/nipype.git 
+  - cd nipype
+  - sudo python setup.py install
+  - cd ..
   #- pip install coveralls
 install:
   - git clone https://github.com/MRtrix3/mrtrix3.git
