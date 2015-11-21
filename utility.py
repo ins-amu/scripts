@@ -483,11 +483,11 @@ class RegionMapping(BaseInterface):
         L, _, _ = self.read_annot(self.inputs.aparc_annot)
         ref_table = np.loadtxt(self.inputs.ref_table)
         vl = np.loadtxt(self.inputs.vertices_downsampled)  # vertices low
-        vh = np.loadtxt(self.inputs.vertices_downsampled)  # vertices high
+        vh = np.loadtxt(self.inputs.vertices)  # vertices high
         reg_map = []
         for vli in vl:
-            pos = np.argmin(np.sum(np.abs(vh - vli)), 1)
-            find_tab = np.nonzero(ref_table[:, 5] == L[pos])
+            pos = np.argmin(np.sum(np.abs(vh - vli), 1))
+            find_tab = np.nonzero(ref_table[:, 5] == L[pos])[0][0]
             reg_map.append(ref_table[find_tab, 4])
         np.savetxt(self._gen_outfilename(), reg_map)
         return runtime

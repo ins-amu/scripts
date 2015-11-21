@@ -72,10 +72,10 @@ class TestSurface(unittest.TestCase):
         rm.inputs.aparc_annot = 'tests/test_data/label/lh.aparc.annot'
         rm.inputs.ref_table = 'lh_ref_table.txt'
         rm.inputs.scripts_directory = '.'
-        rm.inputs.out_file = self.path_pd + 'region_mapping_low_not_corrected.txt'
+        rm.inputs.out_file = self.path_pd + 'lh_region_mapping_low_not_corrected.txt'
         rm.run()
-        ref_rm = np.loadtxt(self.path_s + 'lh_region_mapping_not_corrected.txt')
-        res_rm = np.loadtxt(self.path_pd + 'lh_region_mapping_not_corrected.txt')
+        ref_rm = np.loadtxt(self.path_s + 'lh_region_mapping_low_not_corrected.txt')
+        res_rm = np.loadtxt(self.path_pd + 'lh_region_mapping_low_not_corrected.txt')
         np.testing.assert_array_equal(ref_rm, res_rm)
 
 
