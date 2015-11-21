@@ -22,7 +22,7 @@ before_install:
   #- pip install nipype
   - git clone git://github.com/nipy/nipype.git 
   - cd nipype
-  - python -c 'import nipype.interface.mrtrix3'
+  #- python -c 'import nipype.interface.mrtrix3'
   - python setup.py install
   - cd ..
   #- pip install coveralls
