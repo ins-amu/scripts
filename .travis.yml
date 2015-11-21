@@ -16,12 +16,13 @@ before_install:
   # Useful for debugging any issues with conda
   - conda info -a
   # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n nipype_test_env python=2.7 numpy scipy traits networkx nibabel
+  - conda create -q -n nipype_test_env python=2.7 numpy scipy traits networkx
   - source activate nipype_test_env
-  # - pip install nipype
+  - pip install nibabel
+  - pip install nipype
   - git clone git://github.com/nipy/nipype.git 
   - cd nipype
-  - python -c 'import networkx'
+  - python -c 'import nipype.interface.mrtrix3'
   - python setup.py install
   - cd ..
   #- pip install coveralls
