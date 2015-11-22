@@ -24,6 +24,8 @@ before_install:
   - cd nipype
   - python setup.py install
   - PYTHONPATH=$(pwd):$PYTHONPATH
+  - echo $PYTHONPATH
+  - python -c 'import sys; print sys.path'
   - cd ..
   - python -c 'import nipype.interfaces.mrtrix3'
   #- pip install coveralls
