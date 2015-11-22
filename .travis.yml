@@ -25,7 +25,7 @@ before_install:
   - python setup.py install
   - echo $PYTHONPATH
   - PYTHONPATH=$(pwd)
-  - export $PYTHONPATH
+  - export PYTHONPATH
   - echo $PYTHONPATH
   - python -c 'import sys; print sys.path'
   - cd ..
