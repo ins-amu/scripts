@@ -23,13 +23,8 @@ before_install:
   - git clone git://github.com/nipy/nipype.git 
   - cd nipype
   - python setup.py install
-  - echo $PYTHONPATH
-  - PYTHONPATH=$(pwd)
-  - export PYTHONPATH
-  - echo $PYTHONPATH
-  - python -c 'import sys; print sys.path'
+  - export PYTHONPATH=$(pwd):$PYTHONPATH
   - cd ..
-  - python -c 'import nipype.interfaces.mrtrix3'
   #- pip install coveralls
 install:
   - git clone https://github.com/MRtrix3/mrtrix3.git
@@ -38,8 +33,8 @@ install:
   - ls
   - ./configure -nogui
   - ./build  -disablethreading
-  - PATH=$(pwd)/bin:$PATH
-  - cd -
+  - export PATH=$(pwd)/bin:$PATH
+  - cd ..
 script:
   - pwd
   - mkdir -p /home/travis/build/timpx/scripts/tests/test_data/produced_data/
