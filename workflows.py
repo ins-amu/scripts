@@ -152,8 +152,8 @@ def tractography(name="tractography"):
     tcksift = pe.Node(interface=mrt3u.TckSift(), name='tcksift')
     # tcksift.inputs.term_number = 2500000
     labelconfig = pe.Node(interface=mrt3.connectivity.LabelConfig(), name='labelconfig')
-    labelconfig.inputs.in_config = '/Users/timp/Desktop/scripts/fs_region.txt'
-    labelconfig.inputs.lut_fs = '/Applications/freesurfer/FreeSurferColorLUT.txt'
+    #labelconfig.inputs.in_config = '/Users/timp/Desktop/scripts/fs_region.txt'
+    #labelconfig.inputs.lut_fs = '/Applications/freesurfer/FreeSurferColorLUT.txt'
     tck2connectome_weights = pe.Node(interface=mrt3.connectivity.BuildConnectome(), name='tck2connectome_weights')
     tck2connectome_weights.inputs.search_radius = 2.
     tck2connectome_tract_lengths = pe.Node(interface=mrt3.connectivity.BuildConnectome(),
@@ -162,8 +162,8 @@ def tractography(name="tractography"):
     tck2connectome_tract_lengths.inputs.zero_diagonal = True
     tck2connectome_tract_lengths.inputs.metric = 'meanlength'
     compute_connectivity = pe.Node(interface=su.ComputeConnectivityFiles(), name='compute_connectivity')
-    compute_connectivity.inputs.corr_table = '/Users/timp/Desktop/scripts/correspondance_mat.txt'
-    compute_connectivity.inputs.name_regions = '/Users/timp/Desktop/scripts/name_regions.txt'
+    #compute_connectivity.inputs.corr_table = '/Users/timp/Desktop/scripts/correspondance_mat.txt'
+    #compute_connectivity.inputs.name_regions = '/Users/timp/Desktop/scripts/name_regions.txt'
     output_node = pe.Node(
         interface=niu.IdentityInterface(
             fields=(['weights', 'tract_lengths', 'areas', 'centres', 'average_orientations'])), name='outputnode')

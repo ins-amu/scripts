@@ -6,7 +6,11 @@ import workflows as wf
 import os
 
 subject_id = 'af'
+subject_directory = '/Users/timp/Work/freesurfer/'
 data_directory = '/Users/timp/Work/data/'
+freesurfer_directory = '/Applications/freesurfer/'
+scripts_directory = '/Users/timp/Desktop/scripts/'
+
 
 # inputs of the pipeline: DWI (nii, bvecs, bvals), T1, subject_id
 # you can use any directory hierarchy you want for your data
@@ -21,8 +25,8 @@ sf.inputs.DWI = os.path.join(data_directory, subject_id, 'data/DWI/DWI.nii.gz')
 sf.inputs.bvecs = os.path.join(data_directory, subject_id, 'data/DWI/bvecs')
 sf.inputs.bvals = os.path.join(data_directory, subject_id, 'data/DWI/bvals')
 sf.inputs.subject_id = subject_id
-sf.inputs.scripts_directory = "/Users/timp/Desktop/scripts/"
-sf.inputs.subjects_dir = "/Users/timp/Work/freesurfer/"
+sf.inputs.scripts_directory = freesurfer_directory
+sf.inputs.subjects_dir = subject_directory
 sf.inputs.subject_id = subject_id
 
 # if data in dcm format, please convert to nii format with mrconvert (mrtrix)
@@ -38,6 +42,10 @@ sc.inputs.surface.check_region_mapping.display = False
 sc.inputs.tractography.dwi2fod.max_sh = 6
 sc.inputs.tractography.tckgen.n_tracks = 1000
 sc.inputs.tractography.tcksift.term_number = 500
+sc.inputs.tractography.labelconfig.in_config = scripts_directory + 'fs_region.txt'
+sc.inputs.tractography.labelconfig.lut_fs = freesurfer_directory + 'FreeSurferColorLUT.txt'
+sc.inputs.tractography.compute_connectivity.corr_table = scripts_directory + 'correspondance_mat.txt'
+sc.inputs.tractography.compute_connectivity.name_regions = scripts_directory + 'name_regions.txt'
 
 # outputs of the pipeline: DataSink
 # collecting output data: DataSink
