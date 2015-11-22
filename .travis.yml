@@ -23,8 +23,7 @@ before_install:
   - git clone git://github.com/nipy/nipype.git 
   - cd nipype
   - python setup.py install
-  - cd ..
-  - ls nipype/nipype/interfaces
+  - ls nipype/interfaces
   - python -c 'import nipype.interfaces.mrtrix3'
   #- pip install coveralls
 install:
