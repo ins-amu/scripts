@@ -23,7 +23,9 @@ before_install:
   - git clone git://github.com/nipy/nipype.git 
   - cd nipype
   - python setup.py install
-  - PYTHONPATH=$(pwd):$PYTHONPATH
+  - echo $PYTHONPATH
+  - PYTHONPATH=$(pwd)
+  - export $PYTHONPATH
   - echo $PYTHONPATH
   - python -c 'import sys; print sys.path'
   - cd ..
