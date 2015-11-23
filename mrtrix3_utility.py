@@ -126,7 +126,7 @@ class DWI2TensorInputSpec(CommandLineInputSpec):
 
 class DwiExtractInputSpec(CommandLineInputSpec):
     in_file = File(exists=True, mandatory=True, position=-2, argstr='%s', desc='the input DW image.')
-    out_file = File(exists=True, genfile=True, position=-1, argstr='%s', desc='the output image (diffusion-weighted'
+    out_file = File(genfile=True, position=-1, argstr='%s', desc='the output image (diffusion-weighted'
                                                                               ' volumes by default.')
     bzero = traits.Bool(argstr='-bzero', desc='output b=0 volumes instead of the diffusion weighted volumes.')
 
@@ -163,7 +163,7 @@ class DwiExtract(CommandLine):
 class Fivett2GmwmiInputSpec(CommandLineInputSpec):
     fivett_in = File(exists=True, mandatory=True, position=-2, argstr='%s',
                      desc='the input 5TT segmented anatomical image')
-    mask_out = File(exists=True, genfile=True, position=-1, argstr='%s', desc='the output mask image')
+    mask_out = File(genfile=True, position=-1, argstr='%s', desc='the output mask image')
 
 
 class Fivett2GmwmiOutputSpec(TraitedSpec):

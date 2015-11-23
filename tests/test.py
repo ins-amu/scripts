@@ -1,7 +1,10 @@
+import os
 import unittest
 import utility as ut
 import numpy as np
 import workflows as wf
+import mrtrix3_utility as mrt3u
+import filecmp
 
 
 # run tests with:
@@ -124,6 +127,7 @@ class TestSurface(unittest.TestCase):
 
 class TestSubcorticalSurface(unittest.TestCase):
     def test_aseg2srf(self):
+
         pass
 
     def test_listsubcortical(self):
@@ -147,17 +151,51 @@ class TestConnectivity(unittest.TestCase):
 
     Test data are from subject af
     """
+    path_s = 'tests/test_data/surface/'  # test data surface
+    path_pd = 'tests/test_data/produced_data/'  # test produced data
+    path_d = 'tests/test_data/subj/'  # test data subj
+    path_c = 'tests/test_data/connectivity/'  # test data subj
 
     # use mrtrix test data
     def test_dwi_extract_lowb(self):
-        pass
+        de = mrt3u.DwiExtract()
+        de.inputs.in_file = self.path_c + 'dwi.mif'
+        de.inputs.out_file = self.path_pd + 'dwi_extracted.mif'
+        de.inputs.bzero = True
+        de.run()
+        filecmp.cmp(self.path_pd + 'dwi_extracted.mif', self.path_c + 'dwi_extracted.mif')
 
     def test_fivett2gmwmi(self):
-        pass
+        ft = mrt3u.Fivett2Gmwmi()
+        ft.inputs.fivett_in = self.path_c + '5tt.mif'
+        ft.inputs.mask_out = self.path_pd + 'gmwmi_mask.mif'
+        ft.run()
+        filecmp.cmp(self.path_pd + 'gmwmi_mask.mif', self.path_c + 'gmwmi_mask.mif')
 
     def test_compute_connectivity(self):
-        pass
-
+        cc = ut.ComputeConnectivityFiles()
+        cc.inputs.verts = self.path_d + 'vertices.txt'
+        cc.inputs.tri = self.path_d + 'triangles.txt'
+        cc.inputs.region_mapping = self.path_d + 'region_mapping.txt'
+        cc.inputs.weights= self.path_c + 'weights.csv'
+        cc.inputs.tract_lengths = self.path_c + 'tract_lengths.csv'
+        cc.inputs.corr_table = 'correspondance_mat.txt'
+        cc.inputs.name_regions = 'name_regions.txt'
+        cc.inputs.vertices_sub_list = []
+        cc.inputs.triangles_sub_list = []
+        cc.inputs.out_file_weights = self.path_pd + 'weights.txt'
+        cc.inputs.out_file_tract_lengths = self.path_pd + 'tract_lengths.txt'
+        cc.inputs.out_file_areas = self.path_pd + 'areas.txt'
+        cc.inputs.out_file_average_orientations = self.path_pd + 'average_orientations.txt'
+        cc.inputs.out_file_centres = self.path_pd + 'centres.txt'
+        cc.run()
+        res = [self.path_pd + i for i in  ['weights.txt', 'tract_lengths.txt', 'areas.txt', 'average_orientations.txt']]
+        ref = [self.path_d + i for i in ['weights.txt', 'tract_lengths.txt', 'areas.txt', 'average_orientations.txt']]
+        for a, b in zip(res, ref):
+            print a
+            resa = np.loadtxt(a)
+            resb = np.loadtxt(b)
+            np.testing.assert_array_equal(resa, resb)
 
 class TestWorkflows(unittest.TestCase):
     """
@@ -218,4 +256,5 @@ class TestSurfaceCorrectness(unittest.TestCase):
 
 
 if '__name__' == '__main__':
+    os.mkdir('tests/test_data/produced_data')
     unittest.main()
