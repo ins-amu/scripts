@@ -73,7 +73,7 @@ class TestSurface(unittest.TestCase):
         rm.inputs.vertices_downsampled = self.path_s + 'lh_vertices_low.txt'
         rm.inputs.vertices = self.path_s + 'lh_vertices_high.txt'
         rm.inputs.aparc_annot = 'tests/test_data/label/lh.aparc.annot'
-        rm.inputs.ref_table = 'lh_ref_table.txt'
+        rm.inputs.ref_table = 'files/lh_ref_table.txt'
         rm.inputs.scripts_directory = '.'
         rm.inputs.out_file = self.path_pd + 'lh_region_mapping_low_not_corrected.txt'
         rm.run()
@@ -127,10 +127,21 @@ class TestSurface(unittest.TestCase):
 
 class TestSubcorticalSurface(unittest.TestCase):
     def test_aseg2srf(self):
-
+        # need freesurfer
         pass
 
     def test_listsubcortical(self):
+        ls = ut.ListSubcortical()
+        ls.inputs.in_file = 'tests/test_data/surface/subcortical/aseg_026.srf'
+        ls.inputs.out_file_vertices_sub = 'tests/test_data/produced_data/vert_026.txt'
+        ls.inputs.out_file_triangles_sub = 'tests/test_data/produced_data/tri_026.txt'
+        ls.run()
+        res_vert = np.loadtxt('tests/test_data/produced_data/vert_026.txt')
+        res_tri = np.loadtxt('tests/test_data/produced_data/tri_026.txt')
+        ref_vert = np.loadtxt('tests/test_data/surface/subcortical/aseg_026_vert.txt')
+        ref_tri = np.loadtxt('tests/test_data/surface/subcortical/aseg_026_tri.txt')
+        np.testing.assert_array_equal(res_vert, ref_vert)
+        np.testing.assert_array_equal(res_tri, ref_tri)
         pass
 
 
@@ -140,9 +151,7 @@ class TestPreprocess(unittest.TestCase):
 
     Test data are from subject af
     """
-
-    def test_mrconvert(self):
-        pass
+    pass
 
 
 class TestConnectivity(unittest.TestCase):
@@ -158,6 +167,10 @@ class TestConnectivity(unittest.TestCase):
 
     # use mrtrix test data
     def test_dwi_extract_lowb(self):
+        try:
+            os.remove(self.path_pd + 'dwi_extracted.mif')
+        except:
+            pass
         de = mrt3u.DwiExtract()
         de.inputs.in_file = self.path_c + 'dwi.mif'
         de.inputs.out_file = self.path_pd + 'dwi_extracted.mif'
@@ -166,6 +179,10 @@ class TestConnectivity(unittest.TestCase):
         filecmp.cmp(self.path_pd + 'dwi_extracted.mif', self.path_c + 'dwi_extracted.mif')
 
     def test_fivett2gmwmi(self):
+        try:
+            os.remove(self.path_pd + 'gmwmi_mask.mif')
+        except:
+            pass
         ft = mrt3u.Fivett2Gmwmi()
         ft.inputs.fivett_in = self.path_c + '5tt.mif'
         ft.inputs.mask_out = self.path_pd + 'gmwmi_mask.mif'
@@ -179,8 +196,8 @@ class TestConnectivity(unittest.TestCase):
         cc.inputs.region_mapping = self.path_d + 'region_mapping.txt'
         cc.inputs.weights= self.path_c + 'weights.csv'
         cc.inputs.tract_lengths = self.path_c + 'tract_lengths.csv'
-        cc.inputs.corr_table = 'correspondance_mat.txt'
-        cc.inputs.name_regions = 'name_regions.txt'
+        cc.inputs.corr_table = 'files/correspondance_mat.txt'
+        cc.inputs.name_regions = 'files/name_regions.txt'
         cc.inputs.vertices_sub_list = []
         cc.inputs.triangles_sub_list = []
         cc.inputs.out_file_weights = self.path_pd + 'weights.txt'

@@ -50,7 +50,7 @@ class GrabData(BaseInterface):
         path_fs_subj = os.path.join(os.path.abspath(self.inputs.freesurfer_directory), self.inputs.subject_id)
         out_file_pial = os.path.join(path_fs_subj, 'surf', self.inputs.hemi + '.pial')
         out_file_annot = os.path.join(path_fs_subj, 'label', self.inputs.hemi + '.aparc.annot')
-        out_file_ref_table = os.path.join(self._get_scripts_directory(), self.inputs.hemi + '_ref_table.txt')
+        out_file_ref_table = os.path.join(self._get_scripts_directory(), 'files/' + self.inputs.hemi + '_ref_table.txt')
         outputs = self._outputs().get()
         outputs['pial'] = out_file_pial
         outputs['annot'] = out_file_annot

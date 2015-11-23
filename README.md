@@ -11,9 +11,6 @@ Please see the [wiki](https://github.com/timpx/scripts/wiki)
 - nipype
 - tests
 
-#### NEW in 0.2:
-- mrtrix 3
-
 #### License
 This poject use the MIT License.
 The full license is in LICENSE.txt in the SCRIPTS distribution.

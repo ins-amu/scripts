@@ -42,10 +42,10 @@ sc.inputs.surface.check_region_mapping.display = False
 sc.inputs.tractography.dwi2fod.max_sh = 6
 sc.inputs.tractography.tckgen.n_tracks = 1000
 sc.inputs.tractography.tcksift.term_number = 500
-sc.inputs.tractography.labelconfig.in_config = scripts_directory + 'fs_region.txt'
+sc.inputs.tractography.labelconfig.in_config = scripts_directory + 'files/fs_region.txt'
 sc.inputs.tractography.labelconfig.lut_fs = freesurfer_directory + 'FreeSurferColorLUT.txt'
-sc.inputs.tractography.compute_connectivity.corr_table = scripts_directory + 'correspondance_mat.txt'
-sc.inputs.tractography.compute_connectivity.name_regions = scripts_directory + 'name_regions.txt'
+sc.inputs.tractography.compute_connectivity.corr_table = scripts_directory + 'files/correspondance_mat.txt'
+sc.inputs.tractography.compute_connectivity.name_regions = scripts_directory + 'files/name_regions.txt'
 
 # outputs of the pipeline: DataSink
 # collecting output data: DataSink
