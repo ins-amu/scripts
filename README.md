@@ -1,10 +1,13 @@
 # Surface and Connectivity Reconstruction: Imaging Pipeline for TVB Simulations
-## SCRIPTS 0.2
+## SCRIPTS 0.3
  
-Please see the [wiki](https://github.com/timpx/scripts/wiki)
+Please see the [wiki](https://github.com/ins-amu/scripts/wiki)
 
-#### NEW in 0.2:
+#### NEW in 0.3:
 - mrtrix3
+- tests
+- corrections
+-  ...
 
 #### License
 This poject use the MIT License.
