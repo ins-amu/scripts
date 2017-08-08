@@ -311,11 +311,41 @@ then
     fi
 fi
 
-# response function estimation
-if [ ! -f $PRD/connectivity/response.txt ]
+
+# Response function estimation
+# Check if multi or single shell
+shells=$(mrinfo -shells $PRD/connectivity/dwi.mif)
+echo "shell b values are $shells"
+nshells=($shells)
+no_shells=${#nshells[@]}
+echo "no of shells are $no_shells"
+
+if [ "$no_shells" -gt 2 ] 
 then
-    echo "estimating response"
-    dwi2response $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -mask $PRD/connectivity/mask.mif 
+# Multishell
+    if [ ! -f $PRD/connectivity/response_wm.txt ]
+    then
+        echo "estimating response"
+        ## issue there, we need to generate before the 5tt images
+        dwi2response msmt_5tt -force -mask $PRD/connectivity/mask.mif -voxels $PRD/connectivity/RF_voxels.mif $PRD/connectivity/dwi.mif $PRD/connectivity/response_wm.txt $PRD/connectivity/response_gm.txt $PRD/connectivity/response_csf.txt  
+        if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
+        then
+            echo "check ODF image"
+            mrview $PRD/connectivity/meanlowb.mif -overlay.load $PRD/connectivity/RF_voxels.mif -overlay.opacity 0.5
+        fi
+    fi
+else
+# Single shell
+    if [ ! -f $PRD/connectivity/response.txt ]
+    then
+        echo "estimating response"
+        dwi2response tournier -force -mask $PRD/connectivity/mask.mif -voxels $PRD/connectivity/RF_voxels.mif $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt  
+        if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
+        then
+            echo "check ODF image"
+            mrview $PRD/connectivity/meanlowb.mif -overlay.load $PRD/connectivity/RF_voxels.mif -overlay.opacity 0.5
+        fi
+    fi
 fi
 
 
