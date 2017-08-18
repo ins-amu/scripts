@@ -311,6 +311,20 @@ then
     fi
 fi
 
+# prepare file for act
+### TODO: test
+if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]
+then
+    echo "prepare files for act"
+#    act_anat_prepare_fsl $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/act.mif
+    5ttgen fsl -force -premasked $PRD/connectivity/brain_2_diff.nii.gz $PRD/connectivity/act.mif       
+    if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
+    then
+        echo "check tissue segmented image"
+        5tt2vis -force $PRD/connectivity/act.mif $PRD/connectivity/act_vis.mif
+        mrview $PRD/connectivity/act_vis.mif
+    fi
+fi
 
 # Response function estimation
 # Check if multi or single shell
@@ -323,23 +337,29 @@ echo "no of shells are $no_shells"
 if [ "$no_shells" -gt 2 ] 
 then
 # Multishell
-    if [ ! -f $PRD/connectivity/response_wm.txt ]
+    if [ ! -f $PRD/connectivity/response_wm.txt ] 
     then
-        echo "estimating response"
-        ## issue there, we need to generate before the 5tt images
-        dwi2response msmt_5tt -force -mask $PRD/connectivity/mask.mif -voxels $PRD/connectivity/RF_voxels.mif $PRD/connectivity/dwi.mif $PRD/connectivity/response_wm.txt $PRD/connectivity/response_gm.txt $PRD/connectivity/response_csf.txt  
-        if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
-        then
-            echo "check ODF image"
-            mrview $PRD/connectivity/meanlowb.mif -overlay.load $PRD/connectivity/RF_voxels.mif -overlay.opacity 0.5
+        if [ "$act" = "yes" ]
+        then 
+            echo "estimating response using msmt algorithm"
+            dwi2response msmt_5tt $PRD/connectivity/dwi.mif $PRD/connectivity/act.mif $PRD/connectivity/response_wm.txt $PRD/connectivity/response_gm.txt $PRD/connectivity/response_csf.txt -voxels $PRD/connectivity/RF_voxels.mif -mask $PRD/connectivity/mask.mif -force
+            if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
+            then
+                echo "check ODF image"
+                mrview $PRD/connectivity/meanlowb.mif -overlay.load $PRD/connectivity/RF_voxels.mif -overlay.opacity 0.5
+            fi
+        else
+            echo "estimating response using dhollander algorithm"
+            dwi2response dhollander $PRD/connectivity/dwi.mif $PRD/connectivity/response_wm.txt $PRD/connectivity/response_gm.txt $PRD/connectivity/response_csf.txt -force -voxels $PRD/connectivity/RF_voxels.mif -mask $PRD/connectivity/mask.mif
         fi
     fi
 else
-# Single shell
+# Single shell only
     if [ ! -f $PRD/connectivity/response.txt ]
     then
-        echo "estimating response"
-        dwi2response tournier -force -mask $PRD/connectivity/mask.mif -voxels $PRD/connectivity/RF_voxels.mif $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt  
+        echo "estimating response using dhollander algorithm"
+        # dwi2response tournier $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -force -voxels $PRD/connectivity/RF_voxels.mif -mask $PRD/connectivity/mask.mif
+        dwi2response dhollander $PRD/connectivity/dwi.mif $PRD/connectivity/response_wm.txt $PRD/connectivity/response_gm.txt $PRD/connectivity/response_csf.txt -voxels $PRD/connectivity/RF_voxels.mif -mask $PRD/connectivity/mask.mif -force 
         if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
         then
             echo "check ODF image"
@@ -349,11 +369,33 @@ else
 fi
 
 
-# fibre orientation distribution estimation
-if [ ! -f $PRD/connectivity/CSD$lmax.mif ]
+# Fibre orientation distribution estimation
+if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]
 then
-    echo "calculating fod"
-    dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif
+# Multishell
+    if [ "$no_shells" -gt 2 ] 
+    then
+        echo "calculating fod on multishell data"
+        dwi2fod msmt_csd $PRD/connectivity/dwi.mif $PRD/connectivity/response_wm.txt $PRD/connectivity/wm_CSD$lmax.mif $PRD/connectivity/response_gm.txt $PRD/connectivity/gm_CSD$lmax.mif $PRD/connectivity/response_csf.txt $PRD/connectivity/csf_CSD$lmax.mif -mask $PRD/connectivity/mask_dilated.mif -force 
+    else
+# Single shell only
+        echo "calculating fod on single-shell data"
+        ## to check
+   #    dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif
+        dwiextract $PRD/connectivity/dwi.mif - | dwi2fod msmt_csd - $PRD/connectivity/response.txt $PRD/connectivity/wm_CSD$lmax.mif -mask $PRD/connectivity/mask_dilated.mif -lmax $lmax
+    fi
+    if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
+    then
+        if [ "$no_shells" -gt 2 ] 
+        then
+            echo "check ODF image"
+            mrconvert $PRD/connectivity/wm_CSD$lmax.mif - -coord 3 0 | mrcat $PRD/connectivity/csf_CSD$lmax.mif $PRD/connectivity/gm_CSD$lmax.mif - $PRD/connectivity/tissueRGB.mif -axis 3
+            mrview $PRD/connectivity/tissueRGB.mif -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif 
+        else
+            echo "check ODF image"
+            mrview $PRD/connectivity/dwi.mif -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif
+        fi
+    fi
 fi
 
 # prepare file for act
