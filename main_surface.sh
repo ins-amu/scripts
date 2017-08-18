@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 ######### import config
 while getopts ":c:" opt; do
      case $opt in
@@ -203,6 +205,124 @@ EOF
 
 if [ "$topup" = "reversed" ]
 then
+    if [ ! -f $PRD/connectivity/predwi_1.mif ] || [ ! -f $PRD/connectivity/predwi_2.mif ]
+    then # TODO: find a way for HCP dataset
+         mrchoose 0 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_1.mif \
+                              -datatype float32 -stride 0,0,0,1 -force
+         mrchoose 1 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_2.mif \
+                              -force -datatype float32 -stride 0,0,0,1 
+        # check mif files
+        if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+        then
+            echo "check predwi_*.mif files"
+            mrview $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi_2.mif
+        fi
+    fi
+    # recombining PE dir files 
+    if [ ! -f $PRD/connectivity/predwi.mif ]
+    then
+        mrcat $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi_2.mif \
+              $PRD/connectivity/predwi.mif -axis 3
+        mrinfo $PRD/connectivity/predwi.mif \
+               -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
+               -export_pe_table $PRD/connectivity/pe_table -force 
+    fi
+else
+    echo "generate dwi mif file for use without topup (fsl)"
+    if [ ! -f $PRD/connectivity/predwi.mif ]
+    then
+        mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi.mif\
+                  -export_pe_table $PRD/connectivity/pe_table 
+                  -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init
+                  -datatype float32 -stride 0,0,0,1 -force
+        # check mif file
+        if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+        then
+            echo "check predwi_*.mif file"
+            mrview $PRD/connectivity/predwi.mif 
+        fi
+    fi
+fi
+
+# denoising the volumes
+if [ ! -f $PRD/connectivity/predwi_denoised.mif ]
+then # denoising the combined-directions file is preferable to denoising \
+     # predwi1 and 2 separately because of a higher no of volumes
+    dwidenoise $PRD/connectivity/predwi.mif \
+               $PRD/connectivity/predwi_denoised.mif 
+               -noise $PRD/connectivity/noise.mif -force
+    if [ ! -f $PRD/connectivity/noise_res.mif ]
+    then # calculate residuals noise
+        mrcalc $PRD/connectivity/predwi.mif \
+               $PRD/connectivity/predwi_denoised.mif \
+               -subtract $PRD/connectivity/noise_res.mif
+        # check noise file: lack of anatomy is a marker of accuracy
+        if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+        then # noise.mif can also be used for SNR calculation
+            echo "check noise/predwi_*_denoised.mif files"
+            mrview $PRD/connectivity/predwi.mif \
+                   $PRD/connectivity/predwi_denoised.mif \
+                   $PRD/connectivity/noise.mif \
+                   $PRD/connectivity/noise_res.mif  
+        fi
+    fi
+fi
+
+if [ ! -f $PRD/connectivity/predwi_denoised_preproc.mif ]
+then
+    if [ "$topup" = "reversed" ]
+    then # topup and eddy corrections
+         # TOCHECK: use this hacked version (repol)necesarily if having an equal no. of forward
+         # and reverse volumes, otherwise use dwipreproc command
+         # TODO: compare with 
+         # http://mrtrix.readthedocs.io/en/latest/dwi_preprocessing/dwipreproc.html#dwipreproc-page
+        echo "apply topup/eddy"
+        dwipreproc $PRD/connectivity/predwi_denoised.mif \
+                   $PRD/connectivity/predwi_denoised_preproc.mif \
+                   -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
+                   -rpe_header -eddy_options ' --repol' -cuda -force    
+        if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+        then
+            echo "check topup/eddy preprocessed mif file"
+            mrview $PRD/connectivity/predwi.mif \
+                   $PRD/connectivity/predwi_denoised.mif \
+                   $PRD/connectivity/predwi_denoised_preproc.mif 
+        fi
+    elif [ "$topup" = "eddy_correct" ]
+    then # eddy only 
+         # TODO: check that the header contains non for rpe encoding
+        echo "use eddy (fsl); no topup applied"
+        dwipreproc $PRD/connectivity/predwi_denoised.mif \
+                   $PRD/connectivity/predwi_denoised_preproc.mif 
+                   -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
+                   -rpe_header -eddy_options ' --repol' -cuda -force
+        # check preproc files
+        if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+        then
+            echo "check eddy (no topup) preprocessed mif file"
+            mrview $PRD/connectivity/predwi.mif \
+                   $PRD/connectivity/predwi_denoised.mif \
+                   $PRD/connectivity/predwi_denoised_preproc.mif 
+        fi
+    else # no topup/eddy
+        echo "no topup/eddy applied"
+        mrconvert $PRD/connectivity/predwi_denoised.mif \
+                  $PRD/connectivity/predwi_denoised_preproc.mif \
+                  -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final -force
+        # check preproc files
+        if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+        then
+            echo "check preprocessed mif file (no topup/no eddy)"
+            mrview $PRD/connectivity/predwi.mif \
+                   $PRD/connectivity/predwi_denoised.mif \
+                   $PRD/connectivity/predwi_denoised_preproc.mif 
+        fi
+    fi
+fi
+
+# convert DICOMS
+if [ "$topup" = "reversed" ]
+then
     echo "use topup and eddy from fsl to correct EPI distortions"
 
     if [ ! -f $PRD/connectivity/dwi_1.nii.gz ]
@@ -260,8 +380,19 @@ then
     mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz 
 fi
 
+# Bias field correction
+if [ ! -f $PRD/connectivity/predwi_denoised_preproc_bias.mif ]
+then
+    echo "bias correct"
+    # TODO: ANTS versus FSL?
+    dwibiascorrect $PRD/connectivity/predwi_denoised_preproc.mif \
+                   $PRD/connectivity/predwi_denoised_preproc_bias.mif \
+                   -mask $PRD/connectivity/mask_native.mif \
+                   -bias $PRD/connectivity/B1_bias.mif -ants -force
+fi
+
 # FLIRT registration
-#Diff to T1
+# Diff to T1
 if [ ! -f $PRD/connectivity/T1.nii.gz ]
 then
     echo "generating good orientation for T1"
@@ -398,42 +529,50 @@ then
     fi
 fi
 
-# prepare file for act
-if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]
-then
-    echo "prepare files for act"
-    act_anat_prepare_fsl $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/act.mif
-fi
-
 # tractography
 if [ ! -f $PRD/connectivity/whole_brain.tck ]
 then
     if [ "$act" = "yes" ]
     then
         echo "generating tracks using act" 
-        5tt2gmwmi $PRD/connectivity/act.mif $PRD/connectivity/gmwmi_mask.mif
-        tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -num $number_tracks -act $PRD/connectivity/act.mif -maxlength 250 -step 0.5
+        if [ "$seed" = "gmwmi" ]
+        then
+            echo "seeding from gmwmi" 
+            5tt2gmwmi -force $PRD/connectivity/act.mif $PRD/connectivity/gmwmi_mask.mif
+            # TODO: cutoff add not msmt csd back to default?; min length check andreas paper; angle
+            tckgen $PRD/connectivity/wm_CSD"$lmax".mif $PRD/connectivity/whole_brain.tck -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -act $PRD/connectivity/act.mif -select $number_tracks -seed_unidirectional -crop_at_gmwmi -backtrack -minlength 4 -maxlength 250 -step 1 -angle 45 -cutoff 0.06 -force
+        else # [ "$seed" = "dynamic" ] default. TODO: check if good without SIFT ; see_unidirectional?
+            echo "seeding dynamically"   # -dynamic seeding may work slightly better than gmwmi, see Smith RE Neuroimage. 2015 Oct 1;119:338-51.
+            tckgen $PRD/connectivity/wm_CSD"$lmax".mif $PRD/connectivity/whole_brain.tck -seed_dynamic $PRD/connectivity/wm_CSD$lmax.mif -act $PRD/connectivity/act.mif -select $number_tracks -crop_at_gmwmi -backtrack -minlength 4 -maxlength 250 -step 1 -angle 45 -cutoff 0.06 -force 
+            fi
+        fi  
     else
         echo "generating tracks without using act" 
-        tckgen $PRD/connectivity/CSD$lmax.mif $PRD/connectivity/whole_brain.tck -unidirectional -algorithm iFOD2 -seed_image $PRD/connectivity/aparcaseg_2_diff.nii.gz -mask $PRD/connectivity/mask.mif -maxlength 250 -step 0.5 -num $number_tracks
+        echo "seeding dynamically" 
+        tckgen $PRD/connectivity/wm_CSD"$lmax".mif $PRD/connectivity/whole_brain.tck -seed_dynamic $PRD/connectivity/wm_CSD"$lmax".mif -mask $PRD/connectivity/mask.mif -select $number_tracks -maxlength 250 -step 1 -angle 45 -cutoff 0.06  -force 
+        fi
     fi
 fi
 
-if [ "$sift" = "yes" ] && [ ! -f $PRD/connectivity/whole_brain_post.tck ]
+# postprocessing
+if [ ! -f $PRD/connectivity/whole_brain_post.tck ]
 then
-    echo "using sift"
-    if [ "$act" = "yes" ]
-    then
-        tcksift $PRD/connectivity/whole_brain.tck $PRD/connectivity/CSD"$lmax".mif  $PRD/connectivity/whole_brain_post.tck -act $PRD/connectivity/act.mif -term_number $(( number_tracks/2 ))
-    else
-        tcksift $PRD/connectivity/whole_brain.tck $PRD/connectivity/CSD"$lmax".mif  $PRD/connectivity/whole_brain_post.tck -term_number $(( number_tracks/2 ))
+    if [ "$sift" = "sift2" ] 
+    then 
+        echo "using sift2"
+        ln -s $PRD/connectivity/whole_brain.tck $PRD/connectivity/whole_brain_post.tck
+        if [ "$act" = "yes" ]
+        then
+            echo "using act" 
+            tcksift2 $PRD/connectivity/whole_brain.tck $PRD/connectivity/wm_CSD"$lmax".mif $PRD/connectivity/streamline_weights.csv -act $PRD/connectivity/act.mif -out_mu $PRD/connectivity/mu.txt -out_coeffs $PRD/connectivity/streamline_coeffs.csv -fd_scale_gm -force
+        else
+            tcksift2 $PRD/connectivity/whole_brain.tck $PRD/connectivity/wm_CSD"$lmax".mif $PRD/connectivity/streamline_weights.csv -out_mu $PRD/connectivity/mu.txt -out_coeffs $PRD/connectivity/streamline_coeffs.csv -force
+        fi
+    else 
+        echo "not using sift2"
+        ln -s $PRD/connectivity/whole_brain.tck $PRD/connectivity/whole_brain_post.tck
     fi
-    elif [ ! -f $PRD/connectivity/whole_brain_post.tck ]
-    then
-        echo "not using SIFT"
-        ln -s $PRD/connectivity/whole_brain.tck  $PRD/connectivity/whole_brain_post.tck
 fi
-
 
 # now compute connectivity and length matrix
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.mif ]
