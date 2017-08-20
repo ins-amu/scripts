@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# TODO: add explicits echo for what to check in the figures
 ######### import config
 while getopts ":c:" opt; do
      case $opt in
@@ -320,64 +321,20 @@ then
     fi
 fi
 
-# convert DICOMS
-if [ "$topup" = "reversed" ]
+# Native-resolution mask creation
+if [ ! -f $PRD/connectivity/mask_native.mif ]
 then
-    echo "use topup and eddy from fsl to correct EPI distortions"
-
-    if [ ! -f $PRD/connectivity/dwi_1.nii.gz ]
+    echo "create dwi mask"
+    dwi2mask $PRD/connectivity/predwi_denoised_preproc.mif \
+             $PRD/connectivity/mask_native.mif
+###    check mask file
+    if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
     then
-        mrchoose 0 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi_1.nii.gz
-        mrchoose 0 mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs_1 $PRD/connectivity/bvals_1
-        mrchoose 1 mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi_2.nii.gz
-        mrchoose 1 mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs_2 $PRD/connectivity/bvals_2
-        mrconvert $PRD/connectivity/dwi_1.nii.gz $PRD/connectivity/dwi_1.mif -fslgrad $PRD/connectivity/bvecs_1 $PRD/connectivity/bvals_1
-        mrconvert $PRD/connectivity/dwi_2.nii.gz $PRD/connectivity/dwi_2.mif -fslgrad $PRD/connectivity/bvecs_2 $PRD/connectivity/bvals_2
+        echo "check native mask mif file"
+        mrview $PRD/connectivity/predwi_denoised_preproc.mif \
+               -overlay.load $PRD/connectivity/mask_native.mif \
+               -overlay.opacity 0.5
     fi
-    if [ ! -f $PRD/connectivity/dwi.mif ]
-    then
-        revpe_dwicombine $PRD/connectivity/dwi_1.mif $PRD/connectivity/dwi_2.mif 1 $PRD/connectivity/dwi.mif
-    fi
-else
-    # mrconvert
-    if [ ! -f $PRD/connectivity/dwi.nii.gz ]
-    then
-        if [ -f $PRD/data/DWI/*.nii.gz ]
-        then
-            echo "use already existing nii files"
-            ls $PRD/data/DWI/ | grep '.nii.gz$' | xargs -I {} cp $PRD/data/DWI/{} $PRD/connectivity/dwi.nii.gz
-            cp $PRD/data/DWI/bvecs $PRD/connectivity/bvecs
-            cp $PRD/data/DWI/bvals $PRD/connectivity/bvals
-        else
-            echo "generate dwi.nii.gz"
-            mrconvert $PRD/data/DWI/ $PRD/connectivity/dwi.nii.gz
-            echo "extract bvecs and bvals"
-            mrinfo $PRD/data/DWI/ -export_grad_fsl $PRD/connectivity/bvecs $PRD/connectivity/bvals
-        fi
-    fi
-    # eddy correct
-    if [ ! -f $PRD/connectivity/dwi.mif ]
-    then
-        if [ "$topup" =  "eddy_correct" ]
-        then
-            echo "eddy correct data"
-            "$FSL"eddy_correct $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi_eddy_corrected.nii.gz 0
-            mrconvert $PRD/connectivity/dwi_eddy_corrected.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
-        else
-            mrconvert $PRD/connectivity/dwi.nii.gz $PRD/connectivity/dwi.mif -fslgrad $PRD/connectivity/bvecs $PRD/connectivity/bvals
-        fi
-    fi
-fi
-
-if [ ! -f $PRD/connectivity/mask.mif ]
-then
-    dwi2mask $PRD/connectivity/dwi.mif $PRD/connectivity/mask.mif
-fi
-
-if [ ! -f $PRD/connectivity/lowb.nii.gz ]
-then
-    dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif -bzero
-    mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz 
 fi
 
 # Bias field correction
@@ -391,7 +348,16 @@ then
                    -bias $PRD/connectivity/B1_bias.mif -ants -force
 fi
 
-# FLIRT registration
+## FLIRT registration
+# low b extraction
+if [ ! -f $PRD/connectivity/lowb.nii.gz ]
+then
+    echo "extracting b0 vols for registration"
+    dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif -force -bzero 
+    mrconvert -stride -1,+2,+3,+4 $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz 
+    mrmath $PRD/connectivity/lowb.mif mean $PRD/connectivity/meanlowb.mif -force -axis 3     ## can be used for visualization
+fi
+
 # Diff to T1
 if [ ! -f $PRD/connectivity/T1.nii.gz ]
 then
@@ -505,26 +471,41 @@ if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]
 then
 # Multishell
     if [ "$no_shells" -gt 2 ] 
-    then
+    then # CHECK: lmax?
         echo "calculating fod on multishell data"
-        dwi2fod msmt_csd $PRD/connectivity/dwi.mif $PRD/connectivity/response_wm.txt $PRD/connectivity/wm_CSD$lmax.mif $PRD/connectivity/response_gm.txt $PRD/connectivity/gm_CSD$lmax.mif $PRD/connectivity/response_csf.txt $PRD/connectivity/csf_CSD$lmax.mif -mask $PRD/connectivity/mask_dilated.mif -force 
+        dwi2fod msmt_csd $PRD/connectivity/dwi.mif \
+                $PRD/connectivity/response_wm.txt \
+                $PRD/connectivity/wm_CSD$lmax.mif \
+                $PRD/connectivity/response_gm.txt \
+                $PRD/connectivity/gm_CSD$lmax.mif \
+                $PRD/connectivity/response_csf.txt \
+                $PRD/connectivity/csf_CSD$lmax.mif \
+                -mask $PRD/connectivity/mask_dilated.mif -force 
     else
-# Single shell only
+        # Single shell only
         echo "calculating fod on single-shell data"
         ## to check
-   #    dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif
-        dwiextract $PRD/connectivity/dwi.mif - | dwi2fod msmt_csd - $PRD/connectivity/response.txt $PRD/connectivity/wm_CSD$lmax.mif -mask $PRD/connectivity/mask_dilated.mif -lmax $lmax
+        #    dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif
+        dwiextract $PRD/connectivity/dwi.mif - 
+        | dwi2fod msmt_csd - $PRD/connectivity/response.txt \
+                  $PRD/connectivity/wm_CSD$lmax.mif \
+                  -mask $PRD/connectivity/mask_dilated.mif -lmax $lmax
     fi
     if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
     then
         if [ "$no_shells" -gt 2 ] 
         then
             echo "check ODF image"
-            mrconvert $PRD/connectivity/wm_CSD$lmax.mif - -coord 3 0 | mrcat $PRD/connectivity/csf_CSD$lmax.mif $PRD/connectivity/gm_CSD$lmax.mif - $PRD/connectivity/tissueRGB.mif -axis 3
-            mrview $PRD/connectivity/tissueRGB.mif -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif 
+            mrconvert $PRD/connectivity/wm_CSD$lmax.mif - -coord 3 0 \
+            | mrcat $PRD/connectivity/csf_CSD$lmax.mif \
+                    $PRD/connectivity/gm_CSD$lmax.mif - \
+                    $PRD/connectivity/tissueRGB.mif -axis 3
+            mrview $PRD/connectivity/tissueRGB.mif \
+                   -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif 
         else
             echo "check ODF image"
-            mrview $PRD/connectivity/dwi.mif -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif
+            mrview $PRD/connectivity/dwi.mif \
+            -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif
         fi
     fi
 fi
@@ -538,18 +519,34 @@ then
         if [ "$seed" = "gmwmi" ]
         then
             echo "seeding from gmwmi" 
-            5tt2gmwmi -force $PRD/connectivity/act.mif $PRD/connectivity/gmwmi_mask.mif
+            5tt2gmwmi $PRD/connectivity/act.mif \
+                      $PRD/connectivity/gmwmi_mask.mif -force 
             # TODO: cutoff add not msmt csd back to default?; min length check andreas paper; angle
-            tckgen $PRD/connectivity/wm_CSD"$lmax".mif $PRD/connectivity/whole_brain.tck -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif -act $PRD/connectivity/act.mif -select $number_tracks -seed_unidirectional -crop_at_gmwmi -backtrack -minlength 4 -maxlength 250 -step 1 -angle 45 -cutoff 0.06 -force
+            tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
+                   $PRD/connectivity/whole_brain.tck \
+                   -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif 
+                   -act $PRD/connectivity/act.mif -select $number_tracks \
+                   -seed_unidirectional -crop_at_gmwmi -backtrack \
+                   -minlength 4 -maxlength 250 -step 1 -angle 45 -cutoff 0.06 \
+                   -force
         else # [ "$seed" = "dynamic" ] default. TODO: check if good without SIFT ; see_unidirectional?
             echo "seeding dynamically"   # -dynamic seeding may work slightly better than gmwmi, see Smith RE Neuroimage. 2015 Oct 1;119:338-51.
-            tckgen $PRD/connectivity/wm_CSD"$lmax".mif $PRD/connectivity/whole_brain.tck -seed_dynamic $PRD/connectivity/wm_CSD$lmax.mif -act $PRD/connectivity/act.mif -select $number_tracks -crop_at_gmwmi -backtrack -minlength 4 -maxlength 250 -step 1 -angle 45 -cutoff 0.06 -force 
+            tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
+                   $PRD/connectivity/whole_brain.tck \
+                   -seed_dynamic $PRD/connectivity/wm_CSD$lmax.mif \
+                   -act $PRD/connectivity/act.mif -select $number_tracks \
+                   -crop_at_gmwmi -backtrack -minlength 4 -maxlength 250 \
+                   -step 1 -angle 45 -cutoff 0.06 -force 
             fi
         fi  
     else
         echo "generating tracks without using act" 
         echo "seeding dynamically" 
-        tckgen $PRD/connectivity/wm_CSD"$lmax".mif $PRD/connectivity/whole_brain.tck -seed_dynamic $PRD/connectivity/wm_CSD"$lmax".mif -mask $PRD/connectivity/mask.mif -select $number_tracks -maxlength 250 -step 1 -angle 45 -cutoff 0.06  -force 
+        tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
+               $PRD/connectivity/whole_brain.tck \
+               -seed_dynamic $PRD/connectivity/wm_CSD"$lmax".mif \
+               -mask $PRD/connectivity/mask.mif -select $number_tracks \
+               -maxlength 250 -step 1 -angle 45 -cutoff 0.06  -force 
         fi
     fi
 fi
@@ -564,17 +561,28 @@ then
         if [ "$act" = "yes" ]
         then
             echo "using act" 
-            tcksift2 $PRD/connectivity/whole_brain.tck $PRD/connectivity/wm_CSD"$lmax".mif $PRD/connectivity/streamline_weights.csv -act $PRD/connectivity/act.mif -out_mu $PRD/connectivity/mu.txt -out_coeffs $PRD/connectivity/streamline_coeffs.csv -fd_scale_gm -force
+            tcksift2 $PRD/connectivity/whole_brain.tck \
+                     $PRD/connectivity/wm_CSD"$lmax".mif \
+                     $PRD/connectivity/streamline_weights.csv\
+                     -act $PRD/connectivity/act.mif \
+                     -out_mu $PRD/connectivity/mu.txt \
+                     -out_coeffs $PRD/connectivity/streamline_coeffs.csv \
+                     -fd_scale_gm -force
         else
-            tcksift2 $PRD/connectivity/whole_brain.tck $PRD/connectivity/wm_CSD"$lmax".mif $PRD/connectivity/streamline_weights.csv -out_mu $PRD/connectivity/mu.txt -out_coeffs $PRD/connectivity/streamline_coeffs.csv -force
+            tcksift2 $PRD/connectivity/whole_brain.tck \
+                     $PRD/connectivity/wm_CSD"$lmax".mif \
+                     $PRD/connectivity/streamline_weights.csv \
+                     -out_mu $PRD/connectivity/mu.txt \
+                     -out_coeffs $PRD/connectivity/streamline_coeffs.csv -force
         fi
     else 
         echo "not using sift2"
-        ln -s $PRD/connectivity/whole_brain.tck $PRD/connectivity/whole_brain_post.tck
+        ln -s $PRD/connectivity/whole_brain.tck \
+              $PRD/connectivity/whole_brain_post.tck
     fi
 fi
 
-# now compute connectivity and length matrix
+####TODO # now compute connectivity and length matrix
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.mif ]
 then
     echo " compute labels"
