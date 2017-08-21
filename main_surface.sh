@@ -435,10 +435,13 @@ then # TOCHECK:6 dof vs 12 dof
     "$FSL"convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
     "$FSL"flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
 
-    if [ ! -f $PRD/connectivity/T1_2_diff.nii.gz ]
+    if [ ! -f $PRD/connectivity/brain_2_diff.nii.gz ]
     then
-        echo " register aparc+aseg to diff"
-        "$FSL"flirt -applyxfm -in $PRD/connectivity/T1.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/T1_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+        echo "register brain to diff"
+#        "$FSL"flirt -applyxfm -in $PRD/connectivity/brain.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/brain_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+        mrtransform $PRD/connectivity/brain_2_diff.nii.gz \
+                    -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
+                    -inverse $PRD/connectivity/brain.nii.gz -force 
     fi
 
     # check parcellation to diff
