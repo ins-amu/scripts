@@ -332,7 +332,7 @@ then
     echo "create dwi mask"
     dwi2mask $PRD/connectivity/predwi_denoised_preproc.mif \
              $PRD/connectivity/mask_native.mif
-###    check mask file
+    # check mask file
     if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
     then
         echo "check native mask mif file"
@@ -362,7 +362,7 @@ then
     echo "extracting b0 vols for registration"
     dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif \
                -bzero -force 
-    # note: stride from mrtrix to FSL, RAS to LAS
+    # stride from mrtrix to FSL, RAS to LAS
     # see: http://mrtrix.readthedocs.io/en/latest/getting_started/image_data.html
     mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz \
               -stride -1,+2,+3,+4
@@ -373,10 +373,10 @@ fi
 
 # generating FSl brain.mgz
 if [ ! -f $PRD/connectivity/T1.nii.gz ]
-then # note: brain.mgz seems to be superior to diff to T1
+then # brain.mgz seems to be superior to diff to T1
      # as BET stripping is unfortunate in many situations, and FS pial eddited volumes already present
      # TODO: ref? T1 option?
-     # note: stride from FS to FSL: RAS to LAS
+     # stride from FS to FSL: RAS to LAS
      # see: http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
     echo "generating FSL orientation for masked brain"
     mrconvert $FS/$SUBJ_ID/mri/brain.mgz $PRD/connectivity/brain.nii.gz
@@ -400,7 +400,7 @@ fi
 if [ ! -f $PRD/connectivity/aparc+aseg.nii.gz ]
 then
     echo "generating FSL orientation for aparc+aseg"
-    # note: stride from FS to FSL: RAS to LAS
+    # stride from FS to FSL: RAS to LAS
     mrconvert $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
               $PRD/connectivity/aparc+aseg.nii.gz -stride -1,+2,+3,+4 
 fi
@@ -665,16 +665,152 @@ fi
 ####TODO # now compute connectivity and length matrix
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.mif ]
 then
-    echo " compute labels"
-    labelconfig $PRD/connectivity/aparcaseg_2_diff.nii.gz fs_region.txt $PRD/connectivity/aparcaseg_2_diff.mif -lut_freesurfer $FREESURFER_HOME/FreeSurferColorLUT.txt
+    echo " compute FS labels"
+    labelconvert $PRD/connectivity/aparcaseg_2_diff.nii.gz \
+                 $FREESURFER_HOME/FreeSurferColorLUT.txt \
+                 fs_region.txt $PRD/connectivity/aparcaseg_2_diff_fs.mif -force
+    if [ "$aseg" = "fsl" ]
+    then # FS derived subcortical parcellation is too variable and prone to 
+        # errors => labelsgmfix) was generated, 
+        # see Smith RE Neuroimage. 2015 Jan 1;104:253-65.
+        # TODO: check effect on regoin mapping
+        # TODO; -sgm_amyg_hipp option to consider
+        echo "fix FS subcortical labels to generate FSL labels"
+        labelsgmfix $PRD/connectivity/aparcaseg_2_diff_fs.mif \
+                    $PRD/connectivity/brain_2_diff.nii.gz fs_region.txt \
+                    $PRD/connectivity/aparcaseg_2_diff_fsl.mif -premasked -force   
+    fi 
 fi
 
 if [ ! -f $PRD/connectivity/weights.csv ]
 then
-    echo "compute connectivity matrix"
-    tck2connectome $PRD/connectivity/whole_brain_post.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/weights.csv -assignment_radial_search 2
-    tck2connectome $PRD/connectivity/whole_brain_post.tck $PRD/connectivity/aparcaseg_2_diff.mif $PRD/connectivity/tract_lengths.csv -metric meanlength -zero_diagonal -assignment_radial_search 2 
+    echo "compute connectivity matrix weights"
+    if [ "$sift" = "sift2" ]
+    then # -tck_weights_in flag only needed for sift2 but not for sift/no processing
+         # TOCHECK:  mrtrix3 currently generates upper_triangular weights 
+         # matrices, need to add -symmetric flag if needed, also -zero_diagonal 
+         # if needed (did not see that in the original code)
+         # I think I do the symmetric in the compute_connectivity files.py
+         # diagonal we want to keep it
+        tck2connectome $PRD/connectivity/whole_brain_post.tck \
+                       $PRD/connectivity/aparcaseg_2_diff_$aseg.mif \
+                       $PRD/connectivity/weights.csv -assignment_radial_search 2 \
+                       -out_assignments $PRD/connectivity/edges_2_nodes.csv \
+                       -tck_weights_in $PRD/connectivity/streamline_weights.csv \
+                       -force
+    else
+        tck2connectome $PRD/connectivity/whole_brain_post.tck \
+                       $PRD/connectivity/aparcaseg_2_diff_$aseg.mif \
+                       $PRD/connectivity/weights.csv -assignment_radial_search 2 \
+                       -out_assignments $PRD/connectivity/edges_2_nodes.csv \
+                       -force  
+    fi
 fi
+
+if [ ! -f $PRD/connectivity/tract_lengths.csv ]
+then
+    echo "compute connectivity matrix edge lengths"
+    if [ "$sift" = "sift2" ]
+    then # TOCHECK: the formed -metric meanlength adaptation: if the mean edge 
+         # length is needed to estimate internode conduction delays, my take on 
+         # the new version tck2connectome is that default (-stat_edge sum) would
+         # sum up the no of streamlines between two nodes; simply changing it to
+         # (-stat_edge mean) would generate a 0,1 binary matrix (which happened 
+         # during testing), so streamlines need to be adjusted by their length 
+         # before their mean is calculated (still, needs to be verified); need 
+         # to be careful when applying sift2, as here the mean is 
+         # sum(streamline length * streamline weight)/no streamlines, a bit more
+         # fuzzy to interpret than with sift, however left it as option
+       tck2connectome $PRD/connectivity/whole_brain_post.tck \
+                      $PRD/connectivity/aparcaseg_2_diff_$aseg.mif \
+                      $PRD/connectivity/tract_lengths.csv \
+                      -tck_weights_in $PRD/connectivity/streamline_weights.csv \
+                      -assignment_radial_search 2 -zero_diagonal -scale_length \
+                      -stat_edge mean -force 
+    else
+       tck2connectome $PRD/connectivity/whole_brain_post.tck \
+                      $PRD/connectivity/aparcaseg_2_diff_$aseg.mif \
+                      $PRD/connectivity/tract_lengths.csv \
+                      -assignment_radial_search 2 -zero_diagonal -scale_length \
+                      -stat_edge mean -force
+    fi
+fi
+
+# view connectome
+if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+then
+    echo "view connectome edges as lines or streamlines"
+    if [ ! -f $PRD/connectivity/exemplars.tck ]
+    then
+        if [ "$sift" = "sift2" ]
+        then
+            connectome2tck $PRD/connectivity/whole_brain_post.tck \
+                           $PRD/connectivity/edges_2_nodes.csv \
+                           $PRD/connectivity/exemplars.tck \
+                           -exemplars $PRD/connectivity/aparcaseg_2_diff_$aseg.mif \
+                           -tck_weights_in $PRD/connectivity/streamline_weights.csv \
+                           -files single 
+        else 
+            connectome2tck $PRD/connectivity/whole_brain_post.tck \
+                           $PRD/connectivity/edges_2_nodes.csv \
+                           $PRD/connectivity/exemplars.tck \
+                           -exemplars $PRD/connectivity/aparcaseg_2_diff_$aseg.mif \
+                           -files single 
+        fi
+    fi
+    # TOCHECK: in mrview, load the lut table (fs_region.txt) for node correspondence, 
+    # and exemplars.tck if wanting to see edges as streamlines 
+    mrview $PRD/connectivity/aparcaseg_2_diff_$aseg.mif \
+           -connectome.init $PRD/connectivity/aparcaseg_2_diff_$aseg.mif \
+           -connectome.load $PRD/connectivity/weights.csv 
+fi
+
+# view tractogram and tdi
+if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+then
+    echo "view tractogram and tdi image"
+    if [ ! -f $PRD/connectivity/whole_brain_post_decimated.tck ]
+    then # $(( number_tracks/100)) this follows some recommendations by 
+         # JD Tournier to avoid mrview to be to slow
+         # (for visualization no more than 100-200K streamlines)
+         # => min(100k, number_tracks/100)
+        if [ "$sift" = "sift2" ]
+        then
+            tckedit $PRD/connectivity/whole_brain_post.tck \
+                    $PRD/connectivity/whole_brain_post_decimated.tck \
+                    -tck_weights_in $PRD/connectivity/streamline_weights.csv 
+                    -number $(($number_tracks<100000?$number_tracks:100000))
+                    -minweight 1 -force 
+        else 
+            tckedit $PRD/connectivity/whole_brain_post.tck \
+                    $PRD/connectivity/whole_brain_post_decimated.tck \
+                    -number $(($number_tracks<100000?$number_tracks:100000)) \
+                    -force  
+        fi  
+    fi
+    if [ ! -f $PRD/connectivity/whole_brain_post_tdi.mif ]
+    then
+        if [ "$sift" = "sift2" ]
+        then
+            tckmap $PRD/connectivity/whole_brain_post.tck \
+                   $PRD/connectivity/whole_brain_post_tdi.mif \
+                   -tck_weights_in $PRD/connectivity/streamline_weights.csv \
+                   -dec -vox 1 -force 
+        else
+            tckmap $PRD/connectivity/whole_brain_post.tck \
+                   $PRD/connectivity/whole_brain_post_tdi.mif \
+                   -dec -vox 1 -force
+        fi 
+    fi
+    mrview $PRD/connectivity/aparcaseg_2_diff_$aseg.mif \
+           -overlay.load $PRD/connectivity/whole_brain_post_tdi.mif \
+           -overlay.opacity 0.5 -overlay.interpolation_off \
+           -tractography.load $PRD/connectivity/whole_brain_post_decimated.tck 
+fi
+
+
+# Done 
+read -p "Press [Enter] key to continue..." 
 
 # Compute other files
 # we do not compute hemisphere
