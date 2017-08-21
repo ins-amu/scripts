@@ -432,8 +432,17 @@ then # TOCHECK:6 dof vs 12 dof
                 -out $PRD/connectivity/lowb_2_struct.nii.gz -dof 6 \
                 -searchrx -180 180 -searchry -180 180 -searchrz -180 180 \
                 -cost mutualinfo
-    "$FSL"convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
-    "$FSL"flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+    #"$FSL"convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
+    #"$FSL"flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
+    transformconvert $PRD/connectivity/diffusion_2_struct.mat \
+                     $PRD/connectivity/lowb.nii.gz \
+                     $PRD/connectivity/brain.nii.gz \
+                     flirt_import $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
+                      -force 
+    mrtransform $PRD/connectivity/aparcaseg_2_diff.nii.gz \
+                -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
+                -inverse $PRD/connectivity/aparc+aseg_reorient.nii.gz \
+                -datatype uint32 -force 
 
     if [ ! -f $PRD/connectivity/brain_2_diff.nii.gz ]
     then
@@ -462,8 +471,8 @@ fi
 if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]
 then
     echo "prepare files for act"
-#    act_anat_prepare_fsl $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/act.mif
-    5ttgen fsl -force -premasked $PRD/connectivity/brain_2_diff.nii.gz $PRD/connectivity/act.mif       
+    5ttgen fsl $PRD/connectivity/brain_2_diff.nii.gz $PRD/connectivity/act.mif \
+           -premasked -force       
     if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
     then
         echo "check tissue segmented image"
@@ -488,15 +497,28 @@ then
         if [ "$act" = "yes" ]
         then 
             echo "estimating response using msmt algorithm"
-            dwi2response msmt_5tt $PRD/connectivity/dwi.mif $PRD/connectivity/act.mif $PRD/connectivity/response_wm.txt $PRD/connectivity/response_gm.txt $PRD/connectivity/response_csf.txt -voxels $PRD/connectivity/RF_voxels.mif -mask $PRD/connectivity/mask.mif -force
+            dwi2response msmt_5tt $PRD/connectivity/dwi.mif \
+                         $PRD/connectivity/act.mif \
+                         $PRD/connectivity/response_wm.txt \
+                         $PRD/connectivity/response_gm.txt \
+                         $PRD/connectivity/response_csf.txt \
+                         -voxels $PRD/connectivity/RF_voxels.mif \
+                         -mask $PRD/connectivity/mask.mif -force
             if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
             then
                 echo "check ODF image"
-                mrview $PRD/connectivity/meanlowb.mif -overlay.load $PRD/connectivity/RF_voxels.mif -overlay.opacity 0.5
+                mrview $PRD/connectivity/meanlowb.mif \
+                       -overlay.load $PRD/connectivity/RF_voxels.mif \
+                       -overlay.opacity 0.5
             fi
         else
             echo "estimating response using dhollander algorithm"
-            dwi2response dhollander $PRD/connectivity/dwi.mif $PRD/connectivity/response_wm.txt $PRD/connectivity/response_gm.txt $PRD/connectivity/response_csf.txt -force -voxels $PRD/connectivity/RF_voxels.mif -mask $PRD/connectivity/mask.mif
+            dwi2response dhollander $PRD/connectivity/dwi.mif \
+                         $PRD/connectivity/response_wm.txt \
+                         $PRD/connectivity/response_gm.txt \
+                         $PRD/connectivity/response_csf.txt \
+                         -voxels $PRD/connectivity/RF_voxels.mif \
+                         -mask $PRD/connectivity/mask.mif -force 
         fi
     fi
 else
@@ -505,11 +527,18 @@ else
     then
         echo "estimating response using dhollander algorithm"
         # dwi2response tournier $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -force -voxels $PRD/connectivity/RF_voxels.mif -mask $PRD/connectivity/mask.mif
-        dwi2response dhollander $PRD/connectivity/dwi.mif $PRD/connectivity/response_wm.txt $PRD/connectivity/response_gm.txt $PRD/connectivity/response_csf.txt -voxels $PRD/connectivity/RF_voxels.mif -mask $PRD/connectivity/mask.mif -force 
+        dwi2response dhollander $PRD/connectivity/dwi.mif \
+                     $PRD/connectivity/response_wm.txt \
+                     $PRD/connectivity/response_gm.txt \
+                     $PRD/connectivity/response_csf.txt \
+                     -voxels $PRD/connectivity/RF_voxels.mif \
+                     -mask $PRD/connectivity/mask.mif -force 
         if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
         then
             echo "check ODF image"
-            mrview $PRD/connectivity/meanlowb.mif -overlay.load $PRD/connectivity/RF_voxels.mif -overlay.opacity 0.5
+            mrview $PRD/connectivity/meanlowb.mif \
+                   -overlay.load $PRD/connectivity/RF_voxels.mif \
+                   -overlay.opacity 0.5
         fi
     fi
 fi
@@ -533,8 +562,8 @@ then
     else
         # Single shell only
         echo "calculating fod on single-shell data"
-        ## TOCHECK
-        #    dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif
+        # performing msmt_csd on single shell data
+        # see: http://community.mrtrix.org/t/msmt-csd-for-single-shell-data/1052
         dwiextract $PRD/connectivity/dwi.mif - 
         | dwi2fod msmt_csd - $PRD/connectivity/response.txt \
                   $PRD/connectivity/wm_CSD$lmax.mif \
@@ -579,7 +608,9 @@ then
                    -minlength 4 -maxlength 250 -step 1 -angle 45 -cutoff 0.06 \
                    -force
         else # [ "$seed" = "dynamic" ] default. TODO: check if good without SIFT ; see_unidirectional?
-            echo "seeding dynamically"   # -dynamic seeding may work slightly better than gmwmi, see Smith RE Neuroimage. 2015 Oct 1;119:338-51.
+             # -dynamic seeding may work slightly better than gmwmi, 
+             # see Smith RE Neuroimage. 2015 Oct 1;119:338-51.
+            echo "seeding dynamically"   
             tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
                    $PRD/connectivity/whole_brain.tck \
                    -seed_dynamic $PRD/connectivity/wm_CSD$lmax.mif \
