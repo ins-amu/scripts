@@ -374,7 +374,8 @@ fi
 # generating FSl brain.mgz
 if [ ! -f $PRD/connectivity/T1.nii.gz ]
 then # brain.mgz seems to be superior to diff to T1
-     # as BET stripping is unfortunate in many situations, and FS pial eddited volumes already present
+     # as BET stripping is unfortunate in many situations, 
+     # and FS pial eddited volumes already present
      # TODO: ref? T1 option?
      # stride from FS to FSL: RAS to LAS
      # see: http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
@@ -827,9 +828,11 @@ fi
 # zip to put in final format
 pushd . > /dev/null
 cd $PRD/$SUBJ_ID/connectivity > /dev/null
-zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt weights.txt tract_lengths.txt cortical.txt centres.txt -q
+zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt *
+    weights.txt tract_lengths.txt cortical.txt centres.txt -q
 popd > /dev/null 
 
+# TODO : update sub parcellations
 ###################################################
 # compute sub parcellations connectivity if asked
 if [ -n "$K_list" ]
