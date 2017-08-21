@@ -195,6 +195,9 @@ mkdir -p $PRD/connectivity
 mkdir -p $PRD/$SUBJ_ID/connectivity
 
 
+## preprocessing
+# See: http://mrtrix.readthedocs.io/en/0.3.16/workflows/DWI_preprocessing_for_quantitative_analysis.html
+
 # if single acquisition  with reversed directions
 function mrchoose () {
     choice=$1
@@ -204,6 +207,7 @@ $choice
 EOF
 }
 
+# handle encoding scheme
 if [ "$topup" = "reversed" ]
 then
     if [ ! -f $PRD/connectivity/predwi_1.mif ] || [ ! -f $PRD/connectivity/predwi_2.mif ]
@@ -231,7 +235,7 @@ then
 else
     echo "generate dwi mif file for use without topup (fsl)"
     if [ ! -f $PRD/connectivity/predwi.mif ]
-    then
+    then # TODO: check the strides
         mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi.mif\
                   -export_pe_table $PRD/connectivity/pe_table 
                   -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init
@@ -269,6 +273,7 @@ then # denoising the combined-directions file is preferable to denoising \
     fi
 fi
 
+# topup/eddy corrections
 if [ ! -f $PRD/connectivity/predwi_denoised_preproc.mif ]
 then
     if [ "$topup" = "reversed" ]
@@ -341,7 +346,9 @@ fi
 if [ ! -f $PRD/connectivity/predwi_denoised_preproc_bias.mif ]
 then
     echo "bias correct"
-    # TODO: ANTS versus FSL?
+    # ANTS seems better than FSL
+    # see http://mrtrix.readthedocs.io/en/0.3.16/workflows/DWI_preprocessing_for_quantitative_analysis.html
+    # TODO: check if ANTS is installed, otherwise use FSL
     dwibiascorrect $PRD/connectivity/predwi_denoised_preproc.mif \
                    $PRD/connectivity/predwi_denoised_preproc_bias.mif \
                    -mask $PRD/connectivity/mask_native.mif \
@@ -349,46 +356,82 @@ then
 fi
 
 ## FLIRT registration
-# low b extraction
+# low b extraction to FSL
 if [ ! -f $PRD/connectivity/lowb.nii.gz ]
 then
     echo "extracting b0 vols for registration"
-    dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif -force -bzero 
-    mrconvert -stride -1,+2,+3,+4 $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz 
-    mrmath $PRD/connectivity/lowb.mif mean $PRD/connectivity/meanlowb.mif -force -axis 3     ## can be used for visualization
+    dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif \
+               -bzero -force 
+    # note: stride from mrtrix to FSL, RAS to LAS
+    # see: http://mrtrix.readthedocs.io/en/latest/getting_started/image_data.html
+    mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz \
+              -stride -1,+2,+3,+4
+    # for visualization 
+    mrmath $PRD/connectivity/lowb.mif mean $PRD/connectivity/meanlowb.mif \
+           -axis 3 -force
 fi
 
-# Diff to T1
+# generating FSl brain.mgz
 if [ ! -f $PRD/connectivity/T1.nii.gz ]
-then
-    echo "generating good orientation for T1"
-    mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/T1.mgz $PRD/connectivity/T1.nii.gz
+then # note: brain.mgz seems to be superior to diff to T1
+     # as BET stripping is unfortunate in many situations, and FS pial eddited volumes already present
+     # TODO: ref? T1 option?
+     # note: stride from FS to FSL: RAS to LAS
+     # see: http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
+    echo "generating FSL orientation for masked brain"
+    mrconvert $FS/$SUBJ_ID/mri/brain.mgz $PRD/connectivity/brain.nii.gz
+              -datatype float32 -stride -1,+2,+3,+4 -force 
 fi
 
+# TODO
+## Generate transform image (dwi) for alternative registration method: replace lowb.nii.gz with output lowb_pseudobrain.nii.gz in the subsequent registration steps
+##    if [ ! -f $PRD/connectivity/lowb_pseudobrain.nii.gz ]
+##    then
+##        echo "extracting b0 vols for registration: pseudostructural"
+##        dwiextract $PRD/connectivity/dwi.mif -bzero - | mrmath - mean - -axis 3 | mrcalc 1 - -divide $PRD/connectivity/mask_upsampled.mif -multiply - | mrconvert - - -stride -1,+2,+3 | mrhistmatch - $PRD/connectivity/brain.nii.gz $PRD/connectivity/lowb_pseudobrain.nii.gz
+##        if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+##        then
+##            echo "check pseudo lowb files"
+##            mrview $PRD/connectivity/lowb_pseudobrain.nii.gz $PRD/connectivity/lowb.nii.gz -overlay.load $PRD/connectivity/lowb_pseudobrain.nii.gz -overlay.opacity 0.5 -norealign
+##        fi
+##    fi
+
+# aparc+aseg to FSL
 if [ ! -f $PRD/connectivity/aparc+aseg.nii.gz ]
 then
-    echo " getting aparc+aseg"
-    mri_convert --in_type mgz --out_type nii --out_orientation RAS $FS/$SUBJ_ID/mri/aparc+aseg.mgz $PRD/connectivity/aparc+aseg.nii.gz
+    echo "generating FSL orientation for aparc+aseg"
+    # note: stride from FS to FSL: RAS to LAS
+    mrconvert $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
+              $PRD/connectivity/aparc+aseg.nii.gz -stride -1,+2,+3,+4 
 fi
 
-
+# check orientations
 if [ ! -f $PRD/connectivity/aparc+aseg_reorient.nii.gz ]
 then
     echo "reorienting the region parcellation"
-    fslreorient2std $PRD/connectivity/aparc+aseg.nii.gz $PRD/connectivity/aparc+aseg_reorient.nii.gz
-    # check parcellation to T1
+    fslreorient2std $PRD/connectivity/aparc+aseg.nii.gz \
+                    $PRD/connectivity/aparc+aseg_reorient.nii.gz
+    # check parcellation to brain.mgz
     if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
     then
         echo "check parcellation"
-        echo " if it's correct, just close the window. Otherwise... well, it should be correct anyway"
-        "$FSL"fslview $PRD/connectivity/T1.nii.gz $PRD/connectivity/aparc+aseg_reorient.nii.gz -l "Cool"
+        echo "if it's correct, just close the window." 
+        echo "Otherwise... well, it should be correct anyway"
+        mrview $PRD/connectivity/brain.nii.gz \
+               -overlay.load $PRD/connectivity/aparc+aseg_reorient.nii.gz \
+               -overlay.opacity 0.5 -norealign
     fi
 fi
 
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
-then
+then # TOCHECK:6 dof vs 12 dof
     echo " register aparc+aseg to diff"
-    "$FSL"flirt -in $PRD/connectivity/lowb.nii.gz -ref $PRD/connectivity/T1.nii.gz -omat $PRD/connectivity/diffusion_2_struct.mat -out $PRD/connectivity/lowb_2_struct.nii.gz -dof 12 -searchrx -180 180 -searchry -180 180 -searchrz -180 180 -cost mutualinfo
+    "$FSL"flirt -in $PRD/connectivity/lowb.nii.gz \
+                -ref $PRD/connectivity/brain.nii.gz \
+                -omat $PRD/connectivity/diffusion_2_struct.mat \
+                -out $PRD/connectivity/lowb_2_struct.nii.gz -dof 6 \
+                -searchrx -180 180 -searchry -180 180 -searchrz -180 180 \
+                -cost mutualinfo
     "$FSL"convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
     "$FSL"flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
 
@@ -402,9 +445,12 @@ then
     if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
     then
         echo "check parcellation registration to diffusion space"
-        echo "if it's correct, just close the window. Otherwise you will have to
-        do the registration by hand"
-        "$FSL"fslview $PRD/connectivity/T1_2_diff.nii.gz $PRD/connectivity/lowb.nii.gz $PRD/connectivity/aparcaseg_2_diff -l "Cool"
+        echo "if it's correct, just close the window."
+        echo "Otherwise you will have to do the registration by hand"
+        mrview $PRD/connectivity/brain_2_diff.nii.gz \
+               $PRD/connectivity/lowb.nii.gz \
+               -overlay.load $PRD/connectivity/aparcaseg_2_diff.nii.gz \
+               -overlay.opacity 0.5 -norealign
     fi
 fi
 
@@ -471,7 +517,7 @@ if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]
 then
 # Multishell
     if [ "$no_shells" -gt 2 ] 
-    then # CHECK: lmax?
+    then # TOCHECK: lmax?
         echo "calculating fod on multishell data"
         dwi2fod msmt_csd $PRD/connectivity/dwi.mif \
                 $PRD/connectivity/response_wm.txt \
@@ -484,7 +530,7 @@ then
     else
         # Single shell only
         echo "calculating fod on single-shell data"
-        ## to check
+        ## TOCHECK
         #    dwi2fod $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt $PRD/connectivity/CSD$lmax.mif -lmax $lmax -mask $PRD/connectivity/mask.mif
         dwiextract $PRD/connectivity/dwi.mif - 
         | dwi2fod msmt_csd - $PRD/connectivity/response.txt \
