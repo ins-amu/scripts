@@ -423,6 +423,7 @@ then
     fi
 fi
 
+# aparcaseg to diff by inverser transform
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
 then # TOCHECK:6 dof vs 12 dof
     echo " register aparc+aseg to diff"
@@ -432,8 +433,6 @@ then # TOCHECK:6 dof vs 12 dof
                 -out $PRD/connectivity/lowb_2_struct.nii.gz -dof 6 \
                 -searchrx -180 180 -searchry -180 180 -searchrz -180 180 \
                 -cost mutualinfo
-    #"$FSL"convert_xfm -omat $PRD/connectivity/diffusion_2_struct_inverse.mat -inverse $PRD/connectivity/diffusion_2_struct.mat
-    #"$FSL"flirt -applyxfm -in $PRD/connectivity/aparc+aseg_reorient.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/aparcaseg_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
     transformconvert $PRD/connectivity/diffusion_2_struct.mat \
                      $PRD/connectivity/lowb.nii.gz \
                      $PRD/connectivity/brain.nii.gz \
@@ -443,15 +442,15 @@ then # TOCHECK:6 dof vs 12 dof
                 -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
                 -inverse $PRD/connectivity/aparc+aseg_reorient.nii.gz \
                 -datatype uint32 -force 
+fi
 
-    if [ ! -f $PRD/connectivity/brain_2_diff.nii.gz ]
-    then
-        echo "register brain to diff"
-#        "$FSL"flirt -applyxfm -in $PRD/connectivity/brain.nii.gz -ref $PRD/connectivity/lowb.nii.gz -out $PRD/connectivity/brain_2_diff.nii.gz -init $PRD/connectivity/diffusion_2_struct_inverse.mat -interp nearestneighbour
-        mrtransform $PRD/connectivity/brain_2_diff.nii.gz \
-                    -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
-                    -inverse $PRD/connectivity/brain.nii.gz -force 
-    fi
+# brain to diff by inverse transform
+if [ ! -f $PRD/connectivity/brain_2_diff.nii.gz ]
+then
+    echo "register brain to diff"
+    mrtransform $PRD/connectivity/brain_2_diff.nii.gz \
+                -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
+                -inverse $PRD/connectivity/brain.nii.gz -force 
 
     # check parcellation to diff
     if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
@@ -465,6 +464,7 @@ then # TOCHECK:6 dof vs 12 dof
                -overlay.opacity 0.5 -norealign
     fi
 fi
+
 
 # prepare file for act
 ### TODO: test
