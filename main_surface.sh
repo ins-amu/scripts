@@ -210,6 +210,8 @@ EOF
 # handle encoding scheme
 if [ "$topup" = "reversed" ]
 then
+    echo "generate dwi mif file for use with reversed phase encoding"
+    echo "(use of fsl topup)"
     if [ ! -f $PRD/connectivity/predwi_1.mif ] || [ ! -f $PRD/connectivity/predwi_2.mif ]
     then # TODO: find a way for HCP dataset
          mrchoose 0 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_1.mif \
@@ -233,12 +235,12 @@ then
                -export_pe_table $PRD/connectivity/pe_table -force 
     fi
 else
-    echo "generate dwi mif file for use without topup (fsl)"
     if [ ! -f $PRD/connectivity/predwi.mif ]
     then # TODO: check the strides
-        mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi.mif\
-                  -export_pe_table $PRD/connectivity/pe_table 
-                  -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init
+        echo "generate dwi mif file for use without topup (fsl)"
+        mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi.mif \
+                  -export_pe_table $PRD/connectivity/pe_table \
+                  -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
                   -datatype float32 -stride 0,0,0,1 -force
         # check mif file
         if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
@@ -253,8 +255,9 @@ fi
 if [ ! -f $PRD/connectivity/predwi_denoised.mif ]
 then # denoising the combined-directions file is preferable to denoising \
      # predwi1 and 2 separately because of a higher no of volumes
+     echo "denoising dwi data"
     dwidenoise $PRD/connectivity/predwi.mif \
-               $PRD/connectivity/predwi_denoised.mif 
+               $PRD/connectivity/predwi_denoised.mif \
                -noise $PRD/connectivity/noise.mif -force
     if [ ! -f $PRD/connectivity/noise_res.mif ]
     then # calculate residuals noise
@@ -345,14 +348,55 @@ fi
 # Bias field correction
 if [ ! -f $PRD/connectivity/predwi_denoised_preproc_bias.mif ]
 then
-    echo "bias correct"
     # ANTS seems better than FSL
     # see http://mrtrix.readthedocs.io/en/0.3.16/workflows/DWI_preprocessing_for_quantitative_analysis.html
     # TODO: check if ANTS is installed, otherwise use FSL
-    dwibiascorrect $PRD/connectivity/predwi_denoised_preproc.mif \
-                   $PRD/connectivity/predwi_denoised_preproc_bias.mif \
-                   -mask $PRD/connectivity/mask_native.mif \
-                   -bias $PRD/connectivity/B1_bias.mif -ants -force
+    if [ -n "$ANTS" ]
+    then
+        echo "bias correct using ANTS"
+        dwibiascorrect $PRD/connectivity/predwi_denoised_preproc.mif \
+                       $PRD/connectivity/predwi_denoised_preproc_bias.mif \
+                       -mask $PRD/connectivity/mask_native.mif \
+                       -bias $PRD/connectivity/B1_bias.mif -ants -force
+    else
+        echo "bias correct using FSL"
+        dwibiascorrect $PRD/connectivity/predwi_denoised_preproc.mif \
+                       $PRD/connectivity/predwi_denoised_preproc_bias.mif \
+                       -mask $PRD/connectivity/mask_native.mif \
+                       -bias $PRD/connectivity/B1_bias.mif -fsl -force
+    fi
+fi
+
+# TOCHECK
+# upsampling and reorienting a la fsl
+# reorienting means -stride -1,+2,+3,+4; upsampling 
+# (Dyrby TB. Neuroimage. 2014 Dec;103:202-13.) can help
+# registration with structural and is common with mrtrix3 fixel analysis pipeline
+if [ ! -f $PRD/connectivity/dwi.mif ]
+then
+    echo "upsample dwi"
+    mrresize $PRD/connectivity/predwi_denoised_preproc_bias.mif -  -scale 2 | \
+    mrconvert - -force -datatype float32 -stride -1,+2,+3,+4 $PRD/connectivity/dwi.mif
+##   -interp default: cubic
+fi
+if [ ! -f $PRD/connectivity/mask.mif ]
+then
+    echo "upsample mask"
+    mrresize -force -scale 2 $PRD/connectivity/mask_native.mif - | \
+    mrconvert - $PRD/connectivity/mask.mif -datatype bit -stride -1,+2,+3 -force
+    maskfilter $PRD/connectivity/mask.mif dilate \
+               $PRD/connectivity/mask_dilated.mif -force -npass 2 
+  # for dwi2fod step, a permissive, dilated mask can be used to minimize
+  # streamline premature termination, see BIDS protocol
+    # check upsampled files
+    if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
+    then
+        echo "check upsampled mif files"
+        mrview $PRD/connectivity/dwi.mif \
+               -overlay.load $PRD/connectivity/mask.mif \
+               -overlay.load $PRD/connectivity/mask_dilated.mif \
+               -overlay.opacity 0.5 -norealign 
+    fi
 fi
 
 ## FLIRT registration
@@ -367,12 +411,13 @@ then
     mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz \
               -stride -1,+2,+3,+4
     # for visualization 
-    mrmath $PRD/connectivity/lowb.mif mean $PRD/connectivity/meanlowb.mif \
-           -axis 3 -force
+    # TOCHECK syntax
+    mrmath -axis 3 -force $PRD/connectivity/lowb.mif mean \
+                          $PRD/connectivity/meanlowb.mif 
 fi
 
 # generating FSl brain.mgz
-if [ ! -f $PRD/connectivity/T1.nii.gz ]
+if [ ! -f $PRD/connectivity/brain.nii.gz ]
 then # brain.mgz seems to be superior to diff to T1
      # as BET stripping is unfortunate in many situations, 
      # and FS pial eddited volumes already present
@@ -380,7 +425,7 @@ then # brain.mgz seems to be superior to diff to T1
      # stride from FS to FSL: RAS to LAS
      # see: http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
     echo "generating FSL orientation for masked brain"
-    mrconvert $FS/$SUBJ_ID/mri/brain.mgz $PRD/connectivity/brain.nii.gz
+    mrconvert $FS/$SUBJ_ID/mri/brain.mgz $PRD/connectivity/brain.nii.gz \
               -datatype float32 -stride -1,+2,+3,+4 -force 
 fi
 
@@ -427,7 +472,7 @@ fi
 # aparcaseg to diff by inverser transform
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]
 then # TOCHECK:6 dof vs 12 dof
-    echo " register aparc+aseg to diff"
+    echo "register aparc+aseg to diff"
     "$FSL"flirt -in $PRD/connectivity/lowb.nii.gz \
                 -ref $PRD/connectivity/brain.nii.gz \
                 -omat $PRD/connectivity/diffusion_2_struct.mat \
@@ -439,19 +484,22 @@ then # TOCHECK:6 dof vs 12 dof
                      $PRD/connectivity/brain.nii.gz \
                      flirt_import $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
                       -force 
-    mrtransform $PRD/connectivity/aparcaseg_2_diff.nii.gz \
+    #TOCHECK: syntax
+    mrtransform $PRD/connectivity/aparc+aseg_reorient.nii.gz \
+                $PRD/connectivity/aparcaseg_2_diff.nii.gz \
                 -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
-                -inverse $PRD/connectivity/aparc+aseg_reorient.nii.gz \
-                -datatype uint32 -force 
+                -inverse -datatype uint32 -force 
+#    mrtransform -force -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt -inverse $PRD/connectivity/aparc+aseg_reorient.nii.gz -datatype uint32 $PRD/connectivity/aparcaseg_2_diff.nii.gz  
 fi
 
 # brain to diff by inverse transform
 if [ ! -f $PRD/connectivity/brain_2_diff.nii.gz ]
 then
     echo "register brain to diff"
-    mrtransform $PRD/connectivity/brain_2_diff.nii.gz \
+    mrtransform $PRD/connectivity/brain.nii.gz \
+                $PRD/connectivity/brain_2_diff.nii.gz \
                 -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
-                -inverse $PRD/connectivity/brain.nii.gz -force 
+                -inverse -force 
 
     # check parcellation to diff
     if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
@@ -544,48 +592,31 @@ else
     fi
 fi
 
-
 # Fibre orientation distribution estimation
 if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]
-then
-# Multishell
-    if [ "$no_shells" -gt 2 ] 
-    then # TOCHECK: lmax?
-        echo "calculating fod on multishell data"
-        dwi2fod msmt_csd $PRD/connectivity/dwi.mif \
-                $PRD/connectivity/response_wm.txt \
-                $PRD/connectivity/wm_CSD$lmax.mif \
-                $PRD/connectivity/response_gm.txt \
-                $PRD/connectivity/gm_CSD$lmax.mif \
-                $PRD/connectivity/response_csf.txt \
-                $PRD/connectivity/csf_CSD$lmax.mif \
-                -mask $PRD/connectivity/mask_dilated.mif -force 
-    else
-        # Single shell only
-        echo "calculating fod on single-shell data"
-        # performing msmt_csd on single shell data
-        # see: http://community.mrtrix.org/t/msmt-csd-for-single-shell-data/1052
-        dwiextract $PRD/connectivity/dwi.mif - 
-        | dwi2fod msmt_csd - $PRD/connectivity/response.txt \
-                  $PRD/connectivity/wm_CSD$lmax.mif \
-                  -mask $PRD/connectivity/mask_dilated.mif -lmax $lmax
-    fi
+then # Both for multishell and single shell since we use dhollander in the 
+     # single shell case
+     # see: http://community.mrtrix.org/t/wm-odf-and-response-function-with-dhollander-option---single-shell-versus-multi-shell/572/4
+     # TOCHECK: lmax?
+    echo "calculating fod on multishell data"
+    dwi2fod msmt_csd $PRD/connectivity/dwi.mif \
+            $PRD/connectivity/response_wm.txt \
+            $PRD/connectivity/wm_CSD$lmax.mif \
+            $PRD/connectivity/response_gm.txt \
+            $PRD/connectivity/gm_CSD$lmax.mif \
+            $PRD/connectivity/response_csf.txt \
+            $PRD/connectivity/csf_CSD$lmax.mif \
+            -mask $PRD/connectivity/mask_dilated.mif -force 
+
     if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
     then
-        if [ "$no_shells" -gt 2 ] 
-        then
-            echo "check ODF image"
-            mrconvert $PRD/connectivity/wm_CSD$lmax.mif - -coord 3 0 \
-            | mrcat $PRD/connectivity/csf_CSD$lmax.mif \
-                    $PRD/connectivity/gm_CSD$lmax.mif - \
-                    $PRD/connectivity/tissueRGB.mif -axis 3
-            mrview $PRD/connectivity/tissueRGB.mif \
-                   -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif 
-        else
-            echo "check ODF image"
-            mrview $PRD/connectivity/dwi.mif \
-            -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif
-        fi
+        echo "check ODF image"
+        mrconvert $PRD/connectivity/wm_CSD$lmax.mif - -coord 3 0 \
+        | mrcat $PRD/connectivity/csf_CSD$lmax.mif \
+                $PRD/connectivity/gm_CSD$lmax.mif - \
+                $PRD/connectivity/tissueRGB.mif -axis 3
+        mrview $PRD/connectivity/tissueRGB.mif \
+               -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif 
     fi
 fi
 
