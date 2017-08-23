@@ -37,8 +37,8 @@ def compute_region_orientation(vertex_normals):
 
 
 def compute_vertex_triangles(number_of_vertices, number_of_triangles, triangles):
-    vertex_triangles = [[] for _ in xrange(number_of_vertices)]
-    for k in xrange(number_of_triangles):
+    vertex_triangles = [[] for _ in range(number_of_vertices)]
+    for k in range(number_of_triangles):
         vertex_triangles[triangles[k, 0]].append(k)
         vertex_triangles[triangles[k, 1]].append(k)
         vertex_triangles[triangles[k, 2]].append(k)
@@ -53,7 +53,7 @@ def compute_vertex_normals(number_of_vertices, vertex_triangles, triangles,
     """
     vert_norms = numpy.zeros((number_of_vertices, 3))
     bad_normal_count = 0
-    for k in xrange(number_of_vertices):
+    for k in range(number_of_vertices):
         try:
             tri_list = list(vertex_triangles[k])
             angle_mask = triangles[tri_list, :] == k
@@ -84,9 +84,9 @@ def compute_triangle_angles(vertices, number_of_triangles, triangles):
     # A short profile indicates this function takes 95% of the time to compute normals
     # (this was a direct translation of some old matlab code)
     angles = numpy.zeros((number_of_triangles, 3))
-    for tt in xrange(number_of_triangles):
+    for tt in range(number_of_triangles):
         triangle = triangles[tt, :]
-        for ta in xrange(3):
+        for ta in range(3):
             ang = numpy.roll(triangle, -ta)
             angles[tt, ta] = numpy.arccos(numpy.dot(
                 (verts[ang[1], :] - verts[ang[0], :]) /
@@ -156,7 +156,7 @@ if __name__ == '__main__':
     verts = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surface', 'vertices.txt'))
     tri = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surface', 'triangles.txt'))
     tri = tri.astype(int)
-    region_mapping = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surface', 'region_mapping.txt'))
+    region_mapping = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surface', 'region_mapping.txt')).astype(int)
     # save connectivity and tract length matrices
     weights = np.loadtxt(os.path.join(PRD, 'connectivity', 'weights.csv'))
     tract_lengths = np.loadtxt(os.path.join(PRD, 'connectivity', 'tract_lengths.csv'))

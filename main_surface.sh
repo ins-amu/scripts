@@ -572,7 +572,7 @@ then
     fi
 else
 # Single shell only
-    if [ ! -f $PRD/connectivity/response.txt ]
+    if [ ! -f $PRD/connectivity/response_wm.txt ]
     then
         echo "estimating response using dhollander algorithm"
         # dwi2response tournier $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -force -voxels $PRD/connectivity/RF_voxels.mif -mask $PRD/connectivity/mask.mif
@@ -649,7 +649,6 @@ then
                    -act $PRD/connectivity/act.mif -select $number_tracks \
                    -crop_at_gmwmi -backtrack -minlength 4 -maxlength 250 \
                    -step 1 -angle 45 -cutoff 0.06 -force 
-            fi
         fi  
     else
         echo "generating tracks without using act" 
@@ -659,7 +658,6 @@ then
                -seed_dynamic $PRD/connectivity/wm_CSD"$lmax".mif \
                -mask $PRD/connectivity/mask.mif -select $number_tracks \
                -maxlength 250 -step 1 -angle 45 -cutoff 0.06  -force 
-        fi
     fi
 fi
 
@@ -668,7 +666,7 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]
 then
     if [ "$sift" = "sift2" ] 
     then 
-        echo "using sift2"
+        echo "running sift2"
         ln -s $PRD/connectivity/whole_brain.tck $PRD/connectivity/whole_brain_post.tck
         if [ "$act" = "yes" ]
         then
@@ -694,7 +692,7 @@ then
     fi
 fi
 
-####TODO # now compute connectivity and length matrix
+## now compute connectivity and length matrix
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.mif ]
 then
     echo " compute FS labels"
@@ -705,7 +703,7 @@ then
     then # FS derived subcortical parcellation is too variable and prone to 
         # errors => labelsgmfix) was generated, 
         # see Smith RE Neuroimage. 2015 Jan 1;104:253-65.
-        # TODO: check effect on regoin mapping
+        # TODO: check effect on region mapping
         # TODO; -sgm_amyg_hipp option to consider
         echo "fix FS subcortical labels to generate FSL labels"
         labelsgmfix $PRD/connectivity/aparcaseg_2_diff_fs.mif \
@@ -841,9 +839,6 @@ then
 fi
 
 
-# Done 
-read -p "Press [Enter] key to continue..." 
-
 # Compute other files
 # we do not compute hemisphere
 # subcortical is already done
@@ -859,9 +854,14 @@ fi
 # zip to put in final format
 pushd . > /dev/null
 cd $PRD/$SUBJ_ID/connectivity > /dev/null
-zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt *
+zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt \
     weights.txt tract_lengths.txt cortical.txt centres.txt -q
 popd > /dev/null 
+
+
+
+# Done 
+read -p "Press [Enter] key to continue..." 
 
 # TODO : update sub parcellations
 ###################################################
