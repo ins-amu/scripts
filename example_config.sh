@@ -117,3 +117,7 @@ export seed="gmwmi"
 # subcortical segmentation correction
 # options: ["fs", "fsl"]; default: "fsl"
 export aseg="fsl" 
+
+# number of threads
+# default: value in ~/.mrtrix.conf file if present, or 1 if not present
+export nb_threads=1

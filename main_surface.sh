@@ -83,6 +83,16 @@ then
     fi
 fi
 
+if [ -z "$FSL"]
+then
+    FSL=""
+fi
+
+if [ -z "$CHECK"]
+then
+    CHECK="no"
+fi
+
 if [ -z "$region_mapping_corr"]
 then
     region_mapping_corr=0.42
@@ -91,6 +101,11 @@ fi
 if [ -z "$number_tracks"]
 then
     number_tracks=10000000
+fi
+
+if [ -z "$K_list"]
+then
+    K_list=""
 fi
 
 if [ -z "$topup"]
