@@ -1,6 +1,7 @@
 #######################
 # Example config file #
 #######################
+
 ####################################
 # Copy this file wherever you want #
 # (in the root directory for your  #
@@ -8,14 +9,19 @@
 # and change the relevant options  #
 ####################################
 
-#### Path configurations ####
+#### Path configurations
+
 # to run the pipeline, do:
 # for region pipeline:
-# sh path_to_scripts/main_region.sh -c path_to_config/config.sh
+# bash path_to_scripts/main_region.sh -c path_to_config/config.sh
 # for surface pipeline: 
-# sh path_to_scripts/main_surface.sh -c path_to_config/config.sh
+# bash path_to_scripts/main_surface.sh -c path_to_config/config.sh
 
-#the root directory for files 
+
+
+#### Mandatory path parameters
+
+# the root directory for files 
 # this is where all data and processed data are
 # we advice to also put this config file in this directory
 export PRD=/path_to_root_dir/
@@ -24,10 +30,6 @@ export PRD=/path_to_root_dir/
 # this will determine the name of your subject
 # in brainvisa and in the final directory
 export SUBJ_ID=name_subj
-
-#  FSL prefix in case of use of fsl5.0 
-# for instance FSL="fsl5.0' or FSL="" otherwise
-export FSL=""
 
 # Matlab Runtime Compiler path
 # if you have matlab, do mcrinstaller at the matlab prompt
@@ -38,63 +40,80 @@ export FSL=""
 # http://www.mathworks.com/products/compiler/mcr/index.html
 export MCR=/path_to_matlab_runtime_compiler/
 
+
+#### Additional optional parameters
+# The defaults indicates the options chosen by the pipeline if the option is 
+# not set
+
 # error handling: in case of error, the pipeline 
 # stops immediately
-#set -e
+# default: not set
+# set -e
+
+# FSL prefix in case of use of fsl5.0 and fsl 4 is present
+# for instance FSL="fsl5.0' or FSL="" otherwise
+# if only fsl5.0 is installed, leave empty
+# default: empty
+export FSL=""
+
+
+#### Pipeline parameters
+# The defaults indicates the options chosen by the pipeline if the option is 
+# not set
 
 # check the processed data when the pipeline is running
-# (you need a display) (no/yes)
-export CHECK=no
+# (you need a display and mrview installed) (no/yes)
+export CHECK="no"
 
-########## Pipeline parameters
-# This parameter modify the mask for diffusion processing
-# check for different values with mrview
-export percent_value_mask=10
-
-# This parameter is the maximum harmonic order for spherical deconvolution
-# It depends of the number of directions used during acquisition
-# Please refer to the following table 
-# Maximum harmonic order (lmax)	Number of parameters required
-#             2				     6
-#             4				     15
-#             6				     28
-#             8				     45
-#             10			     66
-#             12			     91
-#             n				½ (n+1)(n+2)
-export lmax=6 
-
-# This parameter is important for the correction of the region mapping. Between 0 and 1. The bigger it is, the bigger is the correction. (only import for the surface pipeline: main_surface.sh)
+# This parameter is important for the correction of the region mapping. 
+# Between 0 and 1. The bigger it is, the bigger is the correction. 
+# (only import for the surface pipeline: main_surface.sh)
+# default: 0.42
 export region_mapping_corr="0.42"
 
 # for computing subconnectivity
-export K_list="0 1 2 3 4 5"
-
-# number of tracks used in the tractography step.
-# note that you will have less tracks at the end.
-export number_tracks=5000000
-
 # if you want subdivided parcellations, you can set the folowing value
 # according to the following table
 # K:                 0   1   2    3    4    5
 # Number of Nodes:  70  140 280  560  1120 2240
-# export K=4
+# default: ""
+export K_list="0 1 2 3 4 5"
 
+# number of tracks used in the tractography step.
+# note that you will have less tracks at the end.
+# default: 10.000.000
+export number_tracks=10000000
+
+# TODO
 # uniquely for region pipeline (main_region.sh)
 # choice of the parcellation
 # export parcel=AAL
 
+# TODO
 # use topup and eddy distortion correction
 # this depends of you images
-# possible choice right now are:
-# ["no", "reversed", "eddy_correct"]
 # be careful with "reversed", depending on your data, 
 # you may have to change the main_surface script
+# options: ["no", "reversed", "eddy_correct"], default: "eddy_correct"
 export topup="no"
 
-# use Anatomically Constrained Tractography
-export act=yes
+# use Anatomically Constrained Tractography (yes/no)
+# options ["yes", "no"]; default: "yes"
+export act="yes"
 
-# using Spherical-deconvolution informed filtering of tractograms
-# note that the number of tracts will be divided by 2
-export sift=yes
+# using Spherical-deconvolution informed filtering of tractograms 
+# options: ["sift", "sift2", "no"]; default: SIFT2
+export sift="sift2"
+
+# if using SIFT, you can set the sift_multiplier variable:
+# the number of tracks generated will be number_tracks*sift_multiplier
+# default: 10
+# export sift_multiplier=10
+
+# seeding mechanism for tckgen if using act, otherwise default to dynamic
+# options: ["gmwmi", "dynamic"]; default: "gmwmi"
+export seed="gmwmi"
+
+# subcortical segmentation correction
+# options: ["fs", "fsl"]; default: "fsl"
+export aseg="fsl" 

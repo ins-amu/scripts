@@ -2,12 +2,14 @@
 
 # TODO: add explicits echo for what to check in the figures
 # TODO: nthreads
-######## Checks and preset variables
-# import config
+
+#### Checks and preset variables
+
+# import and check config
 while getopts ":c:" opt; do
      case $opt in
      c)
-         export CONFIG=$OPTARG
+         CONFIG=$OPTARG
          echo "use config file $CONFIG" >&2
          if [ ! -f $CONFIG ]
          then
@@ -27,38 +29,100 @@ while getopts ":c:" opt; do
     esac
 done
 
-if [ ! -n "$CONFIG" ]
+if [ -z "$CONFIG" ]
 then
     echo "you must provide a config file"
     exit 1
 fi
 
-# set default variables config file
-if [ ! -n $number_threads]
+# check mandatory variables
+if [ -z "$PRD" ] || 
 then
-    if [ -f ~/.bashrc ] &&
-    nb_threads=$(grep 'NumberOfThreads' ~/.bashrc | cut -f 2 -d " ")
-    if [ "$nb_threads" = ""]
-    then 
-        echo "blah"
+    echo "PRD path missing"
+    exit 1
+fi
+
+if [ -z "$SUBJ_ID" ]
+then
+    echo "SUBJ_ID path missing"
+    exit 1
+fi
+
+if [ -z "$matlab" ] || [ -z "$MCR"]
+then
+    echo "matlab or MCR path missing"
+    exit 1
+fi
+
+if [ -z "$SUBJECTS_DIR" ]
+then
+    echo "you have to set the SUBJECTS_DIR environnement variable for FreeSurfer"
+    exit 1
+else
+    FS=$SUBJECTS_DIR
+fi
+
+# set default parameters if not set in config file
+if [ -z  "$nb_threads" ]
+then
+    if [ -f ~/.mrtrix.conf ]
+    then
+        number_threads_mrtrix_conf=$(grep 'NumberOfThreads' ~/.mrtrix.conf | cut -f 2 -d " ")
+        if [ -n "$number_threads_mrtrix_conf" ]
+        then 
+            echo "setting number of threads according to $number_threads_mrtrix_conf"
+            echo "according to .mrtrix.conf file"
+            nb_threads="$number_threads_mrtrix_conf"
+        else
+            echo "setting number of threads to 1"
+            nb_threads=1
+        fi
+    else 
+        echo "setting number of threads to 1"
+        nb_threads=1
     fi
 fi
 
-if [ ! -n "$number_tracks" ]
+if [ -z "$region_mapping_corr"]
 then
-    echo "config file not correct"
-    exit 1
+    region_mapping_corr=0.42
 fi
 
-# check FS bash variables
-if [ ! -n "$SUBJECTS_DIR" ]
+if [ -z "$number_tracks"]
 then
-    echo "you have to set the SUBJECTS_DIR environnement
-    variable for FreeSurfer"
-    exit 1
-else
-    export FS=$SUBJECTS_DIR
+    number_tracks=10000000
 fi
+
+if [ -z "$topup"]
+then
+    topup="no"
+fi
+
+if [ -z "$act"]
+then
+    act="yes"
+fi
+
+if [ -z "$sift"]
+then
+    sift="sift2"
+fi
+
+if [ -z "$sift_multiplier"]
+then
+    sift_multiplier=10
+fi
+
+if [ -z "$seed"]
+then
+    seed="dynamic"
+fi
+
+if [ -z "$aseg"]
+then
+    aseg="fsl"
+fi
+
 
 ######### build cortical surface and region mapping
 if [ ! -f $PRD/data/T1/T1.nii.gz ]
@@ -620,12 +684,8 @@ fi
 # tractography
 if [ ! -f $PRD/connectivity/whole_brain.tck ]
 then
-    if [ "sift" = "sift"]
-    then
-        if [ -n "$sift_multiplier"]
-        then
-            sift_multiplier=10
-        fi
+    if [ "$sift" = "sift"]
+    then # temporarily change number of tracks for sift
         number_tracks=$(($number_tracks*$sift_multiplier))
     fi
     # TODO: check float operations bash
@@ -651,7 +711,7 @@ then
                    -seed_unidirectional -crop_at_gmwmi -backtrack \
                    -minlength 4 -maxlength 250 -step "$stepsize" -angle "$angle" \
                    -cutoff 0.06 -force
-        else # [ "$seed" = "dynamic" ] default. 
+        elif [ "$seed" = "dynamic" ] 
              # -dynamic seeding may work slightly better than gmwmi, 
              # see Smith RE Neuroimage. 2015 Oct 1;119:338-51.
             echo "seeding dynamically"   
@@ -904,7 +964,7 @@ if [ -n "$K_list" ]
 then
     for K in $K_list
     do
-        export curr_K=$(( 2**K ))
+        curr_K=$(( 2**K ))
         mkdir -p $PRD/$SUBJ_ID/connectivity_"$curr_K"
 
         if [ -n "$matlab" ]  
