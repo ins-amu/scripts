@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 # TODO: add explicits echo for what to check in the figures
-######### import config
+# TODO: nthreads
+######## Checks and preset variables
+# import config
 while getopts ":c:" opt; do
      case $opt in
      c)
@@ -31,12 +33,24 @@ then
     exit 1
 fi
 
+# set default variables config file
+if [ ! -n $number_threads]
+then
+    if [ -f ~/.bashrc ] &&
+    nb_threads=$(grep 'NumberOfThreads' ~/.bashrc | cut -f 2 -d " ")
+    if [ "$nb_threads" = ""]
+    then 
+        echo "blah"
+    fi
+fi
+
 if [ ! -n "$number_tracks" ]
 then
     echo "config file not correct"
     exit 1
 fi
 
+# check FS bash variables
 if [ ! -n "$SUBJECTS_DIR" ]
 then
     echo "you have to set the SUBJECTS_DIR environnement
@@ -198,6 +212,8 @@ mkdir -p $PRD/$SUBJ_ID/connectivity
 ## preprocessing
 # See: http://mrtrix.readthedocs.io/en/0.3.16/workflows/DWI_preprocessing_for_quantitative_analysis.html
 
+# TODO: add HCP data
+
 # if single acquisition  with reversed directions
 function mrchoose () {
     choice=$1
@@ -212,8 +228,12 @@ if [ "$topup" = "reversed" ]
 then
     echo "generate dwi mif file for use with reversed phase encoding"
     echo "(use of fsl topup)"
+    # strides are arranged to make volume data contiguous in memory for
+    # each voxel
+    # float 32 to make data access faster in subsequent commands
     if [ ! -f $PRD/connectivity/predwi_1.mif ] || [ ! -f $PRD/connectivity/predwi_2.mif ]
     then # TODO: find a way for HCP dataset
+         # TODO detect phase encoding automatically
          mrchoose 0 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_1.mif \
                               -datatype float32 -stride 0,0,0,1 -force
          mrchoose 1 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_2.mif \
@@ -236,7 +256,7 @@ then
     fi
 else
     if [ ! -f $PRD/connectivity/predwi.mif ]
-    then # TODO: check the strides
+    then 
         echo "generate dwi mif file for use without topup (fsl)"
         mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi.mif \
                   -export_pe_table $PRD/connectivity/pe_table \
@@ -255,7 +275,7 @@ fi
 if [ ! -f $PRD/connectivity/predwi_denoised.mif ]
 then # denoising the combined-directions file is preferable to denoising \
      # predwi1 and 2 separately because of a higher no of volumes
-     echo "denoising dwi data"
+    echo "denoising dwi data"
     dwidenoise $PRD/connectivity/predwi.mif \
                $PRD/connectivity/predwi_denoised.mif \
                -noise $PRD/connectivity/noise.mif -force
@@ -279,13 +299,9 @@ fi
 # topup/eddy corrections
 if [ ! -f $PRD/connectivity/predwi_denoised_preproc.mif ]
 then
-    if [ "$topup" = "reversed" ]
-    then # topup and eddy corrections
-         # TOCHECK: use this hacked version (repol)necesarily if having an equal no. of forward
-         # and reverse volumes, otherwise use dwipreproc command
-         # TODO: compare with 
-         # http://mrtrix.readthedocs.io/en/latest/dwi_preprocessing/dwipreproc.html#dwipreproc-page
-        echo "apply topup/eddy"
+    if [ "$topup" = "reversed" ] || [ "$topup" = "eddy_correct" ]
+    then # eddy maybe topup corrections depending of the encoding scheme
+        echo "apply eddy and maybe topup"
         dwipreproc $PRD/connectivity/predwi_denoised.mif \
                    $PRD/connectivity/predwi_denoised_preproc.mif \
                    -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
@@ -293,22 +309,6 @@ then
         if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
         then
             echo "check topup/eddy preprocessed mif file"
-            mrview $PRD/connectivity/predwi.mif \
-                   $PRD/connectivity/predwi_denoised.mif \
-                   $PRD/connectivity/predwi_denoised_preproc.mif 
-        fi
-    elif [ "$topup" = "eddy_correct" ]
-    then # eddy only 
-         # TODO: check that the header contains non for rpe encoding
-        echo "use eddy (fsl); no topup applied"
-        dwipreproc $PRD/connectivity/predwi_denoised.mif \
-                   $PRD/connectivity/predwi_denoised_preproc.mif 
-                   -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
-                   -rpe_header -eddy_options ' --repol' -cuda -force
-        # check preproc files
-        if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
-        then
-            echo "check eddy (no topup) preprocessed mif file"
             mrview $PRD/connectivity/predwi.mif \
                    $PRD/connectivity/predwi_denoised.mif \
                    $PRD/connectivity/predwi_denoised_preproc.mif 
@@ -350,8 +350,7 @@ if [ ! -f $PRD/connectivity/predwi_denoised_preproc_bias.mif ]
 then
     # ANTS seems better than FSL
     # see http://mrtrix.readthedocs.io/en/0.3.16/workflows/DWI_preprocessing_for_quantitative_analysis.html
-    # TODO: check if ANTS is installed, otherwise use FSL
-    if [ -n "$ANTS" ]
+    if [ -n "$ANTSPATH" ]
     then
         echo "bias correct using ANTS"
         dwibiascorrect $PRD/connectivity/predwi_denoised_preproc.mif \
@@ -379,6 +378,7 @@ then
     mrconvert - -force -datatype float32 -stride -1,+2,+3,+4 $PRD/connectivity/dwi.mif
 ##   -interp default: cubic
 fi
+
 if [ ! -f $PRD/connectivity/mask.mif ]
 then
     echo "upsample mask"
@@ -411,9 +411,8 @@ then
     mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz \
               -stride -1,+2,+3,+4
     # for visualization 
-    # TOCHECK syntax
-    mrmath -axis 3 -force $PRD/connectivity/lowb.mif mean \
-                          $PRD/connectivity/meanlowb.mif 
+    mrmath  $PRD/connectivity/lowb.mif mean $PRD/connectivity/meanlowb.mif \
+            -axis 3 -force
 fi
 
 # generating FSl brain.mgz
@@ -516,7 +515,6 @@ fi
 
 
 # prepare file for act
-### TODO: test
 if [ "$act" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]
 then
     echo "prepare files for act"
@@ -597,7 +595,6 @@ if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]
 then # Both for multishell and single shell since we use dhollander in the 
      # single shell case
      # see: http://community.mrtrix.org/t/wm-odf-and-response-function-with-dhollander-option---single-shell-versus-multi-shell/572/4
-     # TOCHECK: lmax?
     echo "calculating fod on multishell data"
     dwi2fod msmt_csd $PRD/connectivity/dwi.mif \
             $PRD/connectivity/response_wm.txt \
@@ -623,32 +620,47 @@ fi
 # tractography
 if [ ! -f $PRD/connectivity/whole_brain.tck ]
 then
+    if [ "sift" = "sift"]
+    then
+        if [ -n "$sift_multiplier"]
+        then
+            sift_multiplier=10
+        fi
+        number_tracks=$(($number_tracks*$sift_multiplier))
+    fi
+    # TODO: check float operations bash
+    native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+                     | cut -f 1 -d " " | xargs printf "%1.f")
+    stepsize=$(($native_voxelsize/2))
+    angle=$((90*$stepsize/$native_voxelsize))
     if [ "$act" = "yes" ]
     then
-        echo "generating tracks using act" 
+        echo "generating tracks using act"
+
         if [ "$seed" = "gmwmi" ]
         then
             echo "seeding from gmwmi" 
             5tt2gmwmi $PRD/connectivity/act.mif \
                       $PRD/connectivity/gmwmi_mask.mif -force 
-            # TODO: cutoff add not msmt csd back to default?; min length check andreas paper; angle
+            # TODO: cutoff add not msmt csd back to default?
+            # TODO: min length check andreas paper
             tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
                    $PRD/connectivity/whole_brain.tck \
                    -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif 
-                   -act $PRD/connectivity/act.mif -select $number_tracks \
+                   -act $PRD/connectivity/act.mif -select "$number_tracks" \
                    -seed_unidirectional -crop_at_gmwmi -backtrack \
-                   -minlength 4 -maxlength 250 -step 1 -angle 45 -cutoff 0.06 \
-                   -force
-        else # [ "$seed" = "dynamic" ] default. TODO: check if good without SIFT ; see_unidirectional?
+                   -minlength 4 -maxlength 250 -step "$stepsize" -angle "$angle" \
+                   -cutoff 0.06 -force
+        else # [ "$seed" = "dynamic" ] default. 
              # -dynamic seeding may work slightly better than gmwmi, 
              # see Smith RE Neuroimage. 2015 Oct 1;119:338-51.
             echo "seeding dynamically"   
             tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
                    $PRD/connectivity/whole_brain.tck \
                    -seed_dynamic $PRD/connectivity/wm_CSD$lmax.mif \
-                   -act $PRD/connectivity/act.mif -select $number_tracks \
+                   -act $PRD/connectivity/act.mif -select "$number_tracks" \
                    -crop_at_gmwmi -backtrack -minlength 4 -maxlength 250 \
-                   -step 1 -angle 45 -cutoff 0.06 -force 
+                   -step "$stepsize" -angle "$angle" -cutoff 0.06 -force 
         fi  
     else
         echo "generating tracks without using act" 
@@ -656,14 +668,36 @@ then
         tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
                $PRD/connectivity/whole_brain.tck \
                -seed_dynamic $PRD/connectivity/wm_CSD"$lmax".mif \
-               -mask $PRD/connectivity/mask.mif -select $number_tracks \
-               -maxlength 250 -step 1 -angle 45 -cutoff 0.06  -force 
+               -mask $PRD/connectivity/mask.mif -select "$number_tracks" \
+               -maxlength 250 -step "$stepsize" -angle "$angle" -cutoff 1  -force 
     fi
 fi
 
 # postprocessing
 if [ ! -f $PRD/connectivity/whole_brain_post.tck ]
 then
+    if [ "$sift" = "sift"]
+    then
+        echo "using sift"
+        number_tracks=$(($number_tracks/$sift_multiplier))
+        if [ "$act" = "yes" ] 
+        then
+            echo "trimming tracks using sift/act" 
+            tcksift $PRD/connectivity/whole_brain.tck \
+                    $PRD/connectivity/wm_CSD"$lmax".mif \
+                    $PRD/connectivity/whole_brain_post.tck \
+                    -act $PRD/connectivity/act.mif \
+                    -out_mu $PRD/connectivity/mu.txt \
+                    -term_number $number_tracks -fd_scale_gm -force
+
+        else
+            echo "trimming tracks using sift/without act" 
+            tcksift $PRD/connectivity/whole_brain.tck \
+                    $PRD/connectivity/wm_CSD"$lmax".mif \
+                    $PRD/connectivity/whole_brain_post.tck \
+                    -out_mu $PRD/connectivity/mu.txt \
+                    -term_number $number_tracks -force
+        fi
     if [ "$sift" = "sift2" ] 
     then 
         echo "running sift2"
