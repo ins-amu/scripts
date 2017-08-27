@@ -154,13 +154,15 @@ if [ -z  "$NB_THREADS" ] || ! [[ "$NUMBER_TRACKS" =~ ^[0-9]+$ ]]; then
 "$number_threads_mrtrix_conf" according to .mrtrix.conf file" | tee -a "$PRD"/log_processing_parameters.txt
       NB_THREADS="$number_threads_mrtrix_conf"
     else
-      echo "setting number of threads to 1" | tee -a "$PRD"/log_processing_parameters.txt
+      echo "set number of threads to 1" | tee -a "$PRD"/log_processing_parameters.txt
       NB_THREADS=1
     fi
   else 
-    echo "setting number of threads to 1" | tee -a "$PRD"/log_processing_parameters.txt
+    echo "set number of threads to 1" | tee -a "$PRD"/log_processing_parameters.txt
     NB_THREADS=1
   fi
+else
+echo "number of threads is "$NB_THREADS"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
 ######### build cortical surface and region mapping
@@ -374,6 +376,7 @@ then # denoising the combined-directions file is preferable to denoising \
     if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
       # noise.mif can also be used for SNR calculation
       echo "check noise/predwi_*_denoised.mif files"
+      echo "lack of anatomy in noise_res is a marker of accuracy"
       mrview $PRD/connectivity/predwi.mif \
              $PRD/connectivity/predwi_denoised.mif \
              $PRD/connectivity/noise.mif \
@@ -448,14 +451,17 @@ if [ ! -f $PRD/connectivity/predwi_denoised_preproc_bias.mif ]; then
                    -mask $PRD/connectivity/mask_native.mif \
                    -bias $PRD/connectivity/B1_bias.mif -fsl -force \
                    -nthreads "$NB_THREADS"
+  # TODO: mrview check
   fi
 fi
 
 # TOCHECK: why not upsampling to vox=1.25 as recommended in mrtrix?
 # upsampling and reorienting a la fsl
-# reorienting means -stride -1,+2,+3,+4
+# reorienting from DiCOM to FSL, RAS to LAS, means -stride -1,+2,+3,+4
+# see: http://mrtrix.readthedocs.io/en/latest/getting_started/image_data.html
 # upsampling (Dyrby TB. Neuroimage. 2014 Dec;103:202-13.) can help registration
 # with structural and is common with mrtrix3 fixel analysis pipeline
+# see: http://community.mrtrix.org/t/upsampling-dwi-vs-tckgen-defaults/998/2
 if [ ! -f $PRD/connectivity/dwi.mif ]; then
   echo "upsample dwi"
   mrresize $PRD/connectivity/predwi_denoised_preproc_bias.mif - -scale 2 -force | \
@@ -511,7 +517,7 @@ if [ ! -f $PRD/connectivity/brain.nii.gz ]; then
             -datatype float32 -stride -1,+2,+3,+4 -force -nthreads "$NB_THREADS" 
 fi
 
-# TODO
+# TODO: do we want to keep?
 ## Generate transform image (dwi) for alternative registration method: replace lowb.nii.gz with output lowb_pseudobrain.nii.gz in the subsequent registration steps
 ##    if [ ! -f $PRD/connectivity/lowb_pseudobrain.nii.gz ]
 ##    then
@@ -540,6 +546,7 @@ if [ ! -f $PRD/connectivity/aparc+aseg_reorient.nii.gz ]; then
                   $PRD/connectivity/aparc+aseg_reorient.nii.gz
   # check parcellation to brain.mgz
   if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
+    # TODO: mrview discrete colour scheme?
     echo "check parcellation"
     echo "if it's correct, just close the window." 
     echo "Otherwise... well, it should be correct anyway"
@@ -703,13 +710,15 @@ if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
   stepsize=$( bc -l <<< "scale=2; "$native_voxelsize"/2" )
   angle=$( bc -l <<< "scale=2; 90*"$stepsize"/"$native_voxelsize"" )
   if [ "$ACT" = "yes" ]; then
+    # when using msmt_csd in conjunction with ACT, the cutoff threshold
+    # can be reduced to 0.06
+    # see: https://github.com/MRtrix3/mrtrix3/blob/master/docs/quantitative_structural_connectivity/ismrm_hcp_tutorial.rst#connectome-generation
     echo "generating tracks using act"
     if [ "$SEED" = "gmwmi" ]; then
       echo "seeding from gmwmi" 
       5tt2gmwmi $PRD/connectivity/act.mif \
                 $PRD/connectivity/gmwmi_mask.mif -force \
                 -nthreads "$NB_THREADS"
-      # TODO: cutoff add not msmt csd back to default?
       # TODO: min length check andreas paper
       tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
              $PRD/connectivity/whole_brain.tck \
@@ -793,7 +802,7 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
 fi
 
 ## now compute connectivity and length matrix
-if [ ! -f $PRD/connectivity/aparcaseg_2_diff.mif ]; then
+if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$ASEG".mif ]; then
   echo " compute FS labels"
   labelconvert $PRD/connectivity/aparcaseg_2_diff.nii.gz \
                $FREESURFER_HOME/FreeSurferColorLUT.txt \
@@ -939,7 +948,7 @@ cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 # compute centers, areas and orientations
 if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]
 then
-    echo " generate useful files for TVB"
+    echo "generate useful files for TVB"
     python compute_connectivity_files.py
 fi
 

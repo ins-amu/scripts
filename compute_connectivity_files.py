@@ -3,8 +3,6 @@ import numpy
 import os
 PRD = os.environ['PRD']
 SUBJ_ID = os.environ['SUBJ_ID']
-act = os.environ['act']
-number_tracks = os.environ['number_tracks']
 
 def compute_triangle_areas(vertices, triangles):
     """Calculates the area of triangles making up a surface."""
