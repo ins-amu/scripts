@@ -79,11 +79,12 @@ export REGION_MAPPING_CORR="0.42"
 # K:                 0   1   2    3    4    5
 # Number of Nodes:  70  140 280  560  1120 2240
 # default: ""
-export K_LIST="0 1 2 3 4 5"
+# Needs to be a list of integers
+export K_LIST="0 1.5 2 3 4 5"
 
 # number of tracks used in the tractography step.
-# note that you will have less tracks at the end.
 # default: 10.000.000
+# Needs to be an integer
 export NUMBER_TRACKS=10000000
 
 # TODO
@@ -110,6 +111,7 @@ export SIFT="sift2"
 # if using SIFT, you can set the sift_multiplier variable:
 # the number of tracks generated will be NUMBER_TRACKS*SIFT_MULTIPLIER
 # default: 10
+# Needs to be an integer
 # export SIFT_MULTIPLIER=10
 
 # seeding mechanism for tckgen if using act, otherwise default to dynamic
@@ -122,4 +124,5 @@ export ASEG="fsl"
 
 # number of threads
 # default: value in ~/.mrtrix.conf file if present, or 1 if not present
+# Needs to be an integer
 export NB_THREADS=1

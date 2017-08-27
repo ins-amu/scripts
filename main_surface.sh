@@ -6,6 +6,9 @@
 # if you want to write the output instead of a log file, use:
 # bash path_to_scripts/main_surface.sh -c path_to_config/config.sh > logfile.txt
 
+# style guide:
+# https://google.github.io/styleguide/shell.xml
+
 # TODO: add explicits echo for what to check in the figures
 
 #### Checks and preset variables
@@ -63,98 +66,99 @@ else
 fi
 
 # set default parameters if not set in config file
-echo "##### $( date ) #####" >> "$PRD"/log_processing_parameters.txt
+echo "##### $( date ) #####" | tee -a "$PRD"/log_processing_parameters.txt
 
 if [ -z "$FSL" ] || [ "$FSL" != "fsl5.0" ]; then
-  echo "set FSL parameter to empty" >> "$PRD"/log_processing_parameters.txt
+  echo "set FSL parameter to empty" | tee -a "$PRD"/log_processing_parameters.txt
   FSL=""
 else
-  echo "FSL parameter is "$FSL"" >> "$PRD"/log_processing_parameters.txt
+  echo "FSL parameter is "$FSL"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
 if [ -z "$CHECK" ] || [ "$CHECK" != "no" -a "$CHECK" != "yes" ]; then
-  echo "set CHECK parameter to no" >> "$PRD"/log_processing_parameters.txt
+  echo "set CHECK parameter to no"| tee -a "$PRD"/log_processing_parameters.txt
   export CHECK="no"
 else
-  echo "CHECK parameter is "$CHECK"" >> "$PRD"/log_processing_parameters.txt
+  echo "CHECK parameter is "$CHECK""| tee -a "$PRD"/log_processing_parameters.txt
 fi
 
 if [ -z "$REGION_MAPPING_CORR" ]; then
-  echo "set REGION_MAPPING_CORR parameter to 0.42" >> "$PRD"/log_processing_parameters.txt
+  echo "set REGION_MAPPING_CORR parameter to 0.42"| tee -a "$PRD"/log_processing_parameters.txt
   export REGION_MAPPING_CORR=0.42
 else
-  echo "REGION_MAPPING_CORR parameter is "$REGION_MAPPING_CORR"" >> "$PRD"/log_processing_parameters.txt
+  echo "REGION_MAPPING_CORR parameter is "$REGION_MAPPING_CORR""| tee -a "$PRD"/log_processing_parameters.txt
 fi
 
-if [ -z "$NUMBER_TRACKS" ]; then
-  echo "set NUMBER_TRACKS parameter to 10.000.000"  >> "$PRD"/log_processing_parameters.txt
+if [ -z "$NUMBER_TRACKS" ] || ! [[ "$NUMBER_TRACKS" =~ ^[0-9]+$ ]]; then
+  echo "set NUMBER_TRACKS parameter to 10.000.000" | tee -a "$PRD"/log_processing_parameters.txt
   NUMBER_TRACKS=10000000
 else
-  echo "NUMBER_TRACKS parameter is "$NUMBER_TRACKS""  >> "$PRD"/log_processing_parameters.txt
+  echo "NUMBER_TRACKS parameter is "$NUMBER_TRACKS"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
+# TODO: check if list of integers
 if [ -z "$K_LIST" ]; then
-  echo "set K_LIST parameter to empty"  >> "$PRD"/log_processing_parameters.txt
+  echo "set K_LIST parameter to empty" | tee -a "$PRD"/log_processing_parameters.txt
   K_LIST=""
 else
-  echo "K_LIST parameter is "$K_LIST""  >> "$PRD"/log_processing_parameters.txt
+  echo "K_LIST parameter is "$K_LIST"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
 if [ -z "$TOPUP" ] || [ "$TOPUP" != "no" -a "$TOPUP" != "reversed"  -a "$TOPUP" != "eddy_correct" ]; then
-  echo "set TOPUP parameter to no"  >> "$PRD"/log_processing_parameters.txt
+  echo "set TOPUP parameter to no" | tee -a "$PRD"/log_processing_parameters.txt
   TOPUP="no"
 else
-  echo "TOPUP parameter is "$TOPUP""  >> "$PRD"/log_processing_parameters.txt
+  echo "TOPUP parameter is "$TOPUP"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
 if [ -z "$ACT" ] || [ "$ACT" != "no" -a "$ACT" != "yes" ]; then
-  echo "set ACT parameter to yes"  >> "$PRD"/log_processing_parameters.txt
+  echo "set ACT parameter to yes" | tee -a "$PRD"/log_processing_parameters.txt
   ACT="yes"
 else
-  echo "ACT parameter is "$ACT""  >> "$PRD"/log_processing_parameters.txt
+  echo "ACT parameter is "$ACT"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
 if [ -z "$SIFT" ] || [ "$SIFT" != "no" -a "$SIFT" != "sift"  -a "$SIFT" != "sift2" ]; then
-  echo "set SIFT parameter to sift2"  >> "$PRD"/log_processing_parameters.txt
+  echo "set SIFT parameter to sift2" | tee -a "$PRD"/log_processing_parameters.txt
   SIFT="sift2"
 else
-  echo "SIFT parameter is "$SIFT""  >> "$PRD"/log_processing_parameters.txt
+  echo "SIFT parameter is "$SIFT"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
-if [ -z "$SIFT_MULTIPLIER" ]; then
-  echo "set SIFT_MULTIPLIER parameter to 10"  >> "$PRD"/log_processing_parameters.txt
+if [ -z "$SIFT_MULTIPLIER" ] || ! [[ "$NUMBER_TRACKS" =~ ^[0-9]+$ ]]; then
+  echo "set SIFT_MULTIPLIER parameter to 10" | tee -a "$PRD"/log_processing_parameters.txt
   SIFT_MULTIPLIER=10
 else
-  echo "SIFT_MULTIPLIER parameter is "$SIFT_MULTIPLIER""  >> "$PRD"/log_processing_parameters.txt
+  echo "SIFT_MULTIPLIER parameter is "$SIFT_MULTIPLIER"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
 if [ -z "$SEED" ] || [ "$SEED" != "gmwmi" -a "$SEED" != "dynamic" ]; then
-  echo "set SEED parameter to dynamic"  >> "$PRD"/log_processing_parameters.txt
+  echo "set SEED parameter to dynamic" | tee -a "$PRD"/log_processing_parameters.txt
   SEED="dynamic"
 else
-  echo "SEED parameter is "$SEED""  >> "$PRD"/log_processing_parameters.txt
+  echo "SEED parameter is "$SEED"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
 if [ -z "$ASEG" ] || [ "$FSL" != "fs" -a "$FSL" != "fsl" ]; then
-  echo "set ASEG parameter to fsl"  >> "$PRD"/log_processing_parameters.txt
+  echo "set ASEG parameter to fsl" | tee -a "$PRD"/log_processing_parameters.txt
   ASEG="fsl"
 else
-  echo "ASEG parameter is "$ASEG""  >> "$PRD"/log_processing_parameters.txt
+  echo "ASEG parameter is "$ASEG"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
-if [ -z  "$NB_THREADS" ]; then
+if [ -z  "$NB_THREADS" ] || ! [[ "$NUMBER_TRACKS" =~ ^[0-9]+$ ]]; then
   if [ -f ~/.mrtrix.conf ]; then
     number_threads_mrtrix_conf=$(grep 'NumberOfThreads' ~/.mrtrix.conf | cut -f 2 -d " ")
     if [ -n "$number_threads_mrtrix_conf" ]; then 
       echo "set number of threads to \
-"$number_threads_mrtrix_conf" according to .mrtrix.conf file"  >> "$PRD"/log_processing_parameters.txt
+"$number_threads_mrtrix_conf" according to .mrtrix.conf file" | tee -a "$PRD"/log_processing_parameters.txt
       NB_THREADS="$number_threads_mrtrix_conf"
     else
-      echo "setting number of threads to 1"  >> "$PRD"/log_processing_parameters.txt
+      echo "setting number of threads to 1" | tee -a "$PRD"/log_processing_parameters.txt
       NB_THREADS=1
     fi
   else 
-    echo "setting number of threads to 1"  >> "$PRD"/log_processing_parameters.txt
+    echo "setting number of threads to 1" | tee -a "$PRD"/log_processing_parameters.txt
     NB_THREADS=1
   fi
 fi
@@ -301,13 +305,14 @@ mkdir -p $PRD/$SUBJ_ID/connectivity
 
 # if single acquisition  with reversed directions
 function mrchoose () {
-    choice=$1
-    shift
-    $@ << EOF
+  choice=$1
+  shift
+  $@ << EOF
 $choice
 EOF
 }
 
+# TODO detect phase encoding automatically
 # handle encoding scheme
 if [ "$TOPUP" = "reversed" ]; then
   echo "generate dwi mif file for use with reversed phase encoding"
@@ -316,8 +321,7 @@ if [ "$TOPUP" = "reversed" ]; then
   # each voxel
   # float 32 to make data access faster in subsequent commands
   if [ ! -f $PRD/connectivity/predwi_1.mif ] || [ ! -f $PRD/connectivity/predwi_2.mif ]; then
-    # TODO: find a way for HCP dataset
-    # TODO detect phase encoding automatically
+
     mrchoose 0 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_1.mif \
                          -datatype float32 -stride 0,0,0,1 -force \
                          -nthreads "$NB_THREADS"
@@ -411,6 +415,7 @@ then
   fi
 fi
 
+# TOCHECK: Masking step before or after biascorrect?
 # Native-resolution mask creation
 if [ ! -f $PRD/connectivity/mask_native.mif ]; then
   echo "create dwi mask"
@@ -446,28 +451,28 @@ if [ ! -f $PRD/connectivity/predwi_denoised_preproc_bias.mif ]; then
   fi
 fi
 
-# TOCHECK
+# TOCHECK: why not upsampling to vox=1.25 as recommended in mrtrix?
 # upsampling and reorienting a la fsl
-# reorienting means -stride -1,+2,+3,+4; upsampling 
-# (Dyrby TB. Neuroimage. 2014 Dec;103:202-13.) can help
-# registration with structural and is common with mrtrix3 fixel analysis pipeline
+# reorienting means -stride -1,+2,+3,+4
+# upsampling (Dyrby TB. Neuroimage. 2014 Dec;103:202-13.) can help registration
+# with structural and is common with mrtrix3 fixel analysis pipeline
 if [ ! -f $PRD/connectivity/dwi.mif ]; then
   echo "upsample dwi"
-  mrresize $PRD/connectivity/predwi_denoised_preproc_bias.mif -  -scale 2 | \
-  mrconvert - -force -datatype float32 -stride -1,+2,+3,+4 $PRD/connectivity/dwi.mif
-##   -interp default: cubic
+  mrresize $PRD/connectivity/predwi_denoised_preproc_bias.mif - -scale 2 -force | \
+  mrconvert - -datatype float32 -stride -1,+2,+3,+4 $PRD/connectivity/dwi.mif -force 
 fi
 
 if [ ! -f $PRD/connectivity/mask.mif ]; then
+  # for dwi2fod step, a permissive, dilated mask can be used to minimize
+  # streamline premature termination, see BIDS protocol: 
+  # https://github.com/BIDS-Apps/MRtrix3_connectome/blob/master/run.py
   echo "upsample mask"
-  mrresize -force -scale 2 $PRD/connectivity/mask_native.mif - | \
+  mrresize $PRD/connectivity/mask_native.mif - -scale 2 -force | \
   mrconvert - $PRD/connectivity/mask.mif -datatype bit -stride -1,+2,+3 \
             -force -nthreads "$NB_THREADS"
   maskfilter $PRD/connectivity/mask.mif dilate \
              $PRD/connectivity/mask_dilated.mif -npass 2 -force \
              -nthreads "$NB_THREADS" 
-  # for dwi2fod step, a permissive, dilated mask can be used to minimize
-  # streamline premature termination, see BIDS protocol
   # check upsampled files
   if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
     echo "check upsampled mif files"
@@ -652,10 +657,10 @@ else
                  -mask $PRD/connectivity/mask.mif -force \
                  -nthreads "$NB_THREADS"
     if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]; then
-        echo "check ODF image"
-        mrview $PRD/connectivity/meanlowb.mif \
-               -overlay.load $PRD/connectivity/RF_voxels.mif \
-               -overlay.opacity 0.5
+      echo "check ODF image"
+      mrview $PRD/connectivity/meanlowb.mif \
+             -overlay.load $PRD/connectivity/RF_voxels.mif \
+             -overlay.opacity 0.5
     fi
   fi
 fi
@@ -693,39 +698,37 @@ if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
     # temporarily change number of tracks for sift
     number_tracks=$(($NUMBER_TRACKS*$SIFT_MULTIPLIER))
   fi
-  # TODO: check float operations bash
   native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
                    | cut -f 1 -d " " | xargs printf "%1.f")
-  stepsize=$(($native_voxelsize/2))
-  angle=$((90*$stepsize/$native_voxelsize))
+  stepsize=$( bc -l <<< "scale=2; "$native_voxelsize"/2" )
+  angle=$( bc -l <<< "scale=2; 90*"$stepsize"/"$native_voxelsize"" )
   if [ "$ACT" = "yes" ]; then
     echo "generating tracks using act"
-    if [ "$SEED" = "gmwmi" ]
-    then
-        echo "seeding from gmwmi" 
-        5tt2gmwmi $PRD/connectivity/act.mif \
-                  $PRD/connectivity/gmwmi_mask.mif -force \
-                  -nthreads "$NB_THREADS"
-        # TODO: cutoff add not msmt csd back to default?
-        # TODO: min length check andreas paper
-        tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
-               $PRD/connectivity/whole_brain.tck \
-               -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif 
-               -act $PRD/connectivity/act.mif -select "$NUMBER_TRACKS" \
-               -seed_unidirectional -crop_at_gmwmi -backtrack \
-               -minlength 4 -maxlength 250 -step "$stepsize" -angle "$angle" \
-               -cutoff 0.06 -force -nthreads "$NB_THREADS"
-    elif [ "$SEED" = "dynamic" ] 
-         # -dynamic seeding may work slightly better than gmwmi, 
-         # see Smith RE Neuroimage. 2015 Oct 1;119:338-51.
-        echo "seeding dynamically"   
-        tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
-               $PRD/connectivity/whole_brain.tck \
-               -seed_dynamic $PRD/connectivity/wm_CSD$lmax.mif \
-               -act $PRD/connectivity/act.mif -select "$NUMBER_TRACKS" \
-               -crop_at_gmwmi -backtrack -minlength 4 -maxlength 250 \
-               -step "$stepsize" -angle "$angle" -cutoff 0.06 -force \
-               -nthreads "$NB_THREADS"
+    if [ "$SEED" = "gmwmi" ]; then
+      echo "seeding from gmwmi" 
+      5tt2gmwmi $PRD/connectivity/act.mif \
+                $PRD/connectivity/gmwmi_mask.mif -force \
+                -nthreads "$NB_THREADS"
+      # TODO: cutoff add not msmt csd back to default?
+      # TODO: min length check andreas paper
+      tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
+             $PRD/connectivity/whole_brain.tck \
+             -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif 
+             -act $PRD/connectivity/act.mif -select "$NUMBER_TRACKS" \
+             -seed_unidirectional -crop_at_gmwmi -backtrack \
+             -minlength 4 -maxlength 250 -step "$stepsize" -angle "$angle" \
+             -cutoff 0.06 -force -nthreads "$NB_THREADS"
+    elif [ "$SEED" = "dynamic" ]; then
+       # -dynamic seeding may work slightly better than gmwmi, 
+       # see Smith RE Neuroimage. 2015 Oct 1;119:338-51.
+      echo "seeding dynamically"   
+      tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
+             $PRD/connectivity/whole_brain.tck \
+             -seed_dynamic $PRD/connectivity/wm_CSD$lmax.mif \
+             -act $PRD/connectivity/act.mif -select "$NUMBER_TRACKS" \
+             -crop_at_gmwmi -backtrack -minlength 4 -maxlength 250 \
+             -step "$stepsize" -angle "$angle" -cutoff 0.06 -force \
+             -nthreads "$NB_THREADS"
     fi  
   else
     echo "generating tracks without using act" 
@@ -741,7 +744,7 @@ fi
 
 # postprocessing
 if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
-  if [ "$SIFT" = "sift"]; then
+  if [ "$SIFT" = "sift" ]; then
     echo "using sift"
     number_tracks=$(($NUMBER_TRACKS/$SIFT_MULTIPLIER))
     if [ "$ACT" = "yes" ]; then
@@ -762,7 +765,7 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
                 -term_number $NUMBER_TRACKS -force \
                 -nthreads "$NB_THREADS"
     fi
-  if [ "$SIFT" = "sift2" ]; then 
+  elif [ "$SIFT" = "sift2" ]; then 
     echo "running sift2"
     ln -s $PRD/connectivity/whole_brain.tck $PRD/connectivity/whole_brain_post.tck
     if [ "$ACT" = "yes" ]; then
@@ -782,11 +785,11 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
                -out_coeffs $PRD/connectivity/streamline_coeffs.csv \
                -force -nthreads "$NB_THREADS"
     fi
-    else 
-      echo "not using sift2"
-      ln -s $PRD/connectivity/whole_brain.tck \
-            $PRD/connectivity/whole_brain_post.tck
-    fi
+  else 
+    echo "not using sift2"
+    ln -s $PRD/connectivity/whole_brain.tck \
+          $PRD/connectivity/whole_brain_post.tck
+  fi
 fi
 
 ## now compute connectivity and length matrix
