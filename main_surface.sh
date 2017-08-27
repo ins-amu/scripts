@@ -316,14 +316,13 @@ EOF
 
 # TODO detect phase encoding automatically
 # handle encoding scheme
-if [ "$TOPUP" = "reversed" ]; then
-  echo "generate dwi mif file for use with reversed phase encoding"
-  echo "(use of fsl topup)"
-  # strides are arranged to make volume data contiguous in memory for
-  # each voxel
-  # float 32 to make data access faster in subsequent commands
-  if [ ! -f $PRD/connectivity/predwi_1.mif ] || [ ! -f $PRD/connectivity/predwi_2.mif ]; then
-
+if [ ! -f $PRD/connectivity/predwi.mif ]; then 
+  if [ "$TOPUP" = "reversed" ]; then
+    echo "generate dwi mif file for use with reversed phase encoding"
+    echo "(use of fsl topup)"
+    # strides are arranged to make volume data contiguous in memory for
+    # each voxel
+    # float 32 to make data access faster in subsequent commands
     mrchoose 0 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_1.mif \
                          -datatype float32 -stride 0,0,0,1 -force \
                          -nthreads "$NB_THREADS"
@@ -335,29 +334,27 @@ if [ "$TOPUP" = "reversed" ]; then
         echo "check predwi_*.mif files"
         mrview $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi_2.mif
     fi
-  fi
-  # recombining PE dir files 
-  if [ ! -f $PRD/connectivity/predwi.mif ]; then
-      mrcat $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi_2.mif \
-            $PRD/connectivity/predwi.mif -axis 3 -nthreads "$NB_THREADS"
-      mrinfo $PRD/connectivity/predwi.mif \
-             -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
-             -export_pe_table $PRD/connectivity/pe_table -force 
-  fi
-else
-  if [ ! -f $PRD/connectivity/predwi.mif ]; then 
+    # recombining PE dir files 
+    mrcat $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi_2.mif \
+          $PRD/connectivity/predwi.mif -axis 3 -nthreads "$NB_THREADS"
+    mrinfo $PRD/connectivity/predwi.mif \
+           -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
+           -export_pe_table $PRD/connectivity/pe_table -force 
+  else
     echo "generate dwi mif file for use without topup (fsl)"
     mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi.mif \
               -export_pe_table $PRD/connectivity/pe_table \
               -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
               -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"
-    # check mif file
-    if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-        echo "check predwi_*.mif file"
-        mrview $PRD/connectivity/predwi.mif 
-    fi
+  fi
+  # check mif file
+  if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
+      echo "check predwi_*.mif file"
+      mrview $PRD/connectivity/predwi.mif 
   fi
 fi
+
+
 
 # denoising the volumes
 if [ ! -f $PRD/connectivity/predwi_denoised.mif ]
@@ -408,13 +405,13 @@ then
               $PRD/connectivity/predwi_denoised_preproc.mif \
               -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
               -force -nthreads "$NB_THREADS"
-    # check preproc files
-    if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-      echo "check preprocessed mif file (no topup/no eddy)"
-      mrview $PRD/connectivity/predwi.mif \
-             $PRD/connectivity/predwi_denoised.mif \
-             $PRD/connectivity/predwi_denoised_preproc.mif 
-    fi
+  fi
+  # check preproc files
+  if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
+    echo "check preprocessed mif file (no topup/no eddy)"
+    mrview $PRD/connectivity/predwi.mif \
+           $PRD/connectivity/predwi_denoised.mif \
+           $PRD/connectivity/predwi_denoised_preproc.mif 
   fi
 fi
 
@@ -451,7 +448,13 @@ if [ ! -f $PRD/connectivity/predwi_denoised_preproc_bias.mif ]; then
                    -mask $PRD/connectivity/mask_native.mif \
                    -bias $PRD/connectivity/B1_bias.mif -fsl -force \
                    -nthreads "$NB_THREADS"
-  # TODO: mrview check
+  fi
+  # check bias field correction
+  if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
+    echo "check native mask mif file"
+    mrview $PRD/connectivity/predwi.mif \
+           $PRD/connectivity/predwi_denoised_preproc.mif \
+           $PRD/connectivity/predwi_denoised_preproc_bias.mif 
   fi
 fi
 
@@ -571,12 +574,10 @@ if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]; then
                    $PRD/connectivity/brain.nii.gz \
                    flirt_import $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
                     -force 
-  #TOCHECK: syntax
   mrtransform $PRD/connectivity/aparc+aseg_reorient.nii.gz \
               $PRD/connectivity/aparcaseg_2_diff.nii.gz \
               -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
               -inverse -datatype uint32 -force -nthreads "$NB_THREADS"
-  # mrtransform -force -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt -inverse $PRD/connectivity/aparc+aseg_reorient.nii.gz -datatype uint32 $PRD/connectivity/aparcaseg_2_diff.nii.gz  
 fi
 
 # brain to diff by inverse transform
@@ -609,7 +610,7 @@ if [ "$ACT" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]; then
       echo "check tissue segmented image"
       5tt2vis $PRD/connectivity/act.mif $PRD/connectivity/act_vis.mif -force \
               -nthreads "$NB_THREADS"
-      mrview $PRD/connectivity/act_vis.mif
+      mrview $PRD/connectivity/act_vis.mif -colourmap 4
   fi
 fi
 
@@ -635,7 +636,7 @@ if [ "$no_shells" -gt 2 ]; then
                    -mask $PRD/connectivity/mask.mif -force \
                    -nthreads "$NB_THREADS"
       if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]; then
-          echo "check ODF image"
+          echo "check ODF image iwth the selected voxels"
           mrview $PRD/connectivity/meanlowb.mif \
                  -overlay.load $PRD/connectivity/RF_voxels.mif \
                  -overlay.opacity 0.5
@@ -677,7 +678,7 @@ if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]; then
   # Both for multishell and single shell since we use dhollander in the 
   # single shell case
   # see: http://community.mrtrix.org/t/wm-odf-and-response-function-with-dhollander-option---single-shell-versus-multi-shell/572/4
-  echo "calculating fod on multishell data"
+  echo "calculating fod on multishell or single shell data"
   dwi2fod msmt_csd $PRD/connectivity/dwi.mif \
           $PRD/connectivity/response_wm.txt \
           $PRD/connectivity/wm_CSD$lmax.mif \
@@ -848,24 +849,20 @@ fi
 
 if [ ! -f $PRD/connectivity/tract_lengths.csv ]; then
   echo "compute connectivity matrix edge lengths"
-  if [ "$SIFT" = "sift2" ]; then
-    # TOCHECK: the formed -metric meanlength adaptation: if the mean edge 
-    # length is needed to estimate internode conduction delays, my take on 
-    # the new version tck2connectome is that default (-stat_edge sum) would
-    # sum up the no of streamlines between two nodes; simply changing it to
-    # (-stat_edge mean) would generate a 0,1 binary matrix (which happened 
-    # during testing), so streamlines need to be adjusted by their length 
-    # before their mean is calculated (still, needs to be verified); need 
-    # to be careful when applying sift2, as here the mean is 
-    # sum(streamline length * streamline weight)/no streamlines, a bit more
-    # fuzzy to interpret than with sift, however left it as option
-    tck2connectome $PRD/connectivity/whole_brain_post.tck \
-                   $PRD/connectivity/aparcaseg_2_diff_$ASEG.mif \
-                   $PRD/connectivity/tract_lengths.csv \
-                   -tck_weights_in $PRD/connectivity/streamline_weights.csv \
-                   -assignment_radial_search 2 -zero_diagonal -scale_length \
-                   -stat_edge mean -force -nthreads "$NB_THREADS"
-  else
+  # TODO: I don't think it makes sense for the length to use the SIFT2 weighting
+  #if [ "$SIFT" = "sift2" ]; then
+  #  # mean length result: weight by the length, then average
+  #  # see: http://community.mrtrix.org/t/tck2connectome-edge-statistic-sift2-questions/1059/2 
+  #  # TOCHECK: be careful when applying sift2, as here the mean is 
+  #  # sum(streamline length * streamline weight)/no streamlines, a bit more
+  #  # fuzzy to interpret than with sift, however left it as option
+  #  tck2connectome $PRD/connectivity/whole_brain_post.tck \
+  #                 $PRD/connectivity/aparcaseg_2_diff_$ASEG.mif \
+  #                 $PRD/connectivity/tract_lengths.csv \
+  #                 -tck_weights_in $PRD/connectivity/streamline_weights.csv \
+  #                 -assignment_radial_search 2 -zero_diagonal -scale_length \
+  #                 -stat_edge mean -force -nthreads "$NB_THREADS"
+  #else
     tck2connectome $PRD/connectivity/whole_brain_post.tck \
                    $PRD/connectivity/aparcaseg_2_diff_"$ASEG".mif \
                    $PRD/connectivity/tract_lengths.csv \
