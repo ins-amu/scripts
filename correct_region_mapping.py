@@ -2,7 +2,7 @@ import os
 import sys
 rl = sys.argv[1]
 PRD = os.environ['PRD']
-region_mapping_corr = float(os.environ['region_mapping_corr'])
+region_mapping_corr = float(os.environ['REGION_MAPPING_CORR'])
 os.chdir(os.path.join(PRD, 'surface'))
 from copy import deepcopy
 from pylab import *
@@ -20,8 +20,8 @@ for _ in range(10):
         if len(iverts)>0:
             for inode in iverts:
                 iall = trian[np.nonzero(trian==inode)[0]].flatten().tolist()
-                ineig = unique(filter(lambda x: x!=inode, iall)).astype('int')
-                # import pdb; pdb.set_trace()
+                #import pdb; pdb.set_trace()
+                ineig = unique(list(filter(lambda x: x!=inode, iall))).astype('int')
                 ivals = np.array(Counter(texture[ineig]).most_common()).astype('int')                
                 if ivals[np.nonzero(ivals[:,0]==ilab), 1].shape[1]==0:
                     new_texture[inode] = Counter(texture[ineig]).most_common(1)[0][0]

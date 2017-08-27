@@ -6,7 +6,7 @@ if "DISPLAY" in os.environ:
     DISPLAY = os.environ['DISPLAY']
 else:
     DISPLAY = ""
-region_mapping_corr = float(os.environ['region_mapping_corr'])
+region_mapping_corr = float(os.environ['REGION_MAPPING_CORR'])
 os.chdir(os.path.join(PRD, 'surface'))
 from copy import deepcopy
 from pylab import *
@@ -65,7 +65,7 @@ def correct_sub_region(texture, trian, Vw):
     while len(Vw)>0:
         iVw = Vw.pop()
         itrian = trian[np.nonzero(trian==iVw)[0]].flatten().astype('int').tolist()
-        ir = filter(lambda x : new_texture[x] != new_texture[iVw], itrian)
+        ir = list(filter(lambda x : new_texture[x] != new_texture[iVw], itrian))
         if len(ir)>0:
             new_texture[iVw] = new_texture[Counter(ir).most_common(1)[0][0]] 
         else:
@@ -120,14 +120,14 @@ if __name__ == '__main__':
     res = np.array(calculate_connected(texture, vert, trian))
     wrong_labels = res[np.where(res[:,1]>0.),0][0]
     if len(wrong_labels)==0:
-        print 'evrything is fine, continuing'
+        print('evrything is fine, continuing')
     else:
-        print "WARNING, some region have several components"
+        print("WARNING, some region have several components")
         for iwrong in wrong_labels:
             # TODO: handle more than two components
             (V1, V2) = find_both_components(texture, vert, trian, iwrong)
             if CHECK =="yes" and len(DISPLAY)>0:
-                print "checking"
+                print("checking")
                 check_region_mapping(texture, vert, trian, iwrong)
                 i=0
                 while True and i<10:
@@ -137,23 +137,23 @@ if __name__ == '__main__':
                                             2) {1} nodes
                                             3) continue the pipeline anyway
                                             (answer: 1, 2, or 3)? \n""".format(len(V1), len(V2)))
-                        print "you chose " + choice_user
+                        print("you chose " + choice_user)
 
                         choice_user = int(choice_user)
                         if choice_user not in [1, 2, 3]:
                             raise ValueError
                         break 
                     except ValueError:
-                        print 'please choose 1, 2 or 3'
+                        print('please choose 1, 2 or 3')
                         i += 1
                         continue
                 else:
-                    print 'failure total, no check mode'
+                    print('failure total, no check mode')
             else:
-                print "no check, selecting automatically the smallest components"
+                print("no check, selecting automatically the smallest components")
                 choice_user=argmin((len(V1), len(V2)))+1
             if choice_user==3:
-                print "keep that correction"
+                print("keep that correction")
                 savetxt(rl + '_region_mapping_low.txt', new_texture)
             elif choice_user==1:
                 texture  =  correct_sub_region(texture, trian, V1)

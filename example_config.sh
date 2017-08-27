@@ -35,7 +35,8 @@ export SUBJ_ID=name_subj
 # if you have matlab, do mcrinstaller at the matlab prompt
 # to find the location of the MCR
 # alternatively you can uncomment the following line and comment the MCR line
-# export matlab=/path_to_matlab/
+# export MATLAB=/path_to_matlab/
+# export MATLAB=$(which matlab)
 # if you don't have matlab, download the MCR (linux 64 bits) here: 
 # http://www.mathworks.com/products/compiler/mcr/index.html
 export MCR=/path_to_matlab_runtime_compiler/
@@ -62,14 +63,15 @@ export FSL=""
 # not set
 
 # check the processed data when the pipeline is running
-# (you need a display and mrview installed) (no/yes)
+# (you need a display and mrview installed) 
+# options: ["yes"/"no"]; default: "no"
 export CHECK="no"
 
 # This parameter is important for the correction of the region mapping. 
 # Between 0 and 1. The bigger it is, the bigger is the correction. 
 # (only import for the surface pipeline: main_surface.sh)
 # default: 0.42
-export region_mapping_corr="0.42"
+export REGION_MAPPING_CORR="0.42"
 
 # for computing subconnectivity
 # if you want subdivided parcellations, you can set the folowing value
@@ -77,12 +79,12 @@ export region_mapping_corr="0.42"
 # K:                 0   1   2    3    4    5
 # Number of Nodes:  70  140 280  560  1120 2240
 # default: ""
-export K_list="0 1 2 3 4 5"
+export K_LIST="0 1 2 3 4 5"
 
 # number of tracks used in the tractography step.
 # note that you will have less tracks at the end.
 # default: 10.000.000
-export number_tracks=10000000
+export NUMBER_TRACKS=10000000
 
 # TODO
 # uniquely for region pipeline (main_region.sh)
@@ -95,29 +97,29 @@ export number_tracks=10000000
 # be careful with "reversed", depending on your data, 
 # you may have to change the main_surface script
 # options: ["no", "reversed", "eddy_correct"], default: "eddy_correct"
-export topup="no"
+export TOPUP="no"
 
 # use Anatomically Constrained Tractography (yes/no)
 # options ["yes", "no"]; default: "yes"
-export act="yes"
+export ACT="yes"
 
 # using Spherical-deconvolution informed filtering of tractograms 
 # options: ["sift", "sift2", "no"]; default: SIFT2
-export sift="sift2"
+export SIFT="sift2"
 
 # if using SIFT, you can set the sift_multiplier variable:
-# the number of tracks generated will be number_tracks*sift_multiplier
+# the number of tracks generated will be NUMBER_TRACKS*SIFT_MULTIPLIER
 # default: 10
-# export sift_multiplier=10
+# export SIFT_MULTIPLIER=10
 
 # seeding mechanism for tckgen if using act, otherwise default to dynamic
 # options: ["gmwmi", "dynamic"]; default: "gmwmi"
-export seed="gmwmi"
+export SEED="gmwmi"
 
 # subcortical segmentation correction
 # options: ["fs", "fsl"]; default: "fsl"
-export aseg="fsl" 
+export ASEG="fsl" 
 
 # number of threads
 # default: value in ~/.mrtrix.conf file if present, or 1 if not present
-export nb_threads=1
+export NB_THREADS=1
