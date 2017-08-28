@@ -146,9 +146,7 @@ def compute_region_center_cortex(vertices, region_mapping):
 
     return region_center
 
-
-if __name__ == '__main__':
-
+def prepare_connectivity_complete():
     # Cortex
     # import data
     verts = np.loadtxt(os.path.join(PRD, SUBJ_ID, 'surface', 'vertices.txt'))
@@ -239,3 +237,30 @@ if __name__ == '__main__':
             f.write('{:.4f} '.format(centers[i, j]))
         f.write('\n')
     f.close()
+	
+def prepare_connectivity_simple():
+
+    weights = np.loadtxt(os.path.join(PRD, SUBJ_ID + "_regions", 'connectivity', 'weights.csv'))
+    tract_lengths = np.loadtxt(os.path.join(PRD, SUBJ_ID + "_regions", 'connectivity', 'tract_lengths.csv'))
+    weights = weights + weights.transpose() - np.diag(np.diag(weights))
+    # add the first region
+    weights = np.vstack([np.zeros((1, weights.shape[0])), weights])
+    weights = np.hstack([np.zeros((weights.shape[0], 1)), weights])
+    tract_lengths = tract_lengths + tract_lengths.transpose() # because diagonal nul 
+    # tck2connectome produces the number of steps in the tracking file
+    # so we have to multiply by the step size in mm which is 0.5
+    tract_lengths *= 0.5
+    tract_lengths = np.vstack([np.zeros((1, tract_lengths.shape[0])), tract_lengths]) 
+    tract_lengths = np.hstack([np.zeros((tract_lengths.shape[0], 1)), tract_lengths])
+    np.savetxt(os.path.join(PRD, SUBJ_ID + "_regions", 'connectivity', 'weights.txt'), weights, fmt='%d')
+    np.savetxt(os.path.join(PRD, SUBJ_ID + "_regions", 'connectivity', 'tract_lengths.txt'), tract_lengths, fmt='%.3f')
+
+
+if __name__ == '__main__':
+
+	if os.path.exists(PRD + "/" + SUBJ_ID + "_regions/connectivity"):
+		prepare_connectivity_simple()
+	else:
+		prepare_connectivity_complete()
+
+  
