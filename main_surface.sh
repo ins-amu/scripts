@@ -357,9 +357,10 @@ fi
 
 
 # denoising the volumes
-if [ ! -f $PRD/connectivity/predwi_denoised.mif ]
-then # denoising the combined-directions file is preferable to denoising \
-   # predwi1 and 2 separately because of a higher no of volumes
+if [ ! -f $PRD/connectivity/predwi_denoised.mif ]; then
+  # denoising the combined-directions file is preferable to denoising \
+  # predwi1 and 2 separately because of a higher no of volumes
+  # see: https://github.com/MRtrix3/mrtrix3/issues/747
   echo "denoising dwi data"
   dwidenoise $PRD/connectivity/predwi.mif \
              $PRD/connectivity/predwi_denoised.mif \
@@ -493,6 +494,12 @@ if [ ! -f $PRD/connectivity/mask.mif ]; then
 fi
 
 ## FLIRT registration
+# a comparison of registration methods is available in:
+# Ou Y, et al. IEEE Trans Med Imaging. 2014 Oct;33(10):2039-65
+# other potentials methods for registration TOCHECK include
+# FLIRT -bbr (Kerstin's protocol): http://community.mrtrix.org/t/registration-of-structural-and-diffusion-weighted-data/203/8
+# bbregister (FS)
+
 # low b extraction to FSL
 if [ ! -f $PRD/connectivity/lowb.nii.gz ]; then
   echo "extracting b0 vols for registration"
@@ -510,9 +517,9 @@ fi
 # generating FSl brain.mgz
 if [ ! -f $PRD/connectivity/brain.nii.gz ]; then
   # brain.mgz seems to be superior to diff to T1
-  # as BET stripping is unfortunate in many situations, 
+  # as the main problem for registration is the wmgm interface that we want to
+  # remove and BET stripping is unfortunate in many situations, 
   # and FS pial eddited volumes already present
-  # TODO: ref? T1 option?
   # stride from FS to FSL: RAS to LAS
   # see: http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
   echo "generating FSL orientation for masked brain"
@@ -520,18 +527,28 @@ if [ ! -f $PRD/connectivity/brain.nii.gz ]; then
             -datatype float32 -stride -1,+2,+3,+4 -force -nthreads "$NB_THREADS" 
 fi
 
-# TODO: do we want to keep?
-## Generate transform image (dwi) for alternative registration method: replace lowb.nii.gz with output lowb_pseudobrain.nii.gz in the subsequent registration steps
-##    if [ ! -f $PRD/connectivity/lowb_pseudobrain.nii.gz ]
-##    then
-##        echo "extracting b0 vols for registration: pseudostructural"
-##        dwiextract $PRD/connectivity/dwi.mif -bzero - | mrmath - mean - -axis 3 | mrcalc 1 - -divide $PRD/connectivity/mask_upsampled.mif -multiply - | mrconvert - - -stride -1,+2,+3 | mrhistmatch - $PRD/connectivity/brain.nii.gz $PRD/connectivity/lowb_pseudobrain.nii.gz
-##        if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]
-##        then
-##            echo "check pseudo lowb files"
-##            mrview $PRD/connectivity/lowb_pseudobrain.nii.gz $PRD/connectivity/lowb.nii.gz -overlay.load $PRD/connectivity/lowb_pseudobrain.nii.gz -overlay.opacity 0.5 -norealign
-##        fi
-##    fi
+# TOCHECK: test and compare to lowb method, or leave as an option
+# # Generate transform image (dwi) for alternative registration method: 
+# # replace lowb.nii.gz with output lowb_pseudobrain.nii.gz in the subsequent 
+# # registration steps
+# # see: Bhushan C, et al. Neuroimage. 2015 Jul 15;115:269-8
+# # used in: https://github.com/BIDS-Apps/MRtrix3_connectome/blob/master/run.py
+# if [ ! -f $PRD/connectivity/lowb_pseudobrain.nii.gz ]; then
+#   echo "extracting b0 vols for registration: pseudostructural"
+#   dwiextract $PRD/connectivity/dwi.mif -bzero - \
+#   | mrmath - mean - -axis 3 \
+#   | mrcalc 1 - -divide $PRD/connectivity/mask_upsampled.mif -multiply - \
+#   | mrconvert - - -stride -1,+2,+3 \
+#   | mrhistmatch - $PRD/connectivity/brain.nii.gz \
+#                 $PRD/connectivity/lowb_pseudobrain.nii.gz
+#   if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
+#     echo "check pseudo lowb files"
+#     mrview $PRD/connectivity/lowb_pseudobrain.nii.gz \
+#            $PRD/connectivity/lowb.nii.gz -overlay.load \
+#            $PRD/connectivity/lowb_pseudobrain.nii.gz \
+#            -overlay.opacity 0.5 -norealign
+#   fi
+# fi
 
 # aparc+aseg to FSL
 if [ ! -f $PRD/connectivity/aparc+aseg.nii.gz ]; then
@@ -561,7 +578,8 @@ fi
 
 # aparcaseg to diff by inverser transform
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]; then
-  # TOCHECK:6 dof vs 12 dof
+  # 6 dof; see:
+  # http://web.mit.edu/fsl_v5.0.8/fsl/doc/wiki/FLIRT(2f)FAQ.html#What_cost_function_and.2BAC8-or_degrees_of_freedom_.28DOF.29_should_I_use_in_FLIRT.3F
   echo "register aparc+aseg to diff"
   "$FSL"flirt -in $PRD/connectivity/lowb.nii.gz \
               -ref $PRD/connectivity/brain.nii.gz \
