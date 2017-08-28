@@ -139,7 +139,7 @@ else
   echo "SEED parameter is "$SEED"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
-if [ -z "$ASEG" ] || [ "$FSL" != "fs" -a "$FSL" != "fsl" ]; then
+if [ -z "$ASEG" ] || [ "$ASEG" != "fs" -a "$ASEG" != "fsl" ]; then
   echo "set ASEG parameter to fsl" | tee -a "$PRD"/log_processing_parameters.txt
   ASEG="fsl"
 else
@@ -809,6 +809,7 @@ if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$ASEG".mif ]; then
                $FREESURFER_HOME/FreeSurferColorLUT.txt \
                fs_region.txt $PRD/connectivity/aparcaseg_2_diff_fs.mif \
                -force -nthreads "$NB_THREADS"
+  echo "$ASEG"
   if [ "$ASEG" = "fsl" ]; then
     # FS derived subcortical parcellation is too variable and prone to 
     # errors => labelsgmfix) was generated, 
@@ -863,12 +864,12 @@ if [ ! -f $PRD/connectivity/tract_lengths.csv ]; then
   #                 -assignment_radial_search 2 -zero_diagonal -scale_length \
   #                 -stat_edge mean -force -nthreads "$NB_THREADS"
   #else
-    tck2connectome $PRD/connectivity/whole_brain_post.tck \
-                   $PRD/connectivity/aparcaseg_2_diff_"$ASEG".mif \
-                   $PRD/connectivity/tract_lengths.csv \
-                   -assignment_radial_search 2 -zero_diagonal -scale_length \
-                   -stat_edge mean -force -nthreads "$NB_THREADS"
-  fi
+  tck2connectome $PRD/connectivity/whole_brain_post.tck \
+                 $PRD/connectivity/aparcaseg_2_diff_"$ASEG".mif \
+                 $PRD/connectivity/tract_lengths.csv \
+                 -assignment_radial_search 2 -zero_diagonal -scale_length \
+                 -stat_edge mean -force -nthreads "$NB_THREADS"
+  #fi
 fi
 
 # view connectome
@@ -908,7 +909,7 @@ if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
     if [ "$SIFT" = "sift2" ]; then
         tckedit $PRD/connectivity/whole_brain_post.tck \
                 $PRD/connectivity/whole_brain_post_decimated.tck \
-                -tck_weights_in $PRD/connectivity/streamline_weights.csv 
+                -tck_weights_in $PRD/connectivity/streamline_weights.csv \
                 -number $(($NUMBER_TRACKS<100000?$NUMBER_TRACKS:100000))
                 -minweight 1 -force -nthreads "$NB_THREADS"
     else 
@@ -961,12 +962,13 @@ popd > /dev/null
 # Done 
 read -p "Press [Enter] key to continue..." 
 
-# TODO : update sub parcellations
+# TODO : update sub parcellations for mrtrix3
 ###################################################
 # compute sub parcellations connectivity if asked
 if [ -n "$K_LIST" ]; then
   for K in $K_LIST; do
-    curr_K=$(( 2**K ))
+    export curr_K=$(( 2**K ))
+    echo $curr_K
     mkdir -p $PRD/$SUBJ_ID/connectivity_"$curr_K"
     if [ -n "$MATLAB" ]; then
       if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz ]; then
