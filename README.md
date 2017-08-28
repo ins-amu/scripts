@@ -4,10 +4,8 @@
 Please see the [wiki](https://github.com/ins-amu/scripts/wiki)
 
 #### NEW in 0.3:
-- mrtrix3
-- tests
-- corrections
--  ...
+- mrtrix3 and many processing/tractography improvements
+- python 3
 
 #### License
 This poject use the MIT License.
