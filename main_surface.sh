@@ -962,10 +962,12 @@ fi
 cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 
 # compute centers, areas and orientations
-if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]
-then
-    echo "generate useful files for TVB"
-    python compute_connectivity_files.py
+if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]; then
+  echo "generate useful files for TVB"
+  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+                 | cut -f 1 -d " " | xargs printf "%1.f")
+  export stepsize=$( bc -l <<< "scale=2; "$native_voxelsize"/2" )
+  python compute_connectivity_files.py
 fi
 
 # zip to put in final format
