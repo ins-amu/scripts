@@ -870,6 +870,7 @@ if [ ! -f $PRD/connectivity/tract_lengths.csv ]; then
   echo "compute connectivity matrix edge lengths"
   # TODO: I don't think it makes sense for the length to use the SIFT2 weighting
   #if [ "$SIFT" = "sift2" ]; then
+  #  echo "df"
   #  # mean length result: weight by the length, then average
   #  # see: http://community.mrtrix.org/t/tck2connectome-edge-statistic-sift2-questions/1059/2 
   #  # TOCHECK: be careful when applying sift2, as here the mean is 
