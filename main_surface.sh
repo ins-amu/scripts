@@ -75,6 +75,13 @@ else
   echo "FSL parameter is "$FSL"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
+if [ -z "$HCP" ] || [ "$HCP" != "no" -a "$HCP" != "yes" ]; then
+  echo "set HCP parameter to no" | tee -a "$PRD"/log_processing_parameters.txt
+  HCP="no"
+else
+  echo "HCP parameter is "$HCP"" | tee -a "$PRD"/log_processing_parameters.txt
+fi
+
 if [ -z "$CHECK" ] || [ "$CHECK" != "no" -a "$CHECK" != "yes" ]; then
   echo "set CHECK parameter to no"| tee -a "$PRD"/log_processing_parameters.txt
   export CHECK="no"
@@ -151,7 +158,7 @@ if [ -z  "$NB_THREADS" ] || ! [[ "$NUMBER_TRACKS" =~ ^[0-9]+$ ]]; then
     number_threads_mrtrix_conf=$(grep 'NumberOfThreads' ~/.mrtrix.conf | cut -f 2 -d " ")
     if [ -n "$number_threads_mrtrix_conf" ]; then 
       echo "set number of threads to \
-"$number_threads_mrtrix_conf" according to .mrtrix.conf file" | tee -a "$PRD"/log_processing_parameters.txt
+"$number_threads_mrtrix_conf" according to ~/.mrtrix.conf file" | tee -a "$PRD"/log_processing_parameters.txt
       NB_THREADS="$number_threads_mrtrix_conf"
     else
       echo "set number of threads to 1" | tee -a "$PRD"/log_processing_parameters.txt
@@ -165,16 +172,22 @@ else
 echo "number of threads is "$NB_THREADS"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
+#### HCP pre_scripts
+if [ -n "$HCP" ]; then
+  if [ ! -f "$PRD"/connectivity/mask.mif ]; then
+    bash HCP_pre_scripts.sh
+  fi
+fi
+
+
 ######### build cortical surface and region mapping
-if [ ! -f $PRD/data/T1/T1.nii.gz ]
-then
+if [ ! -f $PRD/data/T1/T1.nii.gz ]; then
   echo "generating T1 from DICOM"
   mrconvert $PRD/data/T1/ $PRD/data/T1/T1.nii.gz -nthreads "$NB_THREADS"
 fi
 
 ###################### freesurfer
-if [ ! -d $FS/$SUBJ_ID ] 
-then
+if [ ! -d $FS/$SUBJ_ID ] ; then
   echo "running recon-all of freesurfer"
   recon-all -i $PRD/data/T1/T1.nii.gz -s $SUBJ_ID -all
 fi
@@ -184,9 +197,9 @@ fi
 mkdir -p $PRD/surface
 if [ ! -f $PRD/surface/lh.pial.asc ]; then
   echo "importing left pial surface from freesurfer"
-  mris_convert $FS/$SUBJ_ID/surf/lh.pial $PRD/surface/lh.pial.asc
+  mris_convert "$FS"/"$SUBJ_ID"/surf/lh.pial "$PRD"/surface/lh.pial.asc
   # take care of the c_(ras) shift which is not done by FS (thks FS!)
-  mris_info $FS/$SUBJ_ID/surf/lh.pial >& $PRD/surface/lhinfo.txt
+  mris_info "$FS"/"$SUBJ_ID"/surf/lh.pial >& "$PRD"/surface/lhinfo.txt
 fi
 
 # triangles and vertices high

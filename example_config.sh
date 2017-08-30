@@ -57,6 +57,10 @@ export MCR=/path_to_matlab_runtime_compiler/
 # default: empty
 export FSL=""
 
+# HCP option
+# Set to yes if your data are coming from the Human Connectome Project
+# options: ["no", "yes"]; default: "no"
+export HCP="no"
 
 #### Pipeline parameters
 # The defaults indicates the options chosen by the pipeline if the option is 
