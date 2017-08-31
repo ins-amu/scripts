@@ -10,6 +10,7 @@
 # https://google.github.io/styleguide/shell.xml
 
 # TODO: add explicits echo for what to check in the figures
+# TODO: add the missing mrviews
 
 #### Checks and preset variables
 
@@ -82,7 +83,7 @@ else
   echo "HCP parameter is "$HCP"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
-if [ -z "$CHECK" ] || [ "$CHECK" != "no" -a "$CHECK" != "yes" ]; then
+if [ -z "$CHECK" ] || [ "$CHECK" != "no" -a "$CHECK" != "yes" -a "$CHECK" != "force" ]; then
   echo "set CHECK parameter to no"| tee -a "$PRD"/log_processing_parameters.txt
   export CHECK="no"
 else
@@ -172,9 +173,11 @@ else
 echo "number of threads is "$NB_THREADS"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
-#### HCP pre_scripts
+view_step=0
+
+######## HCP pre_scripts
 if [ -n "$HCP" ]; then
-  if [ ! -f "$PRD"/connectivity/mask.mif ]; then
+  if [ ! -f "$PRD"/connectivity/mask_native.mif ]; then
     bash HCP_pre_scripts.sh
   fi
 fi
@@ -375,6 +378,7 @@ if [ ! -f $PRD/connectivity/predwi_denoised.mif ]; then
   # predwi1 and 2 separately because of a higher no of volumes
   # see: https://github.com/MRtrix3/mrtrix3/issues/747
   echo "denoising dwi data"
+  view_step=1
   dwidenoise $PRD/connectivity/predwi.mif \
              $PRD/connectivity/predwi_denoised.mif \
              -noise $PRD/connectivity/noise.mif -force -nthreads "$NB_THREADS"
@@ -383,22 +387,23 @@ if [ ! -f $PRD/connectivity/predwi_denoised.mif ]; then
     mrcalc $PRD/connectivity/predwi.mif \
            $PRD/connectivity/predwi_denoised.mif \
            -subtract $PRD/connectivity/noise_res.mif -nthreads "$NB_THREADS"
-    # check noise file: lack of anatomy is a marker of accuracy
-    if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-      # noise.mif can also be used for SNR calculation
-      echo "check noise/predwi_*_denoised.mif files"
-      echo "lack of anatomy in noise_res is a marker of accuracy"
-      mrview $PRD/connectivity/predwi.mif \
-             $PRD/connectivity/predwi_denoised.mif \
-             $PRD/connectivity/noise.mif \
-             $PRD/connectivity/noise_res.mif  
-    fi
   fi
+fi
+# check noise file: lack of anatomy is a marker of accuracy
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+  # noise.mif can also be used for SNR calculation
+  echo "check noise/predwi_*_denoised.mif files"
+  echo "lack of anatomy in noise_res is a marker of accuracy"
+  view_step=0
+  mrview $PRD/connectivity/predwi.mif \
+         $PRD/connectivity/predwi_denoised.mif \
+         $PRD/connectivity/noise.mif \
+         $PRD/connectivity/noise_res.mif  
 fi
 
 # topup/eddy corrections
-if [ ! -f $PRD/connectivity/predwi_denoised_preproc.mif ]
-then
+if [ ! -f $PRD/connectivity/predwi_denoised_preproc.mif ]; then
+  view_step=1
   if [ "$TOPUP" = "reversed" ] || [ "$TOPUP" = "eddy_correct" ]; then
     # eddy maybe topup corrections depending of the encoding scheme
     echo "apply eddy and maybe topup"
@@ -407,12 +412,6 @@ then
                -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
                -rpe_header -eddy_options ' --repol' -cuda -force \
                -nthreads "$NB_THREADS"    
-    if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-        echo "check topup/eddy preprocessed mif file"
-        mrview $PRD/connectivity/predwi.mif \
-               $PRD/connectivity/predwi_denoised.mif \
-               $PRD/connectivity/predwi_denoised_preproc.mif 
-    fi
   else # no topup/eddy
     echo "no topup/eddy applied"
     mrconvert $PRD/connectivity/predwi_denoised.mif \
@@ -420,28 +419,31 @@ then
               -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
               -force -nthreads "$NB_THREADS"
   fi
-  # check preproc files
-  if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-    echo "check preprocessed mif file (no topup/no eddy)"
-    mrview $PRD/connectivity/predwi.mif \
-           $PRD/connectivity/predwi_denoised.mif \
-           $PRD/connectivity/predwi_denoised_preproc.mif 
-  fi
+fi
+# check preproc files
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ]  && [ -n "$DISPLAY" ]; then
+  echo "check preprocessed mif file (no topup/no eddy)"
+  view_step=0
+  mrview $PRD/connectivity/predwi.mif \
+         $PRD/connectivity/predwi_denoised.mif \
+         $PRD/connectivity/predwi_denoised_preproc.mif 
 fi
 
 # TOCHECK: Masking step before or after biascorrect?
 # Native-resolution mask creation
 if [ ! -f $PRD/connectivity/mask_native.mif ]; then
   echo "create dwi mask"
+  view_step=1
   dwi2mask $PRD/connectivity/predwi_denoised_preproc.mif \
            $PRD/connectivity/mask_native.mif -nthreads "$NB_THREADS"
-  # check mask file
-  if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-    echo "check native mask mif file"
-    mrview $PRD/connectivity/predwi_denoised_preproc.mif \
-           -overlay.load $PRD/connectivity/mask_native.mif \
-           -overlay.opacity 0.5
-  fi
+fi
+# check mask file
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ]  && [ -n "$DISPLAY" ]; then
+  echo "check native mask mif file"
+  view_step=0
+  mrview $PRD/connectivity/predwi_denoised_preproc.mif \
+         -overlay.load $PRD/connectivity/mask_native.mif \
+         -overlay.opacity 0.5
 fi
 
 # Bias field correction
@@ -463,14 +465,15 @@ if [ ! -f $PRD/connectivity/predwi_denoised_preproc_bias.mif ]; then
                    -bias $PRD/connectivity/B1_bias.mif -fsl -force \
                    -nthreads "$NB_THREADS"
   fi
-  # check bias field correction
-  if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-    echo "check native mask mif file"
-    mrview $PRD/connectivity/predwi.mif \
-           $PRD/connectivity/predwi_denoised_preproc.mif \
-           $PRD/connectivity/predwi_denoised_preproc_bias.mif 
-  fi
 fi
+# check bias field correction
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+  echo "check bias field correction"
+  mrview $PRD/connectivity/predwi.mif \
+         $PRD/connectivity/predwi_denoised_preproc.mif \
+         $PRD/connectivity/predwi_denoised_preproc_bias.mif 
+fi
+
 
 # TOCHECK: why not upsampling to vox=1.25 as recommended in mrtrix?
 # upsampling and reorienting a la fsl
@@ -490,21 +493,24 @@ if [ ! -f $PRD/connectivity/mask.mif ]; then
   # streamline premature termination, see BIDS protocol: 
   # https://github.com/BIDS-Apps/MRtrix3_connectome/blob/master/run.py
   echo "upsample mask"
+  view_step=1
   mrresize $PRD/connectivity/mask_native.mif - -scale 2 -force | \
   mrconvert - $PRD/connectivity/mask.mif -datatype bit -stride -1,+2,+3 \
             -force -nthreads "$NB_THREADS"
   maskfilter $PRD/connectivity/mask.mif dilate \
              $PRD/connectivity/mask_dilated.mif -npass 2 -force \
              -nthreads "$NB_THREADS" 
-  # check upsampled files
-  if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-    echo "check upsampled mif files"
-    mrview $PRD/connectivity/dwi.mif \
-           -overlay.load $PRD/connectivity/mask.mif \
-           -overlay.load $PRD/connectivity/mask_dilated.mif \
-           -overlay.opacity 0.5 -norealign 
-  fi
 fi
+# check upsampled files
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+  echo "check upsampled mif files"
+  view_step=0
+  mrview $PRD/connectivity/dwi.mif \
+         -overlay.load $PRD/connectivity/mask.mif \
+         -overlay.load $PRD/connectivity/mask_dilated.mif \
+         -overlay.opacity 0.5 -norealign 
+fi
+
 
 ## FLIRT registration
 # a comparison of registration methods is available in:
@@ -575,18 +581,20 @@ fi
 # check orientations
 if [ ! -f $PRD/connectivity/aparc+aseg_reorient.nii.gz ]; then
   echo "reorienting the region parcellation"
+  view_step=1
   "$FSL"fslreorient2std $PRD/connectivity/aparc+aseg.nii.gz \
                   $PRD/connectivity/aparc+aseg_reorient.nii.gz
-  # check parcellation to brain.mgz
-  if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-    # TODO: mrview discrete colour scheme?
-    echo "check parcellation"
-    echo "if it's correct, just close the window." 
-    echo "Otherwise... well, it should be correct anyway"
-    mrview $PRD/connectivity/brain.nii.gz \
-           -overlay.load $PRD/connectivity/aparc+aseg_reorient.nii.gz \
-           -overlay.opacity 0.5 -norealign
-  fi
+fi
+# check parcellation to brain.mgz
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+  # TODO: mrview discrete colour scheme?
+  echo "check parcellation"
+  echo "if it's correct, just close the window." 
+  echo "Otherwise... well, it should be correct anyway"
+  view_step=0
+  mrview $PRD/connectivity/brain.nii.gz \
+         -overlay.load $PRD/connectivity/aparc+aseg_reorient.nii.gz \
+         -overlay.opacity 0.5 -norealign
 fi
 
 # aparcaseg to diff by inverser transform
@@ -614,35 +622,39 @@ fi
 # brain to diff by inverse transform
 if [ ! -f $PRD/connectivity/brain_2_diff.nii.gz ]; then
   echo "register brain to diff"
+  view_step=1
   mrtransform $PRD/connectivity/brain.nii.gz \
               $PRD/connectivity/brain_2_diff.nii.gz \
               -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
               -inverse -force 
-  # check parcellation to diff
-  if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]; then
-    echo "check parcellation registration to diffusion space"
-    echo "if it's correct, just close the window."
-    echo "Otherwise you will have to do the registration by hand"
-    mrview $PRD/connectivity/brain_2_diff.nii.gz \
-           $PRD/connectivity/lowb.nii.gz \
-           -overlay.load $PRD/connectivity/aparcaseg_2_diff.nii.gz \
-           -overlay.opacity 0.5 -norealign
-  fi
 fi
+# check parcellation to diff
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+  echo "check parcellation registration to diffusion space"
+  echo "if it's correct, just close the window."
+  echo "Otherwise you will have to do the registration by hand"
+  view_step=0
+  mrview $PRD/connectivity/brain_2_diff.nii.gz \
+         $PRD/connectivity/lowb.nii.gz \
+         -overlay.load $PRD/connectivity/aparcaseg_2_diff.nii.gz \
+         -overlay.opacity 0.5 -norealign
+fi
+
 
 
 # prepare file for act
 if [ "$ACT" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]; then
   echo "prepare files for act"
+  view_step=1
   5ttgen fsl $PRD/connectivity/brain_2_diff.nii.gz $PRD/connectivity/act.mif \
          -premasked -force  -nthreads "$NB_THREADS"
-  if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]
-  then
-      echo "check tissue segmented image"
-      5tt2vis $PRD/connectivity/act.mif $PRD/connectivity/act_vis.mif -force \
-              -nthreads "$NB_THREADS"
-      mrview $PRD/connectivity/act_vis.mif -colourmap 4
-  fi
+  5tt2vis $PRD/connectivity/act.mif $PRD/connectivity/act_vis.mif -force \
+        -nthreads "$NB_THREADS"
+fi
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+    echo "check tissue segmented image"
+    view_step=0
+    mrview $PRD/connectivity/act_vis.mif -colourmap 4
 fi
 
 # Response function estimation
@@ -656,6 +668,7 @@ echo "no of shells are $no_shells"
 if [ "$no_shells" -gt 2 ]; then
 # Multishell
   if [ ! -f $PRD/connectivity/response_wm.txt ]; then
+    view_step=1
     if [ "$ACT" = "yes" ]; then 
       echo "estimating response using msmt algorithm"
       dwi2response msmt_5tt $PRD/connectivity/dwi.mif \
@@ -666,12 +679,6 @@ if [ "$no_shells" -gt 2 ]; then
                    -voxels $PRD/connectivity/RF_voxels.mif \
                    -mask $PRD/connectivity/mask.mif -force \
                    -nthreads "$NB_THREADS"
-      if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]; then
-          echo "check ODF image iwth the selected voxels"
-          mrview $PRD/connectivity/meanlowb.mif \
-                 -overlay.load $PRD/connectivity/RF_voxels.mif \
-                 -overlay.opacity 0.5
-      fi
     else
       echo "estimating response using dhollander algorithm"
       dwi2response dhollander $PRD/connectivity/dwi.mif \
@@ -687,6 +694,7 @@ else
 # Single shell only
   if [ ! -f $PRD/connectivity/response_wm.txt ]; then
     echo "estimating response using dhollander algorithm"
+    view_step=1
     # dwi2response tournier $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -force -voxels $PRD/connectivity/RF_voxels.mif -mask $PRD/connectivity/mask.mif
     dwi2response dhollander $PRD/connectivity/dwi.mif \
                  $PRD/connectivity/response_wm.txt \
@@ -695,13 +703,14 @@ else
                  -voxels $PRD/connectivity/RF_voxels.mif \
                  -mask $PRD/connectivity/mask.mif -force \
                  -nthreads "$NB_THREADS"
-    if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]; then
-      echo "check ODF image"
-      mrview $PRD/connectivity/meanlowb.mif \
-             -overlay.load $PRD/connectivity/RF_voxels.mif \
-             -overlay.opacity 0.5
-    fi
   fi
+fi
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+  echo "check ODF image"
+  view_step=0
+  mrview $PRD/connectivity/meanlowb.mif \
+         -overlay.load $PRD/connectivity/RF_voxels.mif \
+         -overlay.opacity 0.5
 fi
 
 # Fibre orientation distribution estimation
@@ -710,6 +719,7 @@ if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]; then
   # single shell case
   # see: http://community.mrtrix.org/t/wm-odf-and-response-function-with-dhollander-option---single-shell-versus-multi-shell/572/4
   echo "calculating fod on multishell or single shell data"
+  view_step=1
   dwi2fod msmt_csd $PRD/connectivity/dwi.mif \
           $PRD/connectivity/response_wm.txt \
           $PRD/connectivity/wm_CSD$lmax.mif \
@@ -719,21 +729,24 @@ if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]; then
           $PRD/connectivity/csf_CSD$lmax.mif \
           -mask $PRD/connectivity/mask_dilated.mif -force \
           -nthreads "$NB_THREADS"
-  if [ -n "$DISPLAY" ]  && [ "$CHECK" = "yes" ]; then
-    echo "check ODF image"
-    mrconvert $PRD/connectivity/wm_CSD$lmax.mif - -coord 3 0 \
-    -nthreads "$NB_THREADS" \
-    | mrcat $PRD/connectivity/csf_CSD$lmax.mif \
-            $PRD/connectivity/gm_CSD$lmax.mif - \
-            $PRD/connectivity/tissueRGB.mif -axis 3 -nthreads "$NB_THREADS"
-    mrview $PRD/connectivity/tissueRGB.mif \
-           -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif 
-  fi
 fi
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+  echo "check ODF image"
+  view_step=0
+  mrconvert $PRD/connectivity/wm_CSD$lmax.mif - -coord 3 0 \
+  -nthreads "$NB_THREADS" -force \
+  | mrcat $PRD/connectivity/csf_CSD$lmax.mif \
+          $PRD/connectivity/gm_CSD$lmax.mif - \
+          $PRD/connectivity/tissueRGB.mif -axis 3 -nthreads "$NB_THREADS" \
+          -force
+  mrview $PRD/connectivity/tissueRGB.mif \
+         -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif 
+fi
+
 
 # tractography
 if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
-  if [ "$SIFT" = "sift"]; then
+  if [ "$SIFT" = "sift" ]; then
     # temporarily change number of tracks for sift
     number_tracks=$(($NUMBER_TRACKS*$SIFT_MULTIPLIER))
   fi
@@ -881,6 +894,7 @@ fi
 
 if [ ! -f $PRD/connectivity/tract_lengths.csv ]; then
   echo "compute connectivity matrix edge lengths"
+  view_step=1
   # TODO: I don't think it makes sense for the length to use the SIFT2 weighting
   #if [ "$SIFT" = "sift2" ]; then
   #  echo "df"
@@ -905,7 +919,7 @@ if [ ! -f $PRD/connectivity/tract_lengths.csv ]; then
 fi
 
 # view connectome
-if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "view connectome edges as lines or streamlines"
   if [ ! -f $PRD/connectivity/exemplars.tck ]; then
     if [ "$SIFT" = "sift2" ]; then
@@ -931,8 +945,9 @@ if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
 fi
 
 # view tractogram and tdi
-if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
+if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "view tractogram and tdi image"
+  view_step=0
   if [ ! -f $PRD/connectivity/whole_brain_post_decimated.tck ]; then
     # $(( number_tracks/100)) this follows some recommendations by 
     # JD Tournier to avoid mrview to be to slow
@@ -942,7 +957,7 @@ if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
         tckedit $PRD/connectivity/whole_brain_post.tck \
                 $PRD/connectivity/whole_brain_post_decimated.tck \
                 -tck_weights_in $PRD/connectivity/streamline_weights.csv \
-                -number $(($NUMBER_TRACKS<100000?$NUMBER_TRACKS:100000))
+                -number $(($NUMBER_TRACKS<100000?$NUMBER_TRACKS:100000)) \
                 -minweight 1 -force -nthreads "$NB_THREADS"
     else 
         tckedit $PRD/connectivity/whole_brain_post.tck \

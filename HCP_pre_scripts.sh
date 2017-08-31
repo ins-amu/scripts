@@ -29,24 +29,37 @@ mv "$PRD"/"$SUBJ_ID"/T1w/"$SUBJ_ID"/* "$FS"/"$SUBJ_ID"/
 mkdir -p "$PRD"/connectivity
 
 # TODO: FS files or HCP files?
-touch "$PRD"/connectivity/predwi.mif
-touch "$PRD"/connectivity/predwi_denoised.mif
-touch "$PRD"/connectivity/predwi_denoised_preproc.mif
-touch "$PRD"/connectivity/predwi_denoised_preproc_bias.mif
-touch "$PRD"/connectivity/mask_native.mif
-touch "$PRD"/connectivity/lowb.nii.gz
-touch "$PRD"/connectivity/brain.nii.gz
-touch "$PRD"/connectivity/aparc+aseg.nii.gz
-touch "$PRD"/connectivity/aparc+aseg_reorient.nii.gz
 
+cp "$PRD"/"$SUBJ_ID"/T1w/aparc+aseg.nii.gz "$PRD"/connectivity/aparc+aseg.nii.gz
+cp "$PRD"/"$SUBJ_ID"/T1w/aparc+aseg.nii.gz "$PRD"/connectivity/aparc+aseg_reorient.nii.gz
 cp "$PRD"/"$SUBJ_ID"/T1w/aparc+aseg.nii.gz "$PRD"/connectivity/aparcaseg_2_diff.nii.gz
+cp "$PRD"/"$SUBJ_ID"/T1w/T1w_acpc_dc_restore_brain.nii.gz "$PRD"/connectivity/brain.nii.gz
 cp "$PRD"/"$SUBJ_ID"/T1w/T1w_acpc_dc_restore_brain.nii.gz "$PRD"/connectivity/brain_2_diff.nii.gz
 cp "$PRD"/"$SUBJ_ID"/T1w/Diffusion/bvecs "$PRD"/connectivity/bvecs
 cp "$PRD"/"$SUBJ_ID"/T1w/Diffusion/bvals "$PRD"/connectivity/bvals
 
-mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz "$PRD"/connectivity/dwi.mif \
-          -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals -datatype float32 -stride 0,0,0,1
-mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/nodif_brain_mask.nii.gz "$PRD"/connectivity/mask.mif \
-          -datatype float32 -stride 0,0,1
+mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
+          "$PRD"/connectivity/predwi.mif \
+          -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
+          -datatype float32 -stride 0,0,0,1 -force
+mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
+          "$PRD"/connectivity/predwi_denoised.mif \
+          -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
+          -datatype float32 -stride 0,0,0,1 -force
+mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
+          "$PRD"/connectivity/predwi_denoised_preproc.mif \
+          -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
+          -datatype float32 -stride 0,0,0,1 -force
+mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
+          "$PRD"/connectivity/predwi_denoised_preproc_bias.mif \
+          -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
+          -datatype float32 -stride 0,0,0,1 -force
+mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
+          "$PRD"/connectivity/predwi_denoised_preproc_bias.mif \
+          -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
+          -datatype float32 -stride 0,0,0,1 -force
+mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/nodif_brain_mask.nii.gz \
+          "$PRD"/connectivity/mask_native.mif -datatype float32 \
+          -stride 0,0,1 -force
 
 rm -r "$PRD"/"$SUBJ_ID"/

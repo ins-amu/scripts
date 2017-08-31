@@ -68,7 +68,7 @@ export HCP="no"
 
 # check the processed data when the pipeline is running
 # (you need a display and mrview installed) 
-# options: ["yes"/"no"]; default: "no"
+# options: ["yes"/"no"/"force"]; default: "no"
 export CHECK="no"
 
 # This parameter is important for the correction of the region mapping. 
