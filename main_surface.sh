@@ -865,11 +865,6 @@ if [ ! -f $PRD/connectivity/weights.csv ]; then
   echo "compute connectivity matrix weights"
   if [ "$SIFT" = "sift2" ]; then
     # -tck_weights_in flag only needed for sift2 but not for sift/no processing
-    # TOCHECK:  mrtrix3 currently generates upper_triangular weights 
-    # matrices, need to add -symmetric flag if needed, also -zero_diagonal 
-    # if needed (did not see that in the original code)
-    # I think I do the symmetric in the compute_connectivity files.py
-    # diagonal we want to keep it
     tck2connectome $PRD/connectivity/whole_brain_post.tck \
                    $PRD/connectivity/aparcaseg_2_diff_"$ASEG".mif \
                    $PRD/connectivity/weights.csv -assignment_radial_search 2 \
