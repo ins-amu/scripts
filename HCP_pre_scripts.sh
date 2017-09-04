@@ -41,25 +41,25 @@ cp "$PRD"/"$SUBJ_ID"/T1w/Diffusion/bvals "$PRD"/connectivity/bvals
 mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
           "$PRD"/connectivity/predwi.mif \
           -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
-          -datatype float32 -stride 0,0,0,1 -force
+          -datatype float32 -force
 mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
           "$PRD"/connectivity/predwi_denoised.mif \
           -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
-          -datatype float32 -stride 0,0,0,1 -force
+          -datatype float32 -force
 mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
           "$PRD"/connectivity/predwi_denoised_preproc.mif \
           -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
-          -datatype float32 -stride 0,0,0,1 -force
+          -datatype float32 -force
 mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
           "$PRD"/connectivity/predwi_denoised_preproc_bias.mif \
           -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
-          -datatype float32 -stride 0,0,0,1 -force
+          -datatype float32 -force
 mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
           "$PRD"/connectivity/predwi_denoised_preproc_bias.mif \
           -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
-          -datatype float32 -stride 0,0,0,1 -force
+          -datatype float32 -force
 mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/nodif_brain_mask.nii.gz \
           "$PRD"/connectivity/mask_native.mif -datatype float32 \
-          -stride 0,0,1 -force
+          -force
 
 rm -r "$PRD"/"$SUBJ_ID"/

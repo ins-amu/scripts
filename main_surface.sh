@@ -11,6 +11,7 @@
 
 # TODO: add explicits echo for what to check in the figures
 # TODO: add the missing mrviews
+# TOCHECK: test/retest
 
 #### Checks and preset variables
 
@@ -211,7 +212,7 @@ if [ ! -f $PRD/surface/lh_vertices_high.txt ]; then
   python extract_high.py lh
 fi
 
-# decimation using brainvisa
+# decimation using remesher
 if [ ! -f $PRD/surface/lh_vertices_low.txt ]; then
   echo "left decimation using remesher"
   # -> to mesh
@@ -222,14 +223,10 @@ if [ ! -f $PRD/surface/lh_vertices_low.txt ]; then
   python off2txt.py $PRD/surface/lh_low.off $PRD/surface/lh_vertices_low.txt $PRD/surface/lh_triangles_low.txt
 fi
 
-# create left the region mapping
+# create the left region mapping
 if [ ! -f $PRD/surface/lh_region_mapping_low_not_corrected.txt ]; then
   echo "generating the left region mapping on the decimated surface"
-  if [ -n "$MATLAB" ]; then
-      $MATLAB -r "rl='lh';run region_mapping.m; quit;" -nodesktop -nodisplay
-  else
-      sh region_mapping/distrib/run_region_mapping.sh $MCR
-  fi
+  python region_mapping.py lh
 fi
 
 # correct
@@ -266,14 +263,10 @@ if [ ! -f $PRD/surface/rh_vertices_low.txt ]; then
   python off2txt.py $PRD/surface/rh_low.off $PRD/surface/rh_vertices_low.txt $PRD/surface/rh_triangles_low.txt
 fi
 
+# create the right region mapping
 if [ ! -f $PRD/surface/rh_region_mapping_low_not_corrected.txt ]; then
   echo "generating the right region mapping on the decimated surface"
-  # create left the region mapping
-  if [ -n "$MATLAB" ]; then
-      $MATLAB -r "rl='rh'; run region_mapping.m; quit;" -nodesktop -nodisplay
-  else
-      sh region_mapping/distrib/run_region_mapping.sh $MCR
-  fi
+  python region_mapping.py rh
 fi
 
 # correct
@@ -477,7 +470,7 @@ fi
 
 # TOCHECK: why not upsampling to vox=1.25 as recommended in mrtrix?
 # upsampling and reorienting a la fsl
-# reorienting from DiCOM to FSL, RAS to LAS, means -stride -1,+2,+3,+4
+# reorienting from mrtrix to FSL, RAS to LAS, means -stride -1,+2,+3,+4
 # see: http://mrtrix.readthedocs.io/en/latest/getting_started/image_data.html
 # upsampling (Dyrby TB. Neuroimage. 2014 Dec;103:202-13.) can help registration
 # with structural and is common with mrtrix3 fixel analysis pipeline
@@ -751,7 +744,7 @@ if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
     number_tracks=$(($NUMBER_TRACKS*$SIFT_MULTIPLIER))
   fi
   native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
-                   | cut -f 1 -d " " | xargs printf "%1.f")
+                   | cut -f 1 -d " " | xargs printf "%.3f")
   stepsize=$( bc -l <<< "scale=2; "$native_voxelsize"/2" )
   angle=$( bc -l <<< "scale=2; 90*"$stepsize"/"$native_voxelsize"" )
   if [ "$ACT" = "yes" ]; then
@@ -895,27 +888,15 @@ fi
 if [ ! -f $PRD/connectivity/tract_lengths.csv ]; then
   echo "compute connectivity matrix edge lengths"
   view_step=1
-  # TODO: I don't think it makes sense for the length to use the SIFT2 weighting
-  #if [ "$SIFT" = "sift2" ]; then
-  #  echo "df"
-  #  # mean length result: weight by the length, then average
-  #  # see: http://community.mrtrix.org/t/tck2connectome-edge-statistic-sift2-questions/1059/2 
-  #  # TOCHECK: be careful when applying sift2, as here the mean is 
-  #  # sum(streamline length * streamline weight)/no streamlines, a bit more
-  #  # fuzzy to interpret than with sift, however left it as option
-  #  tck2connectome $PRD/connectivity/whole_brain_post.tck \
-  #                 $PRD/connectivity/aparcaseg_2_diff_$ASEG.mif \
-  #                 $PRD/connectivity/tract_lengths.csv \
-  #                 -tck_weights_in $PRD/connectivity/streamline_weights.csv \
-  #                 -assignment_radial_search 2 -zero_diagonal -scale_length \
-  #                 -stat_edge mean -force -nthreads "$NB_THREADS"
-  #else
+  # mean length result: weight by the length, then average
+  # see: http://community.mrtrix.org/t/tck2connectome-edge-statistic-sift2-questions/1059/2 
+  # Not applying sift2, as here the mean is \
+  # sum(streamline length * streamline weight)/no streamlines, does not make sense
   tck2connectome $PRD/connectivity/whole_brain_post.tck \
                  $PRD/connectivity/aparcaseg_2_diff_"$ASEG".mif \
                  $PRD/connectivity/tract_lengths.csv \
                  -assignment_radial_search 2 -zero_diagonal -scale_length \
                  -stat_edge mean -force -nthreads "$NB_THREADS"
-  #fi
 fi
 
 # view connectome
@@ -993,9 +974,6 @@ cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 # compute centers, areas and orientations
 if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]; then
   echo "generate useful files for TVB"
-  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
-                 | cut -f 1 -d " " | xargs printf "%1.f")
-  export stepsize=$( bc -l <<< "scale=2; "$native_voxelsize"/2" )
   python compute_connectivity_files.py
 fi
 
@@ -1007,12 +985,7 @@ zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt \
 popd > /dev/null 
 
 
-
-# Done 
-read -p "Press [Enter] key to continue..." 
-
-# TODO : update sub parcellations for mrtrix3
-###################################################
+################### subparcellations
 # compute sub parcellations connectivity if asked
 if [ -n "$K_LIST" ]; then
   for K in $K_LIST; do
@@ -1031,18 +1004,44 @@ if [ -n "$K_LIST" ]; then
       gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
       fi
     fi
-    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif ]
-    then
-      labelconfig $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz $PRD/connectivity/corr_mat_"$curr_K".txt $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif  -lut_basic $PRD/connectivity/corr_mat_"$curr_K".txt
+    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif ]; then
+      mrconvert $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz \
+                   $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif \
+                   -datatype float32 -force
     fi
-    if [ ! -f $PRD/connectivity/weights_$curr_K.csv ]
-    then
+    if [ ! -f $PRD/connectivity/weights_"$curr_K".csv ]; then
       echo "compute connectivity sub matrix using act"
-      tck2connectome $PRD/connectivity/whole_brain_post.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/weights_"$curr_K".csv -assignment_radial_search 2
-      tck2connectome  $PRD/connectivity/whole_brain_post.tck $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif $PRD/connectivity/tract_lengths_"$curr_K".csv -metric meanlength -assignment_radial_search 2 -zero_diagonal 
+      if [ "$SIFT" = "sift2" ]; then
+      # -tck_weights_in flag only needed for sift2 but not for sift/no processing
+      tck2connectome $PRD/connectivity/whole_brain_post.tck \
+                     $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif \
+                     $PRD/connectivity/weights_"$curr_K".csv -assignment_radial_search 2 \
+                     -out_assignments $PRD/connectivity/edges_2_nodes_"$curr_K".csv \
+                     -tck_weights_in $PRD/connectivity/streamline_weights.csv \
+                     -force -nthreads "$NB_THREADS"
+      else
+      tck2connectome $PRD/connectivity/whole_brain_post.tck \
+                     $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif \
+                     $PRD/connectivity/weights.csv -assignment_radial_search 2 \
+                     -out_assignments $PRD/connectivity/edges_2_nodes_"$curr_K".csv \
+                     -force -nthreads "$NB_THREADS"
+      fi
     fi
-    if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt ]
-    then
+    if [ ! -f $PRD/connectivity/tract_lengths_"$curr_K".csv ]; then
+      echo "compute connectivity matrix edge lengths"
+      view_step=1
+      # mean length result: weight by the length, then average
+      # see: http://community.mrtrix.org/t/tck2connectome-edge-statistic-sift2-questions/1059/2 
+      # Not applying sift2, as here the mean is \
+      # sum(streamline length * streamline weight)/no streamlines, does not make sense
+      tck2connectome $PRD/connectivity/whole_brain_post.tck \
+                     $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif \
+                     $PRD/connectivity/tract_lengths_"$curr_K".csv \
+                     -assignment_radial_search 2 -zero_diagonal -scale_length \
+                     -stat_edge mean -force -nthreads "$NB_THREADS"
+      #fi
+    fi
+    if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt ]; then
       echo "generate files for TVB subparcellations"
       python compute_connectivity_sub.py $PRD/connectivity/weights_"$curr_K".csv $PRD/connectivity/tract_lengths_"$curr_K".csv $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt $PRD/$SUBJ_ID/connectivity_"$curr_K"/tract_lengths.txt
     fi
