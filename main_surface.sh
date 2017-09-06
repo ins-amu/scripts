@@ -321,45 +321,6 @@ $choice
 EOF
 }
 
-# TODO detect phase encoding automatically
-# handle encoding scheme
-#if [ ! -f $PRD/connectivity/predwi.mif ]; then 
-#  if [ "$TOPUP" = "reversed" ]; then
-#    echo "generate dwi mif file for use with reversed phase encoding"
-#    echo "(use of fsl topup)"
-#    # strides are arranged to make volume data contiguous in memory for
-#    # each voxel
-#    # float 32 to make data access faster in subsequent commands
-#    mrchoose 0 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_1.mif \
-#                         -datatype float32 -stride 0,0,0,1 -force \
-#                         -nthreads "$NB_THREADS"
-#    mrchoose 1 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_2.mif \
-#                         -datatype float32 -stride 0,0,0,1 -force \
-#                         -nthreads "$NB_THREADS"
-#    # check mif files
-#    if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-#        echo "check predwi_*.mif files"
-#        mrview $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi_2.mif
-#    fi
-#    # recombining PE dir files 
-#    mrcat $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi_2.mif \
-#          $PRD/connectivity/predwi.mif -axis 3 -nthreads "$NB_THREADS"
-#    mrinfo $PRD/connectivity/predwi.mif \
-#           -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
-#           -export_pe_table $PRD/connectivity/pe_table -force 
-#  else
-#    echo "generate dwi mif file for use without topup (fsl)"
-#    mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi.mif \
-#              -export_pe_table $PRD/connectivity/pe_table \
-#              -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
-#              -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"
-#  fi
-#  # check mif file
-#  if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-#      echo "check predwi_*.mif file"
-#      mrview $PRD/connectivity/predwi.mif 
-#  fi
-#fi
 # handle encoding scheme
 if [ ! -f $PRD/connectivity/predwi.mif ]; then 
   view_step=1
@@ -393,6 +354,9 @@ if [ ! -f $PRD/connectivity/predwi.mif ]; then
       read select_images
     done
   done
+  mrinfo $PRD/connectivity/predwi.mif \
+        -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
+        -export_pe_table $PRD/connectivity/pe_table -force 
 fi
 if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   view_step=0
