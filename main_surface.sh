@@ -312,8 +312,6 @@ mkdir -p $PRD/$SUBJ_ID/connectivity
 ## preprocessing
 # See: http://mrtrix.readthedocs.io/en/0.3.16/workflows/DWI_preprocessing_for_quantitative_analysis.html
 
-# TODO: add HCP data
-
 # if single acquisition  with reversed directions
 function mrchoose () {
   choice=$1
@@ -325,43 +323,83 @@ EOF
 
 # TODO detect phase encoding automatically
 # handle encoding scheme
+#if [ ! -f $PRD/connectivity/predwi.mif ]; then 
+#  if [ "$TOPUP" = "reversed" ]; then
+#    echo "generate dwi mif file for use with reversed phase encoding"
+#    echo "(use of fsl topup)"
+#    # strides are arranged to make volume data contiguous in memory for
+#    # each voxel
+#    # float 32 to make data access faster in subsequent commands
+#    mrchoose 0 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_1.mif \
+#                         -datatype float32 -stride 0,0,0,1 -force \
+#                         -nthreads "$NB_THREADS"
+#    mrchoose 1 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_2.mif \
+#                         -datatype float32 -stride 0,0,0,1 -force \
+#                         -nthreads "$NB_THREADS"
+#    # check mif files
+#    if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
+#        echo "check predwi_*.mif files"
+#        mrview $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi_2.mif
+#    fi
+#    # recombining PE dir files 
+#    mrcat $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi_2.mif \
+#          $PRD/connectivity/predwi.mif -axis 3 -nthreads "$NB_THREADS"
+#    mrinfo $PRD/connectivity/predwi.mif \
+#           -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
+#           -export_pe_table $PRD/connectivity/pe_table -force 
+#  else
+#    echo "generate dwi mif file for use without topup (fsl)"
+#    mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi.mif \
+#              -export_pe_table $PRD/connectivity/pe_table \
+#              -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
+#              -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"
+#  fi
+#  # check mif file
+#  if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
+#      echo "check predwi_*.mif file"
+#      mrview $PRD/connectivity/predwi.mif 
+#  fi
+#fi
+# handle encoding scheme
 if [ ! -f $PRD/connectivity/predwi.mif ]; then 
-  if [ "$TOPUP" = "reversed" ]; then
-    echo "generate dwi mif file for use with reversed phase encoding"
-    echo "(use of fsl topup)"
-    # strides are arranged to make volume data contiguous in memory for
-    # each voxel
-    # float 32 to make data access faster in subsequent commands
-    mrchoose 0 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_1.mif \
-                         -datatype float32 -stride 0,0,0,1 -force \
-                         -nthreads "$NB_THREADS"
-    mrchoose 1 mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_2.mif \
-                         -datatype float32 -stride 0,0,0,1 -force \
-                         -nthreads "$NB_THREADS"
-    # check mif files
-    if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-        echo "check predwi_*.mif files"
-        mrview $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi_2.mif
-    fi
-    # recombining PE dir files 
-    mrcat $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi_2.mif \
-          $PRD/connectivity/predwi.mif -axis 3 -nthreads "$NB_THREADS"
-    mrinfo $PRD/connectivity/predwi.mif \
-           -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
-           -export_pe_table $PRD/connectivity/pe_table -force 
-  else
-    echo "generate dwi mif file for use without topup (fsl)"
-    mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi.mif \
+  view_step=1
+  select_images="n"
+  i_im=1
+  echo "generate dwi mif file"
+  echo "if asked, please select a series of images by typing a number"
+  mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_"$i_im".mif \
+            -export_pe_table $PRD/connectivity/pe_table \
+            -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
+            -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"  
+  echo "Do you want to add another image serie (different phase encoding)? [y, n]"
+  read select_images
+  while [ "$select_images" != "y" ] && [ "$select_images" != "n" ]; do
+    echo " please answer y or n"
+    read select_images
+  done
+  cp $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi.mif
+  while [ "$select_images" == "y" ]; do
+    i_im=$(($i_im + 1))
+    mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_"$i_im".mif \
               -export_pe_table $PRD/connectivity/pe_table \
               -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
               -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"
-  fi
-  # check mif file
-  if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-      echo "check predwi_*.mif file"
-      mrview $PRD/connectivity/predwi.mif 
-  fi
+    mrcat $PRD/connectivity/predwi.mif $PRD/connectivity/predwi_"$i_im".mif \
+          $PRD/connectivity/predwi.mif -axis 3 -nthreads "$NB_THREADS" -force
+    echo "Do you want to add another image serie (different phase encoding)? [y, n]"
+    read select_images
+    while [ "$select_images" != "y" ] && [ "$select_images" != "n" ]; do
+      echo " please answer y or n"
+      read select_images
+    done
+  done
 fi
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+  view_step=0
+  echo "check predwi_*.mif files"
+  mrview $PRD/connectivity/predwi_*.mif
+fi
+
 
 
 
@@ -383,7 +421,7 @@ if [ ! -f $PRD/connectivity/predwi_denoised.mif ]; then
   fi
 fi
 # check noise file: lack of anatomy is a marker of accuracy
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   # noise.mif can also be used for SNR calculation
   echo "check noise/predwi_*_denoised.mif files"
   echo "lack of anatomy in noise_res is a marker of accuracy"
@@ -414,7 +452,7 @@ if [ ! -f $PRD/connectivity/predwi_denoised_preproc.mif ]; then
   fi
 fi
 # check preproc files
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ]  && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ]  && [ -n "$DISPLAY" ]; then
   echo "check preprocessed mif file (no topup/no eddy)"
   view_step=0
   mrview $PRD/connectivity/predwi.mif \
@@ -431,7 +469,7 @@ if [ ! -f $PRD/connectivity/mask_native.mif ]; then
            $PRD/connectivity/mask_native.mif -nthreads "$NB_THREADS"
 fi
 # check mask file
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ]  && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ]  && [ -n "$DISPLAY" ]; then
   echo "check native mask mif file"
   view_step=0
   mrview $PRD/connectivity/predwi_denoised_preproc.mif \
@@ -460,7 +498,7 @@ if [ ! -f $PRD/connectivity/predwi_denoised_preproc_bias.mif ]; then
   fi
 fi
 # check bias field correction
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "check bias field correction"
   mrview $PRD/connectivity/predwi.mif \
          $PRD/connectivity/predwi_denoised_preproc.mif \
@@ -495,7 +533,7 @@ if [ ! -f $PRD/connectivity/mask.mif ]; then
              -nthreads "$NB_THREADS" 
 fi
 # check upsampled files
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "check upsampled mif files"
   view_step=0
   mrview $PRD/connectivity/dwi.mif \
@@ -579,7 +617,7 @@ if [ ! -f $PRD/connectivity/aparc+aseg_reorient.nii.gz ]; then
                   $PRD/connectivity/aparc+aseg_reorient.nii.gz
 fi
 # check parcellation to brain.mgz
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   # TODO: mrview discrete colour scheme?
   echo "check parcellation"
   echo "if it's correct, just close the window." 
@@ -622,7 +660,7 @@ if [ ! -f $PRD/connectivity/brain_2_diff.nii.gz ]; then
               -inverse -force 
 fi
 # check parcellation to diff
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "check parcellation registration to diffusion space"
   echo "if it's correct, just close the window."
   echo "Otherwise you will have to do the registration by hand"
@@ -644,7 +682,7 @@ if [ "$ACT" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]; then
   5tt2vis $PRD/connectivity/act.mif $PRD/connectivity/act_vis.mif -force \
         -nthreads "$NB_THREADS"
 fi
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
     echo "check tissue segmented image"
     view_step=0
     mrview $PRD/connectivity/act_vis.mif -colourmap 4
@@ -698,7 +736,7 @@ else
                  -nthreads "$NB_THREADS"
   fi
 fi
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "check ODF image"
   view_step=0
   mrview $PRD/connectivity/meanlowb.mif \
@@ -723,7 +761,7 @@ if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]; then
           -mask $PRD/connectivity/mask_dilated.mif -force \
           -nthreads "$NB_THREADS"
 fi
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "check ODF image"
   view_step=0
   mrconvert $PRD/connectivity/wm_CSD$lmax.mif - -coord 3 0 \
@@ -895,7 +933,7 @@ if [ ! -f $PRD/connectivity/tract_lengths.csv ]; then
 fi
 
 # view connectome
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "view connectome edges as lines or streamlines"
   if [ ! -f $PRD/connectivity/exemplars.tck ]; then
     if [ "$SIFT" = "sift2" ]; then
@@ -921,7 +959,7 @@ if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DIS
 fi
 
 # view tractogram and tdi
-if [ view_step = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "view tractogram and tdi image"
   view_step=0
   if [ ! -f $PRD/connectivity/whole_brain_post_decimated.tck ]; then
