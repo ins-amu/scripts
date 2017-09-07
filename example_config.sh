@@ -101,7 +101,7 @@ export NUMBER_TRACKS=10000000
 # this depends of you images
 # be careful with "reversed", depending on your data, 
 # you may have to change the main_surface script
-# options: ["no", "reversed", "eddy_correct"], default: "eddy_correct"
+# options: ["no", "eddy_correct"], default: "eddy_correct"
 export TOPUP="no"
 
 # use Anatomically Constrained Tractography (yes/no)

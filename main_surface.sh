@@ -113,7 +113,7 @@ else
   echo "K_LIST parameter is "$K_LIST"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
-if [ -z "$TOPUP" ] || [ "$TOPUP" != "no" -a "$TOPUP" != "reversed"  -a "$TOPUP" != "eddy_correct" ]; then
+if [ -z "$TOPUP" ] || [ "$TOPUP" != "no" -a "$TOPUP" != "eddy_correct" ]; then
   echo "set TOPUP parameter to no" | tee -a "$PRD"/log_processing_parameters.txt
   TOPUP="no"
 else
@@ -312,15 +312,6 @@ mkdir -p $PRD/$SUBJ_ID/connectivity
 ## preprocessing
 # See: http://mrtrix.readthedocs.io/en/0.3.16/workflows/DWI_preprocessing_for_quantitative_analysis.html
 
-# if single acquisition  with reversed directions
-function mrchoose () {
-  choice=$1
-  shift
-  $@ << EOF
-$choice
-EOF
-}
-
 # handle encoding scheme
 if [ ! -f $PRD/connectivity/predwi.mif ]; then 
   view_step=1
@@ -364,9 +355,6 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
   mrview $PRD/connectivity/predwi_*.mif
 fi
 
-
-
-
 # denoising the volumes
 if [ ! -f $PRD/connectivity/predwi_denoised.mif ]; then
   # denoising the combined-directions file is preferable to denoising \
@@ -399,9 +387,9 @@ fi
 # topup/eddy corrections
 if [ ! -f $PRD/connectivity/predwi_denoised_preproc.mif ]; then
   view_step=1
-  if [ "$TOPUP" = "reversed" ] || [ "$TOPUP" = "eddy_correct" ]; then
+  if [ "$TOPUP" = "eddy_correct" ]; then
     # eddy maybe topup corrections depending of the encoding scheme
-    echo "apply eddy and maybe topup"
+    echo "apply eddy and maybe topup if reverse phase-encoding scheme"
     dwipreproc $PRD/connectivity/predwi_denoised.mif \
                $PRD/connectivity/predwi_denoised_preproc.mif \
                -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
