@@ -1045,10 +1045,13 @@ fi
 # make BEM surfaces
 if [ ! -h ${FS}/${SUBJ_ID}/bem/inner_skull.surf ]; then
   echo "generating bem surfaces"
-  mne_watershed_bem --subject ${SUBJ_ID}
-  ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_inner_skull_surface ${FS}/${SUBJ_ID}/bem/inner_skull.surf
-  ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skin_surface  ${FS}/${SUBJ_ID}/bem/outer_skin.surf
-  ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skull_surface ${FS}/${SUBJ_ID}/bem/outer_skull.surf
+  mne_watershed_bem --subject ${SUBJ_ID} --overwrite
+  ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_inner_skull_surface \
+        ${FS}/${SUBJ_ID}/bem/inner_skull.surf
+  ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skin_surface  \
+        ${FS}/${SUBJ_ID}/bem/outer_skin.surf
+  ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skull_surface \
+        ${FS}/${SUBJ_ID}/bem/outer_skull.surf
 fi
 
 # export to ascii
@@ -1070,12 +1073,16 @@ fi
 if [ ! -f ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif ]; then
   echo "generating head bem"
   mkheadsurf -s $SUBJ_ID
-  mne_surf2bem --surf ${FS}/${SUBJ_ID}/surf/lh.seghead --id 4 --check --fif ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif 
+  mne_surf2bem --surf ${FS}/${SUBJ_ID}/surf/lh.seghead --id 4 --check \
+               --fif ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif --overwrite
 fi
 
 if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
   echo "check bem surfaces"
-  freeview -v ${FS}/${SUBJ_ID}/mri/T1.mgz -f ${FS}/${SUBJ_ID}/bem/inner_skull.surf:color=yellow:edgecolor=yellow ${FS}/${SUBJ_ID}/bem/outer_skull.surf:color=blue:edgecolor=blue ${FS}/${SUBJ_ID}/bem/outer_skin.surf:color=red:edgecolor=red
+  freeview -v ${FS}/${SUBJ_ID}/mri/T1.mgz \
+           -f ${FS}/${SUBJ_ID}/bem/inner_skull.surf:color=yellow:edgecolor=yellow \
+           ${FS}/${SUBJ_ID}/bem/outer_skull.surf:color=blue:edgecolor=blue \
+           ${FS}/${SUBJ_ID}/bem/outer_skin.surf:color=red:edgecolor=red
 fi
 
 # Setup BEM
@@ -1085,14 +1092,17 @@ if [ ! -f ${FS}/${SUBJ_ID}/bem/*-bem.fif ]; then
   while [ "$worked" == 0 ]; do
     echo "try generate forward model with 0 shift"
     worked=1
-    mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift $outershift || worked=0 
+    mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 \
+                            --outershift $outershift || worked=0 
     if [ "$worked" == 0 ]; then
       echo "try generate foward model with 1 shift"
       worked=1
-      mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift 1 || worked=0 
+      mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift 1 \
+      || worked=0 
     fi
     if [ "$worked" == 0 ] && [ "$CHECK" = "yes" ]; then
-      echo 'you can try using a different shifting value for outer skull, please enter a value in mm'
+      echo 'you can try using a different shifting value for outer skull, 
+           please enter a value in mm'
       read outershift;
       echo $outershift
     elif [ "$worked" == 0 ]; then
