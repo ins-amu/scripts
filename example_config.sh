@@ -71,6 +71,10 @@ export HCP="no"
 # options: ["yes"/"no"/"force"]; default: "no"
 export CHECK="no"
 
+# Methods for the FLIRT registration
+# options: ["regular"/"boundary"/"pseudo"]; default: "regular"
+export REGISTRATION="regular"
+
 # This parameter is important for the correction of the region mapping. 
 # Between 0 and 1. The bigger it is, the bigger is the correction. 
 # (only import for the surface pipeline: main_surface.sh)

@@ -91,6 +91,13 @@ else
   echo "CHECK parameter is "$CHECK""| tee -a "$PRD"/log_processing_parameters.txt
 fi
 
+if [ -z "$REGISTRATION" ]; then
+  echo "set REGISTRATION parameter to regular"| tee -a "$PRD"/log_processing_parameters.txt
+  REGISTRATION="regular"
+else
+  echo "REGISTRATION parameter is "$REGISTRATION""| tee -a "$PRD"/log_processing_parameters.txt
+fi
+
 if [ -z "$REGION_MAPPING_CORR" ]; then
   echo "set REGION_MAPPING_CORR parameter to 0.42"| tee -a "$PRD"/log_processing_parameters.txt
   export REGION_MAPPING_CORR=0.42
@@ -498,22 +505,44 @@ fi
 ## FLIRT registration
 # a comparison of registration methods is available in:
 # Ou Y, et al. IEEE Trans Med Imaging. 2014 Oct;33(10):2039-65
-# other potentials methods for registration TOCHECK include
-# FLIRT -bbr (Kerstin's protocol): http://community.mrtrix.org/t/registration-of-structural-and-diffusion-weighted-data/203/8
-# bbregister (FS)
+# FLIRT -bbr (Kerstin's protocol):
+# http://community.mrtrix.org/t/registration-of-structural-and-diffusion-weighted-data/203/8
+
 
 # low b extraction to FSL
 if [ ! -f $PRD/connectivity/lowb.nii.gz ]; then
-  echo "extracting b0 vols for registration"
-  dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif \
-             -bzero -force -nthreads "$NB_THREADS" 
-  # stride from mrtrix to FSL, RAS to LAS
-  # see: http://mrtrix.readthedocs.io/en/latest/getting_started/image_data.html
-  mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz \
-            -stride -1,+2,+3,+4 -force -nthreads "$NB_THREADS" 
-  # for visualization 
-  mrmath  $PRD/connectivity/lowb.mif mean $PRD/connectivity/meanlowb.mif \
-          -axis 3 -force -nthreads "$NB_THREADS"
+  view_step=1
+  if [ "$REGISTRATION" = "regular" ] || [ "$REGISTRATION" = "boundary" ]; then
+    echo "extracting b0 vols for registration"
+    dwiextract $PRD/connectivity/dwi.mif $PRD/connectivity/lowb.mif \
+               -bzero -force -nthreads "$NB_THREADS" 
+    # stride from mrtrix to FSL, RAS to LAS
+    # see: http://mrtrix.readthedocs.io/en/latest/getting_started/image_data.html
+    mrconvert $PRD/connectivity/lowb.mif $PRD/connectivity/lowb.nii.gz \
+              -stride -1,+2,+3,+4 -force -nthreads "$NB_THREADS" 
+    # for visualization 
+    mrmath  $PRD/connectivity/lowb.mif mean $PRD/connectivity/meanlowb.mif \
+            -axis 3 -force -nthreads "$NB_THREADS"
+  elif [ "$REGISTRATION" = "pseudo" ]; then
+    # lowb-pseudo brain for pseudo registration
+    echo "generate lowb-pseudo vols for pseudo registration"
+    # Generate transform image (dwi) for pseudo registration method: 
+    # see: Bhushan C, et al. Neuroimage. 2015 Jul 15;115:269-8
+    # used in: https://github.com/BIDS-Apps/MRtrix3_connectome/blob/master/run.py
+    dwiextract $PRD/connectivity/dwi.mif -bzero - \
+    | mrmath - mean - -axis 3 \
+    | mrcalc 1 - -divide $PRD/connectivity/mask.mif -multiply - \
+    | mrconvert - - -stride -1,+2,+3 \
+    | mrhistmatch - $PRD/connectivity/brain.nii.gz \
+                  $PRD/connectivity/lowb.nii.gz
+  fi
+fi
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+  echo "check lowb image"
+  view_step=0
+  mrview $PRD/connectivity/lowb.mif \
+         -overlay.load $PRD/connectivity/dwi.mif \
+         -overlay.opacity 1. -norealign
 fi
 
 # generating FSl brain.mgz
@@ -524,33 +553,20 @@ if [ ! -f $PRD/connectivity/brain.nii.gz ]; then
   # and FS pial eddited volumes already present
   # stride from FS to FSL: RAS to LAS
   # see: http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
-  echo "generating FSL orientation for masked brain"
-  mrconvert $FS/$SUBJ_ID/mri/brain.mgz $PRD/connectivity/brain.nii.gz \
-            -datatype float32 -stride -1,+2,+3,+4 -force -nthreads "$NB_THREADS" 
+  # we could do
+  # mrconvert $FS/$SUBJ_ID/mri/brain.mgz $PRD/connectivity/brain.nii.gz \
+  #           -datatype float32 -stride -1,+2,+3,+4 -force -nthreads "$NB_THREADS" 
+  # instead we use the pure brain from aparc+aseg:
+    echo "generating masked brain in FSL orientation"
+  mri_binarize --i $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
+               --o $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz--min 0.5 --dilate 1 
+  mri_mask $FS/$SUBJ_ID/mri/brain.mgz $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz \
+           $FS/$SUBJ_ID/mri/brain_masked.mgz
+  mrconvert $FS/$SUBJ_ID/mri/brain_masked.mgz $PRD/connectivity/brain.nii.gz \
+            -force -datatype float32 -stride -1,+2,+3,+4 
 fi
 
-# TOCHECK: test and compare to lowb method, or leave as an option
-# # Generate transform image (dwi) for alternative registration method: 
-# # replace lowb.nii.gz with output lowb_pseudobrain.nii.gz in the subsequent 
-# # registration steps
-# # see: Bhushan C, et al. Neuroimage. 2015 Jul 15;115:269-8
-# # used in: https://github.com/BIDS-Apps/MRtrix3_connectome/blob/master/run.py
-# if [ ! -f $PRD/connectivity/lowb_pseudobrain.nii.gz ]; then
-#   echo "extracting b0 vols for registration: pseudostructural"
-#   dwiextract $PRD/connectivity/dwi.mif -bzero - \
-#   | mrmath - mean - -axis 3 \
-#   | mrcalc 1 - -divide $PRD/connectivity/mask_upsampled.mif -multiply - \
-#   | mrconvert - - -stride -1,+2,+3 \
-#   | mrhistmatch - $PRD/connectivity/brain.nii.gz \
-#                 $PRD/connectivity/lowb_pseudobrain.nii.gz
-#   if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
-#     echo "check pseudo lowb files"
-#     mrview $PRD/connectivity/lowb_pseudobrain.nii.gz \
-#            $PRD/connectivity/lowb.nii.gz -overlay.load \
-#            $PRD/connectivity/lowb_pseudobrain.nii.gz \
-#            -overlay.opacity 0.5 -norealign
-#   fi
-# fi
+
 
 # aparc+aseg to FSL
 if [ ! -f $PRD/connectivity/aparc+aseg.nii.gz ]; then
@@ -580,22 +596,45 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
          -overlay.opacity 0.5 -norealign
 fi
 
-# aparcaseg to diff by inverser transform
+# aparcaseg to diff by inverse transform
 if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]; then
-  # 6 dof; see:
-  # http://web.mit.edu/fsl_v5.0.8/fsl/doc/wiki/FLIRT(2f)FAQ.html#What_cost_function_and.2BAC8-or_degrees_of_freedom_.28DOF.29_should_I_use_in_FLIRT.3F
-  echo "register aparc+aseg to diff"
-  "$FSL"flirt -in $PRD/connectivity/lowb.nii.gz \
-              -ref $PRD/connectivity/brain.nii.gz \
-              -omat $PRD/connectivity/diffusion_2_struct.mat \
-              -out $PRD/connectivity/lowb_2_struct.nii.gz -dof 6 \
-              -searchrx -180 180 -searchry -180 180 -searchrz -180 180 \
-              -cost mutualinfo
+  view_step=1
+  if [ "$REGISTRATION" = "regular" ] || [ "$REGISTRATION" = "pseudo" ]; then
+    # 6 dof; see:
+    # http://web.mit.edu/fsl_v5.0.8/fsl/doc/wiki/FLIRT(2f)FAQ.html#What_cost_function_and.2BAC8-or_degrees_of_freedom_.28DOF.29_should_I_use_in_FLIRT.3F
+    echo "register aparc+aseg to diff"
+    "$FSL"flirt -in $PRD/connectivity/lowb.nii.gz \
+                -out $PRD/connectivity/lowb_2_struct.nii.gz \
+                -ref $PRD/connectivity/brain.nii.gz \
+                -omat $PRD/connectivity/diffusion_2_struct.mat -dof 6 \
+                -searchrx -180 180 -searchry -180 180 -searchrz -180 180 \
+                -cost mutualinfo
+  elif [ "$REGISTRATION" = "boundary" ]; then
+    echo "register aparc+aseg to diff using bbr cost function in FLIRT"
+    # as per http://community.mrtrix.org/t/registration-of-structural-and-diffusion-weighted-data/203/8
+    "$FSL"fast -N -o $PRD/connectivity/brain_fast $PRD/connectivity/brain.nii.gz 
+    "$FSL"fslmaths $PRD/connectivity/brain_fast_pve_2.nii.gz -thr 0.5 \
+                   -bin $PRD/connectivity/brain_fast_wmmask.nii.gz
+    # first flirt to get an init transform mat
+    "$FSL"flirt -in $PRD/connectivity/lowb.nii.gz \
+                -ref $PRD/connectivity/brain.nii.gz \
+                -omat $PRD/connectivity/flirt_bbr_tmp.mat -dof 6 
+    # flirt using bbr cost
+    "$FSL"flirt -in $PRD/connectivity/lowb.nii.gz \
+                -out $PRD/connectivity/lowb_2_struct.nii.gz \
+                -ref $PRD/connectivity/brain.nii.gz \
+                -omat $PRD/connectivity/diffusion_2_struct.mat \
+                -wmseg $PRD/connectivity/brain_fast_wmmask.nii.gz \              
+                -init $PRD/connectivity/flirt_bbr_tmp.mat \
+                -schedule $FSLDIR/etc/flirtsch/bbr.sch -dof 6 \
+                -searchrx -180 180 -searchry -180 180 -searchrz -180 180 \
+                -cost bbr 
+  fi
   transformconvert $PRD/connectivity/diffusion_2_struct.mat \
                    $PRD/connectivity/lowb.nii.gz \
                    $PRD/connectivity/brain.nii.gz \
                    flirt_import $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
-                    -force 
+                   -force 
   mrtransform $PRD/connectivity/aparc+aseg_reorient.nii.gz \
               $PRD/connectivity/aparcaseg_2_diff.nii.gz \
               -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
@@ -611,7 +650,7 @@ if [ ! -f $PRD/connectivity/brain_2_diff.nii.gz ]; then
               -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
               -inverse -force 
 fi
-# check parcellation to diff
+# check brain and parcellation to diff
 if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "check parcellation registration to diffusion space"
   echo "if it's correct, just close the window."
@@ -1072,13 +1111,16 @@ fi
 
 if [ ! -f ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif ]; then
   echo "generating head bem"
+  view_step=1
   mkheadsurf -s $SUBJ_ID
   mne_surf2bem --surf ${FS}/${SUBJ_ID}/surf/lh.seghead --id 4 --check \
                --fif ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif --overwrite
 fi
 
-if [ -n "$DISPLAY" ] && [ "$CHECK" = "yes" ]; then
+if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "check bem surfaces"
+  view_step=0
+  # TODO: use mrview instead
   freeview -v ${FS}/${SUBJ_ID}/mri/T1.mgz \
            -f ${FS}/${SUBJ_ID}/bem/inner_skull.surf:color=yellow:edgecolor=yellow \
            ${FS}/${SUBJ_ID}/bem/outer_skull.surf:color=blue:edgecolor=blue \
