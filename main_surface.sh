@@ -624,7 +624,7 @@ if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]; then
                 -out $PRD/connectivity/lowb_2_struct.nii.gz \
                 -ref $PRD/connectivity/brain.nii.gz \
                 -omat $PRD/connectivity/diffusion_2_struct.mat \
-                -wmseg $PRD/connectivity/brain_fast_wmmask.nii.gz \              
+                -wmseg $PRD/connectivity/brain_fast_wmmask.nii.gz \
                 -init $PRD/connectivity/flirt_bbr_tmp.mat \
                 -schedule $FSLDIR/etc/flirtsch/bbr.sch -dof 6 \
                 -searchrx -180 180 -searchry -180 180 -searchrz -180 180 \
