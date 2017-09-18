@@ -11,7 +11,7 @@ SUBJ_ID = os.environ['SUBJ_ID']
 def read_annot(fname):
 
     """Read a Freesurfer annotation from a .annot file.
-    Note : Copied from PySurfer
+    Note : Copied from nibabel
     Parameters
     ----------
     fname : str
