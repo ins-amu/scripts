@@ -1156,3 +1156,4 @@ if [ ! -f ${FS}/${SUBJ_ID}/bem/*-bem.fif ]; then
   done
 fi
 
+# Calculate forward solutions with OpenMEEG
