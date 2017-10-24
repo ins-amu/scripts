@@ -815,7 +815,7 @@ if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
            $PRD/connectivity/whole_brain.tck \
            -seed_dynamic $PRD/connectivity/wm_CSD.mif \
            -mask $PRD/connectivity/mask.mif -select "$NUMBER_TRACKS" \
-           -maxlength 250  -step "$stepsize"  -angle "$angle" -cutoff 0.1 
+           -maxlength 250  -step "$stepsize"  -angle "$angle" -cutoff 0.1 \
            -force -nthreads "$NB_THREADS"
   fi
 fi
