@@ -184,7 +184,7 @@ fi
 view_step=0
 
 ######## HCP pre_scripts
-if [ -n "$HCP" ]; then
+if [ "$HCP" = "yes"  ]; then
   if [ ! -f "$PRD"/connectivity/mask_native.mif ]; then
     bash HCP_pre_scripts.sh
   fi
@@ -559,11 +559,11 @@ if [ ! -f $PRD/connectivity/brain.nii.gz ]; then
   # instead we use the pure brain from aparc+aseg:
     echo "generating masked brain in FSL orientation"
   mri_binarize --i $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
-               --o $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz--min 0.5 --dilate 1 
+               --o $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz --min 0.5 --dilate 1 
   mri_mask $FS/$SUBJ_ID/mri/brain.mgz $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz \
            $FS/$SUBJ_ID/mri/brain_masked.mgz
   mrconvert $FS/$SUBJ_ID/mri/brain_masked.mgz $PRD/connectivity/brain.nii.gz \
-            -force -datatype float32 -stride -1,+2,+3,+4 
+            -force -datatype float32 -stride -1,+2,+3
 fi
 
 
@@ -573,7 +573,7 @@ if [ ! -f $PRD/connectivity/aparc+aseg.nii.gz ]; then
   echo "generating FSL orientation for aparc+aseg"
   # stride from FS to FSL: RAS to LAS
   mrconvert $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
-            $PRD/connectivity/aparc+aseg.nii.gz -stride -1,+2,+3,+4 -force \
+            $PRD/connectivity/aparc+aseg.nii.gz -stride -1,+2,+3 -force \
             -nthreads "$NB_THREADS" 
 fi
 
@@ -736,7 +736,7 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
 fi
 
 # Fibre orientation distribution estimation
-if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]; then
+if [ ! -f $PRD/connectivity/wm_CSD.mif ]; then
   # Both for multishell and single shell since we use dhollander in the 
   # single shell case
   # see: http://community.mrtrix.org/t/wm-odf-and-response-function-with-dhollander-option---single-shell-versus-multi-shell/572/4
@@ -744,25 +744,25 @@ if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]; then
   view_step=1
   dwi2fod msmt_csd $PRD/connectivity/dwi.mif \
           $PRD/connectivity/response_wm.txt \
-          $PRD/connectivity/wm_CSD$lmax.mif \
+          $PRD/connectivity/wm_CSD.mif \
           $PRD/connectivity/response_gm.txt \
-          $PRD/connectivity/gm_CSD$lmax.mif \
+          $PRD/connectivity/gm_CSD.mif \
           $PRD/connectivity/response_csf.txt \
-          $PRD/connectivity/csf_CSD$lmax.mif \
+          $PRD/connectivity/csf_CSD.mif \
           -mask $PRD/connectivity/mask_dilated.mif -force \
           -nthreads "$NB_THREADS"
 fi
 if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "check ODF image"
   view_step=0
-  mrconvert $PRD/connectivity/wm_CSD$lmax.mif - -coord 3 0 \
+  mrconvert $PRD/connectivity/wm_CSD.mif - -coord 3 0 \
   -nthreads "$NB_THREADS" -force \
-  | mrcat $PRD/connectivity/csf_CSD$lmax.mif \
-          $PRD/connectivity/gm_CSD$lmax.mif - \
+  | mrcat $PRD/connectivity/csf_CSD.mif \
+          $PRD/connectivity/gm_CSD.mif - \
           $PRD/connectivity/tissueRGB.mif -axis 3 -nthreads "$NB_THREADS" \
           -force
   mrview $PRD/connectivity/tissueRGB.mif \
-         -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif 
+         -odf.load_sh $PRD/connectivity/wm_CSD.mif 
 fi
 
 
@@ -775,7 +775,9 @@ if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
   native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
                    | cut -f 1 -d " " | xargs printf "%.3f")
   stepsize=$( bc -l <<< "scale=2; "$native_voxelsize"/2" )
+  echo "stepsize parameter for tckgen is $stepsize"
   angle=$( bc -l <<< "scale=2; 90*"$stepsize"/"$native_voxelsize"" )
+  echo "angle parameter for tckgen is $angle"
   if [ "$ACT" = "yes" ]; then
     # when using msmt_csd in conjunction with ACT, the cutoff threshold
     # can be reduced to 0.06
@@ -787,7 +789,7 @@ if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
                 $PRD/connectivity/gmwmi_mask.mif -force \
                 -nthreads "$NB_THREADS"
       # TODO: min length check andreas paper
-      tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
+      tckgen $PRD/connectivity/wm_CSD.mif \
              $PRD/connectivity/whole_brain.tck \
              -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif 
              -act $PRD/connectivity/act.mif -select "$NUMBER_TRACKS" \
@@ -798,9 +800,9 @@ if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
        # -dynamic seeding may work slightly better than gmwmi, 
        # see Smith RE Neuroimage. 2015 Oct 1;119:338-51.
       echo "seeding dynamically"   
-      tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
+      tckgen $PRD/connectivity/wm_CSD.mif \
              $PRD/connectivity/whole_brain.tck \
-             -seed_dynamic $PRD/connectivity/wm_CSD$lmax.mif \
+             -seed_dynamic $PRD/connectivity/wm_CSD.mif \
              -act $PRD/connectivity/act.mif -select "$NUMBER_TRACKS" \
              -crop_at_gmwmi -backtrack -minlength 4 -maxlength 250 \
              -step "$stepsize" -angle "$angle" -cutoff 0.06 -force \
@@ -809,11 +811,11 @@ if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
   else
     echo "generating tracks without using act" 
     echo "seeding dynamically" 
-    tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
+    tckgen $PRD/connectivity/wm_CSD.mif \
            $PRD/connectivity/whole_brain.tck \
-           -seed_dynamic $PRD/connectivity/wm_CSD"$lmax".mif \
+           -seed_dynamic $PRD/connectivity/wm_CSD.mif \
            -mask $PRD/connectivity/mask.mif -select "$NUMBER_TRACKS" \
-           -maxlength 250 -step "$stepsize" -angle "$angle" -cutoff 1  \
+           -maxlength 250  -step "$stepsize"  -angle "$angle" -cutoff 0.1 
            -force -nthreads "$NB_THREADS"
   fi
 fi
@@ -825,8 +827,8 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
     number_tracks=$(($NUMBER_TRACKS/$SIFT_MULTIPLIER))
     if [ "$ACT" = "yes" ]; then
         echo "trimming tracks using sift/act" 
-        tcksift $PRD/connectivity/whole_brain.tck \
-                $PRD/connectivity/wm_CSD"$lmax".mif \
+        tcksift $PRD/connectivity/whole_brain.tck \s
+                $PRD/connectivity/wm_CSD.mif \
                 $PRD/connectivity/whole_brain_post.tck \
                 -act $PRD/connectivity/act.mif \
                 -out_mu $PRD/connectivity/mu.txt \
@@ -835,7 +837,7 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
     else
         echo "trimming tracks using sift/without act" 
         tcksift $PRD/connectivity/whole_brain.tck \
-                $PRD/connectivity/wm_CSD"$lmax".mif \
+                $PRD/connectivity/wm_CSD.mif \
                 $PRD/connectivity/whole_brain_post.tck \
                 -out_mu $PRD/connectivity/mu.txt \
                 -term_number $NUMBER_TRACKS -force \
@@ -847,7 +849,7 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
     if [ "$ACT" = "yes" ]; then
       echo "using act" 
       tcksift2 $PRD/connectivity/whole_brain.tck \
-               $PRD/connectivity/wm_CSD"$lmax".mif \
+               $PRD/connectivity/wm_CSD.mif \
                $PRD/connectivity/streamline_weights.csv\
                -act $PRD/connectivity/act.mif \
                -out_mu $PRD/connectivity/mu.txt \
@@ -855,7 +857,7 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
                -fd_scale_gm -force -nthreads "$NB_THREADS"
     else
       tcksift2 $PRD/connectivity/whole_brain.tck \
-               $PRD/connectivity/wm_CSD"$lmax".mif \
+               $PRD/connectivity/wm_CSD.mif \
                $PRD/connectivity/streamline_weights.csv \
                -out_mu $PRD/connectivity/mu.txt \
                -out_coeffs $PRD/connectivity/streamline_coeffs.csv \
