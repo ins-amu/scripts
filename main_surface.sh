@@ -184,7 +184,7 @@ fi
 view_step=0
 
 ######## HCP pre_scripts
-if [ -n "$HCP" ]; then
+if [ "$HCP" = "yes" ]; then
   if [ ! -f "$PRD"/connectivity/mask_native.mif ]; then
     bash HCP_pre_scripts.sh
   fi
@@ -559,7 +559,7 @@ if [ ! -f $PRD/connectivity/brain.nii.gz ]; then
   # instead we use the pure brain from aparc+aseg:
     echo "generating masked brain in FSL orientation"
   mri_binarize --i $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
-               --o $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz--min 0.5 --dilate 1 
+               --o $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz --min 0.5 --dilate 1 
   mri_mask $FS/$SUBJ_ID/mri/brain.mgz $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz \
            $FS/$SUBJ_ID/mri/brain_masked.mgz
   mrconvert $FS/$SUBJ_ID/mri/brain_masked.mgz $PRD/connectivity/brain.nii.gz \
