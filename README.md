@@ -21,4 +21,4 @@ Copyright (c) [2014] [The SCRIPTS Developers]
 
 When citing SCRIPTS, please cite this work:
 
-Proix T., Spiegler A., Schirner M., Rothmeier S., Ritter P., and Jirsa, VK. How do parcellation size and short-range connectivity affect dynamics in large-scale brain network models? NeuroImage, 2016, 142:135-149
+Proix T, Spiegler A, Schirner M, Rothmeier S, Ritter P, Jirsa, VK. How do parcellation size and short-range connectivity affect dynamics in large-scale brain network models? NeuroImage, 2016, 142:135-149

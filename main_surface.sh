@@ -184,7 +184,7 @@ fi
 view_step=0
 
 ######## HCP pre_scripts
-if [ "$HCP" = "yes"  ]; then
+if [ "$HCP" = "yes" ]; then
   if [ ! -f "$PRD"/connectivity/mask_native.mif ]; then
     bash HCP_pre_scripts.sh
   fi
