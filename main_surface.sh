@@ -186,7 +186,7 @@ view_step=0
 ######## HCP pre_scripts
 if [ "$HCP" = "yes" ]; then
   if [ ! -f "$PRD"/connectivity/mask_native.mif ]; then
-    bash HCP_pre_scripts.sh
+    bash util/HCP_pre_scripts.sh
   fi
 fi
 
@@ -216,32 +216,32 @@ fi
 # triangles and vertices high
 if [ ! -f $PRD/surface/lh_vertices_high.txt ]; then
   echo "extracting left vertices and triangles"
-  python extract_high.py lh
+  python util/extract_high.py lh
 fi
 
 # decimation using remesher
 if [ ! -f $PRD/surface/lh_vertices_low.txt ]; then
   echo "left decimation using remesher"
   # -> to mesh
-  python txt2off.py $PRD/surface/lh_vertices_high.txt $PRD/surface/lh_triangles_high.txt $PRD/surface/lh_high.off
+  python util/txt2off.py $PRD/surface/lh_vertices_high.txt $PRD/surface/lh_triangles_high.txt $PRD/surface/lh_high.off
   #  decimation
   ./remesher/cmdremesher/cmdremesher $PRD/surface/lh_high.off $PRD/surface/lh_low.off
   # export to list vertices triangles
-  python off2txt.py $PRD/surface/lh_low.off $PRD/surface/lh_vertices_low.txt $PRD/surface/lh_triangles_low.txt
+  python util/off2txt.py $PRD/surface/lh_low.off $PRD/surface/lh_vertices_low.txt $PRD/surface/lh_triangles_low.txt
 fi
 
 # create the left region mapping
 if [ ! -f $PRD/surface/lh_region_mapping_low_not_corrected.txt ]; then
   echo "generating the left region mapping on the decimated surface"
-  python region_mapping.py lh
+  python util/region_mapping.py lh
 fi
 
 # correct
 if [ ! -f $PRD/surface/lh_region_mapping_low.txt ]; then
     echo "correct the left region mapping"
-    python correct_region_mapping.py lh
+    python util/correct_region_mapping.py lh
     echo "check left region mapping"
-    python check_region_mapping.py lh
+    python util/check_region_mapping.py lh
 fi
 
 ###################################### right hemisphere
@@ -256,32 +256,32 @@ fi
 # triangles and vertices high
 if [ ! -f $PRD/surface/rh_vertices_high.txt ]; then
   echo "extracting right vertices and triangles"
-  python extract_high.py rh
+  python util/extract_high.py rh
 fi
 
 # decimation using brainvisa
 if [ ! -f $PRD/surface/rh_vertices_low.txt ]; then
   echo "right decimation using remesher"
   # -> to mesh
-  python txt2off.py $PRD/surface/rh_vertices_high.txt $PRD/surface/rh_triangles_high.txt $PRD/surface/rh_high.off
+  python util/txt2off.py $PRD/surface/rh_vertices_high.txt $PRD/surface/rh_triangles_high.txt $PRD/surface/rh_high.off
   #  decimation
   ./remesher/cmdremesher/cmdremesher $PRD/surface/rh_high.off $PRD/surface/rh_low.off
   # export to list vertices triangles
-  python off2txt.py $PRD/surface/rh_low.off $PRD/surface/rh_vertices_low.txt $PRD/surface/rh_triangles_low.txt
+  python util/off2txt.py $PRD/surface/rh_low.off $PRD/surface/rh_vertices_low.txt $PRD/surface/rh_triangles_low.txt
 fi
 
 # create the right region mapping
 if [ ! -f $PRD/surface/rh_region_mapping_low_not_corrected.txt ]; then
   echo "generating the right region mapping on the decimated surface"
-  python region_mapping.py rh
+  python util/region_mapping.py rh
 fi
 
 # correct
 if [ ! -f $PRD/surface/rh_region_mapping_low.txt ]; then
   echo " correct the right region mapping"
-  python correct_region_mapping.py rh
+  python util/correct_region_mapping.py rh
   echo "check right region mapping"
-  python check_region_mapping.py rh
+  python util/check_region_mapping.py rh
 fi
 ###################################### both hemisphere
 # prepare final directory
@@ -291,7 +291,7 @@ mkdir -p $PRD/$SUBJ_ID/surface
 # reunify both region_mapping, vertices and triangles
 if [ ! -f $PRD/$SUBJ_ID/surface/region_mapping.txt ]; then
   echo "reunify both region mappings"
-  python reunify_both_regions.py
+  python util/reunify_both_regions.py
 fi
 
 # zip to put in final format
@@ -305,10 +305,10 @@ popd > /dev/null
 # extract subcortical surfaces 
 if [ ! -f $PRD/surface/subcortical/aseg_058_vert.txt ]; then
   echo "generating subcortical surfaces"
-  ./aseg2srf -s $SUBJ_ID
+  ./util/aseg2srf -s $SUBJ_ID
   mkdir -p $PRD/surface/subcortical
   cp $FS/$SUBJ_ID/ascii/* $PRD/surface/subcortical
-  python list_subcortical.py
+  python util/list_subcortical.py
 fi
 
 ########################## build connectivity using mrtrix 3
@@ -1000,7 +1000,7 @@ cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 # compute centers, areas and orientations
 if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]; then
   echo "generate useful files for TVB"
-  python compute_connectivity_files.py
+  python util/compute_connectivity_files.py
 fi
 
 # zip to put in final format
@@ -1032,7 +1032,7 @@ if [ -n "$K_LIST" ]; then
     fi
     if [ ! -f $PRD/$SUBJ_ID/region_mapping_"$curr_K".txt ]; then
       echo "generate region mapping for subparcellation "$curr_K""
-      python region_mapping_other_parcellations.py
+      python util/region_mapping_other_parcellations.py
     fi
     if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif ]; then
       mrconvert $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz \
@@ -1073,7 +1073,7 @@ if [ -n "$K_LIST" ]; then
     fi
     if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt ]; then
       echo "generate files for TVB subparcellation "$curr_K""
-      python compute_connectivity_sub.py $PRD/connectivity/weights_"$curr_K".csv $PRD/connectivity/tract_lengths_"$curr_K".csv $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt $PRD/$SUBJ_ID/connectivity_"$curr_K"/tract_lengths.txt
+      python util/compute_connectivity_sub.py $PRD/connectivity/weights_"$curr_K".csv $PRD/connectivity/tract_lengths_"$curr_K".csv $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt $PRD/$SUBJ_ID/connectivity_"$curr_K"/tract_lengths.txt
     fi
     pushd . > /dev/null
     cd $PRD/$SUBJ_ID/connectivity_"$curr_K" > /dev/null
@@ -1106,9 +1106,9 @@ fi
 # triangles and vertices bem
 if [ ! -f $PRD/$SUBJ_ID/surface/inner_skull_vertices.txt ]; then
   echo "extracting bem vertices and triangles"
-  python extract_bem.py inner_skull 
-  python extract_bem.py outer_skull 
-  python extract_bem.py outer_skin 
+  python util/extract_bem.py inner_skull 
+  python util/extract_bem.py outer_skull 
+  python util/extract_bem.py outer_skin 
 fi
 
 if [ ! -f ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif ]; then
