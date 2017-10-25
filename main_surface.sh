@@ -21,12 +21,15 @@ while getopts ":c:" opt; do
   c)
     CONFIG=$OPTARG
     echo "use config file $CONFIG" >&2
-    if [ ! -f $CONFIG ]
-    then
+    if [ ! -f $CONFIG ];then
     echo "config file unexistent" >&2
     exit 1
     fi
-    source "$CONFIG"
+    if [ $CONFIG = "test" ]; then
+      echo "test mode"
+    else
+      source "$CONFIG"
+    fi
     ;;
   \?)
     echo "Invalid option: -$OPTARG" >&2
@@ -1158,3 +1161,4 @@ if [ ! -f ${FS}/${SUBJ_ID}/bem/*-bem.fif ]; then
   done
 fi
 
+exit
