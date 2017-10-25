@@ -875,7 +875,7 @@ if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$ASEG".mif ]; then
   echo "compute FS labels"
   labelconvert $PRD/connectivity/aparcaseg_2_diff.nii.gz \
                $FREESURFER_HOME/FreeSurferColorLUT.txt \
-               fs_region.txt $PRD/connectivity/aparcaseg_2_diff_fs.mif \
+               share/fs_region.txt $PRD/connectivity/aparcaseg_2_diff_fs.mif \
                -force -nthreads "$NB_THREADS"
   echo "$ASEG"
   if [ "$ASEG" = "fsl" ]; then
@@ -886,7 +886,7 @@ if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$ASEG".mif ]; then
     # TODO; -sgm_amyg_hipp option to consider
     echo "fix FS subcortical labels to generate FSL labels"
     labelsgmfix $PRD/connectivity/aparcaseg_2_diff_fs.mif \
-                $PRD/connectivity/brain_2_diff.nii.gz fs_region.txt \
+                $PRD/connectivity/brain_2_diff.nii.gz share/fs_region.txt \
                 $PRD/connectivity/aparcaseg_2_diff_fsl.mif -premasked \
                 -force -nthreads "$NB_THREADS"   
   fi 
@@ -944,7 +944,7 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
                        -files single -nthreads "$NB_THREADS"
     fi
   fi
-  # TOCHECK: in mrview, load the lut table (fs_region.txt) for node correspondence, 
+  # TOCHECK: in mrview, load the lut table (share/fs_region.txt) for node correspondence, 
   # and exemplars.tck if wanting to see edges as streamlines 
   mrview $PRD/connectivity/aparcaseg_2_diff_$ASEG.mif \
          -connectome.init $PRD/connectivity/aparcaseg_2_diff_$ASEG.mif \
@@ -995,7 +995,7 @@ fi
 # Compute other files
 # we do not compute hemisphere
 # subcortical is already done
-cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
+cp share/cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 
 # compute centers, areas and orientations
 if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]; then

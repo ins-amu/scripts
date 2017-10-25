@@ -164,11 +164,11 @@ mat2nii(vol,Out,size(data),32,Msk);
 %%%%%%%%%%%%%%%%%
 
 % compute centers and orientations
-fid = fopen('name_regions.txt');
+fid = fopen('share/name_regions.txt');
 name_region = textscan(fid, '%s');
 fclose(fid);
 
-load('cortical.txt');
+load('share/cortical.txt');
 cortical(find(cortical==0))=false;
 name_region_subcortical = name_region{1}(find(cortical==0));
 name_region_subcortical = name_region_subcortical(2:end);
