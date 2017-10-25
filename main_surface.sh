@@ -16,7 +16,7 @@
 #### Checks and preset variables
 
 # import and check config
-while getopts ":c:" opt; do
+while getopts ":c:e" opt; do
   case $opt in
   c)
     CONFIG=$OPTARG
@@ -29,6 +29,9 @@ while getopts ":c:" opt; do
     else
       source "$CONFIG"
     fi
+    ;;
+  e) 
+    set -e 
     ;;
   \?)
     echo "Invalid option: -$OPTARG" >&2
