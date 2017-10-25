@@ -20,13 +20,13 @@ while getopts ":c:e" opt; do
   case $opt in
   c)
     CONFIG=$OPTARG
-    echo "use config file $CONFIG" >&2
     if [ ! -f "$CONFIG" -a "$CONFIG" != "test" ];then
       echo "config file "$CONFIG" unexistent" >&2
       exit 1
     elif [ $CONFIG = "test" ]; then
       echo "test mode"
     else
+      echo "use config file $CONFIG" >&2
       source "$CONFIG"
     fi
     ;;
