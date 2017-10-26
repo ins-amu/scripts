@@ -348,11 +348,7 @@ mkdir -p $PRD/$SUBJ_ID/connectivity
 # handle encoding scheme
 if [ ! -f "$PRD"/connectivity/predwi.mif ]; then 
   view_step=1
-  if [ "$FORCE" = "yes" ]; then
-    select_images="y"
-  else
-    select_images="n"
-  fi
+  select_images="n"
   i_im=1
   echo "generate dwi mif file"
   echo "if asked, please select a series of images by typing a number"
@@ -360,28 +356,30 @@ if [ ! -f "$PRD"/connectivity/predwi.mif ]; then
             -export_pe_table $PRD/connectivity/pe_table \
             -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
             -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"  
-  echo "Do you want to add another image serie (different phase encoding)? [y, n]"
-  read select_images
-  while [ "$select_images" != "y" ] && [ "$select_images" != "n" ]; do
-    echo " please answer y or n"
-    read select_images
-  done
-  cp $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi.mif
-  while [ "$select_images" == "y" ]; do
-    i_im=$(($i_im + 1))
-    mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_"$i_im".mif \
-              -export_pe_table $PRD/connectivity/pe_table \
-              -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
-              -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"
-    mrcat $PRD/connectivity/predwi.mif $PRD/connectivity/predwi_"$i_im".mif \
-          $PRD/connectivity/predwi.mif -axis 3 -nthreads "$NB_THREADS" -force
+  if [ "$FORCE" = "no"]; then
     echo "Do you want to add another image serie (different phase encoding)? [y, n]"
     read select_images
     while [ "$select_images" != "y" ] && [ "$select_images" != "n" ]; do
       echo " please answer y or n"
       read select_images
     done
-  done
+    cp $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi.mif
+    while [ "$select_images" == "y" ]; do
+      i_im=$(($i_im + 1))
+      mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_"$i_im".mif \
+                -export_pe_table $PRD/connectivity/pe_table \
+                -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
+                -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"
+      mrcat $PRD/connectivity/predwi.mif $PRD/connectivity/predwi_"$i_im".mif \
+            $PRD/connectivity/predwi.mif -axis 3 -nthreads "$NB_THREADS" -force
+      echo "Do you want to add another image serie (different phase encoding)? [y, n]"
+      read select_images
+      while [ "$select_images" != "y" ] && [ "$select_images" != "n" ]; do
+        echo " please answer y or n"
+        read select_images
+      done
+    done
+  fi
   mrinfo $PRD/connectivity/predwi.mif \
         -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
         -export_pe_table $PRD/connectivity/pe_table -force 
