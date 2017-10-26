@@ -88,23 +88,19 @@ export REGION_MAPPING_CORR="0.42"
 # Number of Nodes:  70  140 280  560  1120 2240
 # default: ""
 # Needs to be a list of integers
-export K_LIST="0 1.5 2 3 4 5"
+export K_LIST="0 1 2 3 4 5"
 
 # number of tracks used in the tractography step.
 # default: 10.000.000
 # Needs to be an integer
 export NUMBER_TRACKS=10000000
 
-# TODO
-# uniquely for region pipeline (main_region.sh)
 # choice of the parcellation
-# export parcel=AAL
+# options ["desikan", "destrieux", "HCP"]; default: "desikan" 
+export parcel="desikan"
 
-# TODO
 # use topup and eddy distortion correction
 # this depends of you images
-# be careful with "reversed", depending on your data, 
-# you may have to change the main_surface script
 # options: ["no", "eddy_correct"], default: "eddy_correct"
 export TOPUP="no"
 
