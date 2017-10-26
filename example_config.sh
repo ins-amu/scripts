@@ -95,10 +95,9 @@ export K_LIST="0 1.5 2 3 4 5"
 # Needs to be an integer
 export NUMBER_TRACKS=10000000
 
-# TODO
-# uniquely for region pipeline (main_region.sh)
 # choice of the parcellation
-# export parcel=AAL
+# options ["desikan", "destrieux", "HCP"]; default: "desikan" 
+export parcel="desikan"
 
 # TODO
 # use topup and eddy distortion correction
