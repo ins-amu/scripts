@@ -83,25 +83,25 @@ for s in ${SBJLIST} ; do
     ${FREESURFER_HOME}/bin/mri_pretess \
            ${SUBJECTS_DIR}/${s}/mri/aseg.mgz ${lab} \
            ${SUBJECTS_DIR}/${s}/mri/norm.mgz \
-           ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0}_filled.mgz
+           ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0}_filled.mgz >/dev/null 2>/dev/null
 
     # Tessellate
     echo "==> Tessellating: ${s}, ${lab0}"
     ${FREESURFER_HOME}/bin/mri_tessellate \
            ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0}_filled.mgz \
-           ${lab} ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0}_notsmooth
+           ${lab} ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0}_notsmooth >/dev/null 2>/dev/null
 
     # Smooth
     echo "==> Smoothing: ${s}, ${lab0}"
     ${FREESURFER_HOME}/bin/mris_smooth -nw \
            ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0}_notsmooth \
-           ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0}
+           ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0} >/dev/null 2>/dev/null
 
     # Convert to ASCII
     echo "==> Converting to ASCII: ${s}, ${lab0}"
     ${FREESURFER_HOME}/bin/mris_convert \
            ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0} \
-           ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0}.asc
+           ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0}.asc >/dev/null 2>/dev/null
     mv ${SUBJECTS_DIR}/${s}/tmp/${RNDSTR}/aseg_${lab0}.asc \
        ${SUBJECTS_DIR}/${s}/ascii/aseg_${lab0}.srf
   done

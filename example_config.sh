@@ -17,7 +17,8 @@
 # for surface pipeline: 
 # bash path_to_scripts/main_surface.sh -c path_to_config/config.sh
 
-
+# The defaults indicates the options chosen by the pipeline if the option is 
+# not set
 
 #### Mandatory path parameters
 
@@ -42,15 +43,26 @@ export SUBJ_ID=name_subj
 export MCR=/path_to_matlab_runtime_compiler/
 
 
-#### Additional optional parameters
-# The defaults indicates the options chosen by the pipeline if the option is 
-# not set
+#### Standard options
 
-# error handling: in case of error, the pipeline 
-# stops immediately
-# default: not set
+# error handling: in case of error, the pipeline stops immediately
+# Can also be set with option -e to main_surface.sh
+# default: not set; 
 # set -e
 
+# Force: all choices are made automatically without asking the user
+# WARNING: can lead to issues
+# options: ["no", "yes"]; default: "no"
+# Can also be set with option -f to main_surface.sh
+export FORCE="no"
+
+# Quiet: run the pipeline without any output
+# options: ["no", "yes"]; default: "no"
+# Can also be set with option -q to main_surface.sh
+export QUIET="no"
+
+
+#### Optional parameters
 # FSL prefix in case of use of fsl5.0 and fsl 4 is present
 # for instance FSL="fsl5.0' or FSL="" otherwise
 # if only fsl5.0 is installed, leave empty

@@ -16,7 +16,7 @@
 #### Checks and preset variables
 
 # import and check config
-while getopts ":c:e" opt; do
+while getopts ":c:e:q:f" opt; do
   case $opt in
   c)
     CONFIG=$OPTARG
@@ -32,6 +32,12 @@ while getopts ":c:e" opt; do
     ;;
   e) 
     set -e 
+    ;;
+  q)
+    QUIET="yes"
+    ;;
+  f)
+    FORCE="yes"
     ;;
   \?)
     echo "Invalid option: -$OPTARG" >&2
@@ -74,6 +80,21 @@ fi
 
 # set default parameters if not set in config file
 echo "##### $( date ) #####" | tee -a "$PRD"/log_processing_parameters.txt
+
+if [ -z "$FORCE" ] || [ "$FORCE" != "no" -a "$FORCE" != "yes" ]; then
+  echo "set FORCE parameter to no" | tee -a "$PRD"/log_processing_parameters.txt
+  FORCE="no"
+else
+  echo "FORCE parameter is "$FORCE"" | tee -a "$PRD"/log_processing_parameters.txt
+fi
+
+if [ -z "$QUIET" ] || [ "$QUIET" != "no" -a "$QUIET" != "yes" ]; then
+  echo "set QUIET parameter to no" | tee -a "$PRD"/log_processing_parameters.txt
+  export QUIET="no"
+else
+  echo "QUIET parameter is "$QUIET"" | tee -a "$PRD"/log_processing_parameters.txt
+  export MRTRIX_QUIET=1
+fi
 
 if [ -z "$FSL" ] || [ "$FSL" != "fsl5.0" ]; then
   echo "set FSL parameter to empty" | tee -a "$PRD"/log_processing_parameters.txt
@@ -327,7 +348,11 @@ mkdir -p $PRD/$SUBJ_ID/connectivity
 # handle encoding scheme
 if [ ! -f "$PRD"/connectivity/predwi.mif ]; then 
   view_step=1
-  select_images="n"
+  if [ "$FORCE" = "yes" ]; then
+    select_images="y"
+  else
+    select_images="n"
+  fi
   i_im=1
   echo "generate dwi mif file"
   echo "if asked, please select a series of images by typing a number"
