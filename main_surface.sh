@@ -62,8 +62,8 @@ if [ -z "$SUBJ_ID" ]; then
   exit 1
 fi
 
-if [ -z "$MATLAB" ] && [ -z "$MCR"]; then
-  echo "matlab or MCR path missing"
+if [ -z "$MATLAB" ]; then
+  echo "Matlab path missing"
   exit 1
 fi
 
@@ -1057,13 +1057,6 @@ if [ -n "$K_LIST" ]; then
         $MATLAB -r "run subparcel.m; quit;" -nodesktop -nodisplay 
         gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
       fi
-    else
-      if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz ]; then
-        echo "compute subparcellations for subparcellation $curr_K"
-        sh subparcel/distrib/run_subparcel.sh $MCR  
-        gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
-      fi
-    fi
     if [ ! -f $PRD/$SUBJ_ID/region_mapping_"$curr_K".txt ]; then
       echo "generate region mapping for subparcellation "$curr_K""
       python util/region_mapping_other_parcellations.py

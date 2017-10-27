@@ -32,16 +32,9 @@ export PRD=/path_to_root_dir/
 # in brainvisa and in the final directory
 export SUBJ_ID=name_subj
 
-# Matlab Runtime Compiler path
-# if you have matlab, do mcrinstaller at the matlab prompt
-# to find the location of the MCR
-# alternatively you can uncomment the following line and comment the MCR line
+# Matlab path
 # export MATLAB=/path_to_matlab/
-# export MATLAB=$(which matlab)
-# if you don't have matlab, download the MCR (linux 64 bits) here: 
-# http://www.mathworks.com/products/compiler/mcr/index.html
-export MCR=/path_to_matlab_runtime_compiler/
-
+export MATLAB=$(which matlab)
 
 #### Standard options
 
