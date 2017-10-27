@@ -145,22 +145,22 @@ test_nb_threads_2() {
   printf "\n >>> Test test_nb_threads_2 output is : "$out" <<< \n"
 }
 
-( setUp; test_fsl_5 ) &
-( setUp; test_registration_boundary; Teardown ) &
-( setUp; test_registration_pseudo; Teardown ) &
-( setUp; test_region_mapping_corr; Teardown ) &
-( setUp; test_k_list; Teardown  ) &
-( setUp; test_no_k_list; Teardown ) &
-( setUp; test_number_tracks; Teardown ) &
-( setUp; test_parcel_destrieux; Teardown ) &
-( setUp; test_parcel_HCP; Teardown ) &
-( setUp; test_no_topup; Teardown ) &
-( setUp; test_no_act; Teardown ) &
-( setUp; test_no_sift; Teardown ) &
-( setUp; test_sift; Teardown ) &
-( setUp; test_sift_multiplier; Teardown ) &
-( setUp; test_seed_dynamic; Teardown ) &
-( setUp; test_aseg_fs; Teardown ) &
-( setUp; test_nb_threads_2; Teardown ) &
+#( setUp; test_fsl_5 ) &
+#( setUp; test_registration_boundary; Teardown ) &
+#( setUp; test_registration_pseudo; Teardown ) &
+#( setUp; test_region_mapping_corr; Teardown ) &
+#( setUp; test_k_list; Teardown  ) &
+#( setUp; test_no_k_list; Teardown ) &
+#( setUp; test_number_tracks; Teardown ) &
+( setUp; test_parcel_destrieux ) &
+( setUp; test_parcel_HCP ) &
+#( setUp; test_no_topup; Teardown ) &
+#( setUp; test_no_act; Teardown ) &
+#( setUp; test_no_sift; Teardown ) &
+#( setUp; test_sift; Teardown ) &
+#( setUp; test_sift_multiplier; Teardown ) &
+#( setUp; test_seed_dynamic; Teardown ) &
+#( setUp; test_aseg_fs; Teardown ) &
+#( setUp; test_nb_threads_2; Teardown ) &
 
 exit
