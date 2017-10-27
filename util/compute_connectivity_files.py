@@ -3,6 +3,7 @@ import numpy
 import os
 PRD = os.environ['PRD']
 SUBJ_ID = os.environ['SUBJ_ID']
+PARCEL = os.environ['PARCEL']
 
 def compute_triangle_areas(vertices, triangles):
     """Calculates the area of triangles making up a surface."""
@@ -188,7 +189,7 @@ if __name__ == '__main__':
     areas = compute_region_areas_cortex(triangle_areas, vertex_triangles, region_mapping)
 
     # subcorticals
-    corr_table = np.loadtxt('share/correspondance_mat.txt')
+    corr_table = np.loadtxt(open(os.path.join('share', 'reference_table_' + PARCEL + ".csv"), "r"), delimiter=",", skiprows=1, usecols=(0, 5))
     for val in ['16', '08', '10', '11', '12', '13', '17', '18', '26', '47', '49',
                 '50', '51', '52', '53', '54', '58']:
         verts = np.loadtxt(os.path.join(PRD, 'surface', 'subcortical',
@@ -223,16 +224,16 @@ if __name__ == '__main__':
             orientations, fmt='%.2f %.2f %.2f')
 
     # add the name to centers
-    f = open('share/name_regions.txt', 'rb')
-    list_name = []
-    for line in f:
-        list_name.append(line)
-    f.close()
+    list_name = np.loadtxt(open(os.path.join('share', 'reference_table_' + PARCEL + ".csv"), "r"), delimiter=",", skiprows=1, usecols=(1, ), dtype='str')
 
-    f = open(os.path.join(PRD, SUBJ_ID, 'connectivity/centres.txt'), 'w')
-    for i, name in enumerate(list_name):
-        f.write(str(name[:-1])+' ')
+    f = open(os.path.join(PRD, SUBJ_ID, 'connectivity/centresl.txt'), 'w')
+    for i, name in enumerate(list_namel):
+        f.write(str(name) +' ')
         for j in range(3):
             f.write('{:.4f} '.format(centers[i, j]))
         f.write('\n')
     f.close()
+
+    # save cortical
+    ref_table = np.loadtxt(open(os.path.join('share', 'reference_table_' + PARCEL + ".csv"), "rb"), delimiter=",", skiprows=1, usecols=(7,))
+    np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity/cortical.txt'), ref_table, fmt='%d')

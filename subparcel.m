@@ -10,6 +10,7 @@ curr_K = str2num(curr_K);
 K = log(curr_K)/log(2) 
 PRD = fullfile(getenv('PRD'), '/')
 SUBJ_ID = getenv('SUBJ_ID')
+PARCEL = getenv('PARCEL')
 
 % get rid of subcortical regions and white matter
 
@@ -163,12 +164,16 @@ mat2nii(vol,Out,size(data),32,Msk);
 
 %%%%%%%%%%%%%%%%%
 
-% compute centers and orientations
-fid = fopen('share/name_regions.txt');
-name_region = textscan(fid, '%s');
+%% compute centers and orientations
+% load name_regions and cortical
+fid = fopen(['share/reference_table_' PARCEL '.csv']);
+textscan(fid, '%*s %*s %*s %*s %*s %*s %*s %*s', 1);
+ref = textscan(fid, '%d %s %d %d %d %d %d %d %d', 'delimiter', ',');
 fclose(fid);
 
-load('share/cortical.txt');
+name_region = ref{2};
+cortical = ref{8};
+
 cortical(find(cortical==0))=false;
 name_region_subcortical = name_region{1}(find(cortical==0));
 name_region_subcortical = name_region_subcortical(2:end);

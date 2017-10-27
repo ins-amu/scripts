@@ -84,38 +84,19 @@ def read_annot(fname):
     return annot, ctab, names
 
 if PARCEL=='desikan':
-    L, _, _ = read_annot(os.path.join(FS, SUBJ_ID, 'label', rl + '.aparc.annot'))
-elif PARCEL=='destrieux':
-    L, _, _ = read_annot(os.path.join(FS, SUBJ_ID, 'label', rl + '.aparc.a2009s.annot'))
-elif PARCEL=='HCP-MMP':
-    L, _, _ = read_annot(os.path.join(share, rl + 'HCP-MMP1.annot'))
-# using the ref table instead of the annot to reorder the region indices as we want for the region mapping
-ref_table = np.loadtxt(os.path.join('share', rl + '_ref_table.txt'))
-vl = np.loadtxt(os.path.join(PRD, 'surface', rl + '_vertices_low.txt'))  # vertices low
-vh = np.loadtxt(os.path.join(PRD, 'surface', rl + '_vertices_high.txt'))  # vertices high
-reg_map = []
-for vli in vl:
-    pos = np.argmin(np.sum(np.abs(vh - vli), 1))
-    find_tab = np.nonzero(ref_table[:, 5] == L[pos])[0][0]
-    reg_map.append(ref_table[find_tab, 4])
-
-
-if PARCEL=='desikan':
     L, _, _ = read_annot(os.path.join(FS, SUBJ_ID, 'label', 'lh.aparc.annot'))
 elif PARCEL=='destrieux':
     L, _, _ = read_annot(os.path.join(FS, SUBJ_ID, 'label', rl + '.aparc.a2009s.annot'))
 elif PARCEL=='HCP-MMP':
     L, _, _ = read_annot(os.path.join(share, rl + 'HCP-MMP1.annot'))
-ref_table = np.loadtxt(open(os.path.join('share', 'reference_table_' + PARCEL + ".csv"), "rb"), delimiter=" ", skiprows=1, usecols=(5, 6))
+# using the ref table instead of the annot to reorder the region indices as we want for the region mapping
+ref_table = np.loadtxt(open(os.path.join('reference_table_' + PARCEL + ".csv"), "rb"), delimiter=",", skiprows=1, usecols=(5,6))
 vl = np.loadtxt(os.path.join(PRD, 'surface', rl + '_vertices_low.txt'))  # vertices low
 vh = np.loadtxt(os.path.join(PRD, 'surface', rl + '_vertices_high.txt'))  # vertices high
-
 reg_map = []
 for vli in vl:
     pos = np.argmin(np.sum(np.abs(vh - vli), 1))
-    find_tab = np.nonzero(ref_table[:, 4] == L_[pos])[0][0]
-    reg_map.append(find_tab + pad_pos)
-
-
+    find_tab = np.nonzero(ref_table[:, 1] == L[pos])[0][0]
+    reg_map.append(ref_table[find_tab, 0])
 
 np.savetxt(os.path.join(PRD, 'surface', rl + '_region_mapping_low_not_corrected.txt'), reg_map)

@@ -824,7 +824,7 @@ if [ ! -f "$PRD"/connectivity/whole_brain.tck ]; then
       # TODO: min length check andreas paper
       tckgen $PRD/connectivity/wm_CSD.mif \
              $PRD/connectivity/whole_brain.tck \
-             -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif 
+             -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif \
              -act $PRD/connectivity/act.mif -select "$NUMBER_TRACKS" \
              -seed_unidirectional -crop_at_gmwmi -backtrack \
              -minlength 4 -maxlength 250 -step "$stepsize" -angle "$angle" \
@@ -905,10 +905,11 @@ fi
 
 ## now compute connectivity and length matrix
 if [ ! -f "$PRD"/connectivity/aparcaseg_2_diff_"$ASEG".mif ]; then
-  echo "compute FS labels"
+  echo "compute parcellation labels"
+  python util/compute_luts.py
   labelconvert $PRD/connectivity/aparcaseg_2_diff.nii.gz \
-               $FREESURFER_HOME/FreeSurferColorLUT.txt \
-               share/fs_region.txt $PRD/connectivity/aparcaseg_2_diff_fs.mif \
+               $PRD/connectivity/lut_in.txt $PRD/connectivity/lut_out.txt\
+               $PRD/connectivity/aparcaseg_2_diff_fs.mif \
                -force -nthreads "$NB_THREADS"
   echo "$ASEG"
   if [ "$ASEG" = "fsl" ]; then
@@ -919,7 +920,7 @@ if [ ! -f "$PRD"/connectivity/aparcaseg_2_diff_"$ASEG".mif ]; then
     # TODO; -sgm_amyg_hipp option to consider
     echo "fix FS subcortical labels to generate FSL labels"
     labelsgmfix $PRD/connectivity/aparcaseg_2_diff_fs.mif \
-                $PRD/connectivity/brain_2_diff.nii.gz share/fs_region.txt \
+                $PRD/connectivity/brain_2_diff.nii.gz $PRD/connectivity/lut_out.txt \
                 $PRD/connectivity/aparcaseg_2_diff_fsl.mif -premasked \
                 -force -nthreads "$NB_THREADS"   
   fi 
@@ -977,7 +978,7 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
                        -files single -nthreads "$NB_THREADS"
     fi
   fi
-  # TOCHECK: in mrview, load the lut table (share/fs_region.txt) for node correspondence, 
+  # TOCHECK: in mrview, load the lut table ($PRD/connectivity/lut_out.txt) for node correspondence, 
   # and exemplars.tck if wanting to see edges as streamlines 
   mrview $PRD/connectivity/aparcaseg_2_diff_$ASEG.mif \
          -connectome.init $PRD/connectivity/aparcaseg_2_diff_$ASEG.mif \
@@ -1028,9 +1029,9 @@ fi
 # Compute other files
 # we do not compute hemisphere
 # subcortical is already done
-cp share/cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 
-# compute centers, areas and orientations
+echo ""$PRD"/"$SUBJ_ID"/connectivity/weights.txt"
+# compute centers, areas, cortical and orientations
 if [ ! -f "$PRD"/"$SUBJ_ID"/connectivity/weights.txt ]; then
   echo "generate useful files for TVB"
   python util/compute_connectivity_files.py
