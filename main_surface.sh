@@ -16,42 +16,38 @@
 #### Checks and preset variables
 
 # import and check config
-while getopts ":c:e:q:f" opt; do
+while getopts "c:eqf" opt; do
   case $opt in
-  c)
-    CONFIG=$OPTARG
-    if [ ! -f "$CONFIG" -a "$CONFIG" != "test" ];then
-      echo "config file "$CONFIG" unexistent" >&2
+    c)
+      CONFIG=$OPTARG
+      if [ ! -f "$CONFIG" -a "$CONFIG" != "test" ];then
+        echo "config file "$CONFIG" unexistent" >&2
+        exit 1
+      elif [ $CONFIG = "test" ]; then
+        echo "test mode"
+      else
+        echo "use config file $CONFIG" >&2
+        source "$CONFIG"
+      fi
+      ;;
+    e) 
+      set -e 
+      ;;
+    q)
+      QUIET="yes"
+      ;;
+    f)
+      FORCE="yes"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
       exit 1
-    elif [ $CONFIG = "test" ]; then
-      echo "test mode"
-    else
-      echo "use config file $CONFIG" >&2
-      source "$CONFIG"
-    fi
-    ;;
-  e) 
-    set -e 
-    ;;
-  q)
-    QUIET="yes"
-    ;;
-  f)
-    FORCE="yes"
-    ;;
-  \?)
-    echo "Invalid option: -$OPTARG" >&2
-    exit 1
-    ;;
-  :)
-    echo "Option -$OPTARG requires an argument." >&2
-    exit 1
-    ;;
-  esac
+      ;;
+    esac
 done
 
 if [ -z "$CONFIG" ]; then
-  echo "you must provide a config file"
+  echo "You must provide a config file."
   exit 1
 fi
 
@@ -93,6 +89,7 @@ if [ -z "$QUIET" ] || [ "$QUIET" != "no" -a "$QUIET" != "yes" ]; then
   export QUIET="no"
 else
   echo "QUIET parameter is "$QUIET"" | tee -a "$PRD"/log_processing_parameters.txt
+  # TODO: finish quiet
   export MRTRIX_QUIET=1
 fi
 
@@ -144,6 +141,14 @@ if [ -z "$K_LIST" ]; then
   K_LIST=""
 else
   echo "K_LIST parameter is "$K_LIST"" | tee -a "$PRD"/log_processing_parameters.txt
+fi
+
+
+if [ -z "$PARCEL" ] || [ "$PARCEL" != "desikan" -a "$PARCEL" != "destrieux" -a "$PARCEL" != "HCP-MMP" ]; then
+  echo "set PARCEL parameter to desikan" | tee -a "$PRD"/log_processing_parameters.txt
+  PARCEL="desikan"
+else
+  echo "PARCEL parameter is "$PARCEL"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
 if [ -z "$TOPUP" ] || [ "$TOPUP" != "no" -a "$TOPUP" != "eddy_correct" ]; then
@@ -356,14 +361,14 @@ if [ ! -f "$PRD"/connectivity/predwi.mif ]; then
             -export_pe_table $PRD/connectivity/pe_table \
             -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
             -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"  
-  if [ "$FORCE" = "no"]; then
+  cp $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi.mif
+  if [ "$FORCE" = "no" ]; then
     echo "Do you want to add another image serie (different phase encoding)? [y, n]"
     read select_images
     while [ "$select_images" != "y" ] && [ "$select_images" != "n" ]; do
       echo " please answer y or n"
       read select_images
     done
-    cp $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi.mif
     while [ "$select_images" == "y" ]; do
       i_im=$(($i_im + 1))
       mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_"$i_im".mif \
@@ -423,13 +428,13 @@ fi
 if [ ! -f "$PRD"/connectivity/predwi_denoised_preproc.mif ]; then
   view_step=1
   if [ "$TOPUP" = "eddy_correct" ]; then
-    # eddy maybe topup corrections depending of the encoding scheme
+    # eddy and maybe topup corrections depending of the encoding scheme
+    # TODO: removed repol option for now, as it is not in current FSL debian release
     echo "apply eddy and maybe topup if reverse phase-encoding scheme"
     dwipreproc $PRD/connectivity/predwi_denoised.mif \
                $PRD/connectivity/predwi_denoised_preproc.mif \
                -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
-               -rpe_header -eddy_options ' --repol' -cuda -force \
-               -nthreads "$NB_THREADS"    
+               -rpe_header -cuda -force -nthreads "$NB_THREADS"    
   else # no topup/eddy
     echo "no topup/eddy applied"
     mrconvert $PRD/connectivity/predwi_denoised.mif \

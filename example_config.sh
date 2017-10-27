@@ -108,13 +108,13 @@ export K_LIST="0 1 2 3 4 5"
 export NUMBER_TRACKS=10000000
 
 # choice of the parcellation
-# options ["desikan", "destrieux", "HCP"]; default: "desikan" 
+# options ["desikan", "destrieux", "HCP-MMP"]; default: "desikan" 
 export parcel="desikan"
 
 # use topup and eddy distortion correction
 # this depends of you images
 # options: ["no", "eddy_correct"], default: "eddy_correct"
-export TOPUP="no"
+export TOPUP="eddy_correct"
 
 # use Anatomically Constrained Tractography (yes/no)
 # options ["yes", "no"]; default: "yes"
