@@ -41,144 +41,30 @@ Teardown() {
 	rm -r "$PRD"
 }
 
-test_fsl_5() {
-  export FSL="fsl5.0-"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_fsl_5 output is : "$out" <<< \n"
-}
-
-test_registration_boundary() {
-  export REGISTRATION="boundary"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_registration_boundary output is : "$out" <<< \n"
-}
-
-test_registration_pseudo() {
-  export REGISTRATION="pseudo"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_registration_pseudo output is : "$out" <<< \n"
-}
-
-test_region_mapping_corr() {
-  export REGION_MATPPING_COOR="0.5"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_region_mapping_corr output is : "$out" <<< \n"
-}
-
-test_k_list() {
-  export K_LIST="0 2 5"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_k_list output is : "$out" <<< \n"
-}
-
-test_no_k_list() {
-  export K_LIST=""
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_no_k_list output is : "$out" <<< \n"
-}
-
-test_number_tracks() {
-  export NUMBER_TRACKS=10000
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_number_tracks output is : "$out" <<< \n"
-}
-
-test_parcel_destrieux() {
-  
-  bash ./main_surface.sh -c "test" -e -q -f && out="success" || out="fail"
-  printf "\n >>> Test test_parcel_destrieux output is : "$out" <<< \n"
-}
-
-test_parcel_HCP() {
-  export PARCEL="HCP-MMP"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_parcel_HCP output is : "$out" <<< \n"
-}
-
-test_parcel_Yeo7() {
-  export PARCEL="HCP-MMP"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_parcel_Yeo_7 output is : "$out" <<< \n"
-}
-
-test_parcel_Yeo17() {
-  export PARCEL="HCP-MMP"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_parcel_Yeo_17 output is : "$out" <<< \n"
-}
-
-test_no_topup() {
-  export TOPUP="no"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_no_topup output is : "$out" <<< \n"
-}
-
-test_no_act() {
-  export ACT="no"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_no_act output is : "$out" <<< \n"
-}
-
-test_no_sift() {
-  export SIFT="no"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_no_sift output is : "$out" <<< \n"
-}
-
-test_sift() {
-  export SIFT="sift"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_no_sift output is : "$out" <<< \n"
-}
-
-test_sift_multiplier() {
-  export SIFT="sift"
-  export SIFT_MULTIPLIER=2
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_no_sift output is : "$out" <<< \n"
-}
-
-test_seed_dynamic() {
-  export SEED="dynamic"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_seed_dynamic output is : "$out" <<< \n"
-}
-
-test_aseg_fs() {
-  export ASEG="fs"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_aseg_fs output is : "$out" <<< \n"
-}
-
-test_nb_threads_2() {
-  export NB_THREADS=2
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_nb_threads_2 output is : "$out" <<< \n"
-}
 
 test_function() {
   bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
   printf "\n >>> Test "$NAME_TEST" output is : "$out" <<< \n"
 }
 
-#( setUp; test_fsl_5 ) &
-#( setUp; test_registration_boundary; Teardown ) &
-#( setUp; test_registration_pseudo; Teardown ) &
-#( setUp; test_region_mapping_corr; Teardown ) &
-#( setUp; test_k_list; Teardown  ) &
-#( setUp; test_no_k_list; Teardown ) &
-#( setUp; test_number_tracks; Teardown ) &
-( export NAME_TEST="parcel_destrieux"; PARCEL="destrieux"; setUp "$P"; test_function ) &
-#( setUp; test_parcel_HCP ) &
-#( setUp; test_parcel_Yeo7 ) &
-#( setUp; test_parcel_Yeo17 ) &
-#( setUp; test_no_topup; Teardown ) &
-#( setUp; test_no_act; Teardown ) &
-#( setUp; test_no_sift; Teardown ) &
-#( setUp; test_sift; Teardown ) &
-#( setUp; test_sift_multiplier; Teardown ) &
-#( setUp; test_seed_dynamic; Teardown ) &
-#( setUp; test_aseg_fs; Teardown ) &
-#( setUp; test_nb_threads_2; Teardown ) &
+#( export NAME_TEST="fsl_5"; export FSL="fsl5.0-"; setUp; test_function ) &
+#( export NAME_TEST="registration_boundary"; export REGISTRATION="boundary"; setUp; test_function; Teardown ) &
+#( export NAME_TEST="registration_pseudo"; export REGISTRATION="pseudo"; setUp; test_function; Teardown ) &
+#( export NAME_TEST="region_mapping_corr"; export REGION_MAPPING_COOR="0.5"; setUp; test_function; Teardown ) &
+#( export NAME_TEST="k_list"; export K_LIST="0 2 5"; setUp; test_function; Teardown  ) &
+#( export NAME_TEST="no_k_list"; export K_LIST=""; setUp; test_function; Teardown ) &
+#( export NAME_TEST="number_tracks"; export NUMBER_TRACKS=10000"; setUp; test_function; Teardown ) &
+( export NAME_TEST="parcel_destrieux"; PARCEL="destrieux"; setUp; test_function ) &
+#( export NAME_TEST="parcel_HCP"; export PARCEL="HCP-MMP"; setUp; test_function ) &
+#( export NAME_TEST="parcel_Yeo7"; export PARCEL="Yeo-7nets"; setUp; test_function) &
+#( export NAME_TEST="parcel_Yeo17"; export PARCEL="Yeo-17nets"; setUp; test_function; Teardown ) &
+#( export NAME_TEST="parcel_no_topup"; export TOPUP="no"; setUp; test_function ) &
+#( export NAME_TEST="no_act"; export ACT="no"; setUp; test_function; Teardown ) &
+#( export NAME_TEST="no_sift"; export SIFT="no""; setUp; test_function; Teardown ) &
+#( export NAME_TEST="sift"; export SIFT="sift""; setUp; test_function; Teardown ) &
+#( export NAME_TEST="sift_multiplier"; export SIFT="sift"; export SIFT_MULTIPLIER=2; setUp; test_function; Teardown ) &
+#( export NAME_TEST="seed_dynamic"; export SEED="dynamic"; setUp; test_function; Teardown ) &
+#( export NAME_TEST="aseg_fs"; export PARCEL="destrieux"; setUp; test_function; Teardown ) &
+#( export NAME_TEST="nb_threads_2"; export ASEG="fs"; setUp; test_function; Teardown ) &
 
 exit
