@@ -89,6 +89,10 @@ elif PARCEL=='destrieux':
     L, _, _ = read_annot(os.path.join(FS, SUBJ_ID, 'label', rl + '.aparc.a2009s.annot'))
 elif PARCEL=='HCP-MMP':
     L, _, _ = read_annot(os.path.join('share', rl + '.HCP-MMP1.annot'))
+elif PARCEL=='Yeo_7nets':
+    L, _, _ = read_annot(os.path.join('share', rl + '.Yeo_7nets.annot'))
+elif PARCEL=='Yeo_17nets':
+    L, _, _ = read_annot(os.path.join('share', rl + '.Yeo_17nets.annot'))
 # using the ref table instead of the annot to reorder the region indices as we want for the region mapping
 ref_table = np.loadtxt(open(os.path.join('share', 'reference_table_' + PARCEL + ".csv"), "rb"), delimiter=",", skiprows=1, usecols=(5,6))
 vl = np.loadtxt(os.path.join(PRD, 'surface', rl + '_vertices_low.txt'))  # vertices low

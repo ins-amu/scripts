@@ -11,7 +11,7 @@ while getopts "c:e" opt; do
     elif [ $CONFIG = "test" ]; then
       echo "test mode"
     else
-      echo "use config file $CONFIG" >&2
+      echo "Using config file $CONFIG." >&2
       source "$CONFIG"
     fi
     ;;
@@ -96,6 +96,18 @@ test_parcel_HCP() {
   printf "\n >>> Test test_parcel_HCP output is : "$out" <<< \n"
 }
 
+test_parcel_Yeo7() {
+  export PARCEL="HCP-MMP"
+  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
+  printf "\n >>> Test test_parcel_HCP output is : "$out" <<< \n"
+}
+
+test_parcel_Yeo17() {
+  export PARCEL="HCP-MMP"
+  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
+  printf "\n >>> Test test_parcel_HCP output is : "$out" <<< \n"
+}
+
 test_no_topup() {
   export TOPUP="no"
   bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
@@ -154,6 +166,8 @@ test_nb_threads_2() {
 #( setUp; test_number_tracks; Teardown ) &
 ( setUp; test_parcel_destrieux ) &
 ( setUp; test_parcel_HCP ) &
+( setUp; test_parcel_Yeo7 ) &
+( setUp; test_parcel_Yeo17 ) &
 #( setUp; test_no_topup; Teardown ) &
 #( setUp; test_no_act; Teardown ) &
 #( setUp; test_no_sift; Teardown ) &

@@ -26,7 +26,7 @@ while getopts "c:eqf" opt; do
       elif [ $CONFIG = "test" ]; then
         echo "test mode"
       else
-        echo "use config file $CONFIG" >&2
+        echo "Using config file $CONFIG." >&2
         source "$CONFIG"
       fi
       ;;
