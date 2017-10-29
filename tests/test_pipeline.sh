@@ -32,10 +32,9 @@ fi
 
 setUp() {
   set +e
-  name_dir=$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 10)
-  mkdir -p "$PRD"/test_"$name_dir"
-  cp -r "$PRD"/data "$PRD"/test_"$name_dir"/data
-  PRD="$PRD"/test_"$name_dir"
+  mkdir -p "$PRD"/test_"$NAME_TEST"
+  cp -r "$PRD"/data "$PRD"/test_"$NAME_TEST"/data
+  PRD="$PRD"/test_"$NAME_TEST"
 }
 
 Teardown() {
@@ -85,8 +84,8 @@ test_number_tracks() {
 }
 
 test_parcel_destrieux() {
-  export PARCEL="destrieux"
-  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
+  
+  bash ./main_surface.sh -c "test" -e -q -f && out="success" || out="fail"
   printf "\n >>> Test test_parcel_destrieux output is : "$out" <<< \n"
 }
 
@@ -99,13 +98,13 @@ test_parcel_HCP() {
 test_parcel_Yeo7() {
   export PARCEL="HCP-MMP"
   bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_parcel_HCP output is : "$out" <<< \n"
+  printf "\n >>> Test test_parcel_Yeo_7 output is : "$out" <<< \n"
 }
 
 test_parcel_Yeo17() {
   export PARCEL="HCP-MMP"
   bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
-  printf "\n >>> Test test_parcel_HCP output is : "$out" <<< \n"
+  printf "\n >>> Test test_parcel_Yeo_17 output is : "$out" <<< \n"
 }
 
 test_no_topup() {
@@ -157,6 +156,11 @@ test_nb_threads_2() {
   printf "\n >>> Test test_nb_threads_2 output is : "$out" <<< \n"
 }
 
+test_function() {
+  bash ./main_surface.sh -c "test" -e -q -f > /dev/null && out="success" || out="fail"
+  printf "\n >>> Test "$NAME_TEST" output is : "$out" <<< \n"
+}
+
 #( setUp; test_fsl_5 ) &
 #( setUp; test_registration_boundary; Teardown ) &
 #( setUp; test_registration_pseudo; Teardown ) &
@@ -164,10 +168,10 @@ test_nb_threads_2() {
 #( setUp; test_k_list; Teardown  ) &
 #( setUp; test_no_k_list; Teardown ) &
 #( setUp; test_number_tracks; Teardown ) &
-( setUp; test_parcel_destrieux ) &
-( setUp; test_parcel_HCP ) &
-( setUp; test_parcel_Yeo7 ) &
-( setUp; test_parcel_Yeo17 ) &
+( export NAME_TEST="parcel_destrieux"; PARCEL="destrieux"; setUp "$P"; test_function ) &
+#( setUp; test_parcel_HCP ) &
+#( setUp; test_parcel_Yeo7 ) &
+#( setUp; test_parcel_Yeo17 ) &
 #( setUp; test_no_topup; Teardown ) &
 #( setUp; test_no_act; Teardown ) &
 #( setUp; test_no_sift; Teardown ) &

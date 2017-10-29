@@ -84,7 +84,7 @@ def read_annot(fname):
     return annot, ctab, names
 
 if PARCEL=='desikan':
-    L, _, _ = read_annot(os.path.join(FS, SUBJ_ID, 'label', 'lh.aparc.annot'))
+    L, _, _ = read_annot(os.path.join(FS, SUBJ_ID, 'label', rl + '.aparc.annot'))
 elif PARCEL=='destrieux':
     L, _, _ = read_annot(os.path.join(FS, SUBJ_ID, 'label', rl + '.aparc.a2009s.annot'))
 elif PARCEL=='HCP-MMP':

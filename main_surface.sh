@@ -605,9 +605,15 @@ fi
 if [ ! -f "$PRD"/connectivity/aparc+aseg.nii.gz ]; then
   echo "generating FSL orientation for aparc+aseg"
   # stride from FS to FSL: RAS to LAS
-  mrconvert $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
+  if [ $PARCEL = "desikan" ]; then
+    mrconvert $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
             $PRD/connectivity/aparc+aseg.nii.gz -stride -1,+2,+3 -force \
             -nthreads "$NB_THREADS" 
+  elif [ $PARCEL = "destrieux" ]; then
+    mrconvert $FS/$SUBJ_ID/mri/aparc.a2009s+aseg.mgz \
+            $PRD/connectivity/aparc+aseg.nii.gz -stride -1,+2,+3 -force \
+            -nthreads "$NB_THREADS" 
+  fi
 fi
 
 # check orientations
@@ -854,7 +860,8 @@ if [ ! -f "$PRD"/connectivity/whole_brain.tck ]; then
 fi
 
 # postprocessing
-if [ ! -f "$PRD"/connectivity/whole_brain_post.tck ]; then
+if [ ! -e "$PRD"/connectivity/whole_brain_post.tck ]; then
+  echo "$PRD"/connectivity/whole_brain_post.tck
   if [ "$SIFT" = "sift" ]; then
     echo "using sift"
     number_tracks=$(($NUMBER_TRACKS/$SIFT_MULTIPLIER))
