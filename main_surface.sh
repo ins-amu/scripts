@@ -1030,9 +1030,8 @@ fi
 # we do not compute hemisphere
 # subcortical is already done
 
-echo ""$PRD"/"$SUBJ_ID"/connectivity/weights.txt"
 # compute centers, areas, cortical and orientations
-if [ ! -f "$PRD"/"$SUBJ_ID"/connectivity/weights.txt ]; then
+if [ ! -f "$PRD"/"$SUBJ_ID"/connectivity/cortical.txt ]; then
   echo "generate useful files for TVB"
   python util/compute_connectivity_files.py
 fi
@@ -1051,12 +1050,11 @@ if [ -n "$K_LIST" ]; then
   for K in $K_LIST; do
     export curr_K=$(( 2**K ))
     mkdir -p $PRD/$SUBJ_ID/connectivity_"$curr_K"
-    if [ -n "$MATLAB" ]; then
-      if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz ]; then
-        echo "compute subparcellations for $curr_K"
-        $MATLAB -r "run subparcel.m; quit;" -nodesktop -nodisplay 
-        gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
-      fi
+    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz ]; then
+      echo "compute subparcellations for $curr_K"
+      $MATLAB -r "run subparcel.m; quit;" -nodesktop -nodisplay 
+      gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
+    fi
     if [ ! -f $PRD/$SUBJ_ID/region_mapping_"$curr_K".txt ]; then
       echo "generate region mapping for subparcellation "$curr_K""
       python util/region_mapping_other_parcellations.py

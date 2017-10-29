@@ -227,7 +227,7 @@ if __name__ == '__main__':
     list_name = np.loadtxt(open(os.path.join('share', 'reference_table_' + PARCEL + ".csv"), "r"), delimiter=",", skiprows=1, usecols=(1, ), dtype='str')
 
     f = open(os.path.join(PRD, SUBJ_ID, 'connectivity/centresl.txt'), 'w')
-    for i, name in enumerate(list_namel):
+    for i, name in enumerate(list_name):
         f.write(str(name) +' ')
         for j in range(3):
             f.write('{:.4f} '.format(centers[i, j]))
