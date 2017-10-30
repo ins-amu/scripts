@@ -63,7 +63,7 @@ def find_both_components(texture, vert, trian, ilab):
 
 def correct_sub_region(texture, trian, Vw):
     "correct the region mapping for the chosen component"
-    new_texture = copy(texture)
+    new_texture = np.copy(texture)
     icount = 0
     while len(Vw)>0:
         iVw = Vw.pop()

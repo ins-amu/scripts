@@ -67,8 +67,8 @@ export CLEAN_AFTER_TEST=0
 ( export NAME_TEST="parcel_Yeo17"; export PARCEL="Yeo-17nets"; setUp; test_function; Teardown ) &
 ( export NAME_TEST="no_topup"; export TOPUP="no"; setUp; test_function; Teardown ) &
 ( export NAME_TEST="no_act"; export ACT="no"; setUp; test_function; Teardown ) &
-( export NAME_TEST="no_sift"; export SIFT="no""; setUp; test_function; Teardown ) &
-( export NAME_TEST="sift"; export SIFT="sift""; setUp; test_function; Teardown ) &
+( export NAME_TEST="no_sift"; export SIFT="no"; setUp; test_function; Teardown ) &
+( export NAME_TEST="sift"; export SIFT="sift"; setUp; test_function; Teardown ) &
 ( export NAME_TEST="sift_multiplier"; export SIFT="sift"; export SIFT_MULTIPLIER=2; setUp; test_function; Teardown ) &
 ( export NAME_TEST="seed_dynamic"; export SEED="dynamic"; setUp; test_function; Teardown ) &
 ( export NAME_TEST="aseg_fs"; export PARCEL="destrieux"; setUp; test_function; Teardown ) &
