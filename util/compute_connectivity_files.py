@@ -1,6 +1,6 @@
 import numpy as np
-import numpy
 import os
+
 PRD = os.environ['PRD']
 SUBJ_ID = os.environ['SUBJ_ID']
 PARCEL = os.environ['PARCEL']
@@ -9,14 +9,14 @@ def compute_triangle_areas(vertices, triangles):
     """Calculates the area of triangles making up a surface."""
     tri_u = vertices[triangles[:, 1], :] - vertices[triangles[:, 0], :]
     tri_v = vertices[triangles[:, 2], :] - vertices[triangles[:, 0], :]
-    tri_norm = numpy.cross(tri_u, tri_v)
-    triangle_areas = numpy.sqrt(numpy.sum(tri_norm ** 2, axis=1)) / 2.0
-    triangle_areas = triangle_areas[:, numpy.newaxis]
+    tri_norm = np.cross(tri_u, tri_v)
+    triangle_areas = np.sqrt(np.sum(tri_norm ** 2, axis=1)) / 2.0
+    triangle_areas = triangle_areas[:, np.newaxis]
     return triangle_areas
 
 
 def compute_region_areas(triangles_areas, vertex_triangles):
-    avt = numpy.array(vertex_triangles)
+    avt = np.array(vertex_triangles)
     #NOTE: Slightly overestimates as it counts overlapping border triangles,
     #      but, not really a problem provided triangle-size << region-size.
     regs = map(set, avt)
@@ -26,11 +26,11 @@ def compute_region_areas(triangles_areas, vertex_triangles):
 
 
 def compute_region_orientation(vertex_normals):
-    average_orientation = numpy.zeros((1, 3))
+    average_orientation = np.zeros((1, 3))
     # Average orientation of the region
     orient = vertex_normals[:, :]
-    avg_orient = numpy.mean(orient, axis=0)
-    average_orientation = avg_orient / numpy.sqrt(numpy.sum(avg_orient ** 2))
+    avg_orient = np.mean(orient, axis=0)
+    average_orientation = avg_orient / np.sqrt(np.sum(avg_orient ** 2))
     region_orientation = average_orientation
     return region_orientation
 
@@ -50,24 +50,24 @@ def compute_vertex_normals(number_of_vertices, vertex_triangles, triangles,
     Estimates vertex normals, based on triangle normals weighted by the
     angle they subtend at each vertex...
     """
-    vert_norms = numpy.zeros((number_of_vertices, 3))
+    vert_norms = np.zeros((number_of_vertices, 3))
     bad_normal_count = 0
     for k in range(number_of_vertices):
         try:
             tri_list = list(vertex_triangles[k])
             angle_mask = triangles[tri_list, :] == k
             angles = triangle_angles[tri_list, :]
-            angles = angles[angle_mask][:, numpy.newaxis]
-            angle_scaling = angles / numpy.sum(angles, axis=0)
-            vert_norms[k, :] = numpy.mean(angle_scaling * triangle_normals[tri_list, :], axis=0)
+            angles = angles[angle_mask][:, np.newaxis]
+            angle_scaling = angles / np.sum(angles, axis=0)
+            vert_norms[k, :] = np.mean(angle_scaling * triangle_normals[tri_list, :], axis=0)
             # Scale by angle subtended.
-            vert_norms[k, :] = vert_norms[k, :] / numpy.sqrt(numpy.sum(vert_norms[k, :] ** 2, axis=0))
+            vert_norms[k, :] = vert_norms[k, :] / np.sqrt(np.sum(vert_norms[k, :] ** 2, axis=0))
             # Normalise to unit vectors.
         except (ValueError, FloatingPointError):
             # If normals are bad, default to position vector
             # A nicer solution would be to detect degenerate triangles and ignore their
             # contribution to the vertex normal
-            vert_norms[k, :] = vertices[k] / numpy.sqrt(vertices[k].dot(vertices[k]))
+            vert_norms[k, :] = vertices[k] / np.sqrt(vertices[k].dot(vertices[k]))
             bad_normal_count += 1
     if bad_normal_count:
         print(" %d vertices have bad normals" % bad_normal_count)
@@ -82,17 +82,16 @@ def compute_triangle_angles(vertices, number_of_triangles, triangles):
     # TODO: Should be possible with arrays, ie not nested loops...
     # A short profile indicates this function takes 95% of the time to compute normals
     # (this was a direct translation of some old matlab code)
-    angles = numpy.zeros((number_of_triangles, 3))
+    angles = np.zeros((number_of_triangles, 3))
     for tt in range(number_of_triangles):
         triangle = triangles[tt, :]
         for ta in range(3):
-            ang = numpy.roll(triangle, -ta)
-            angles[tt, ta] = numpy.arccos(numpy.dot(
+            ang = np.roll(triangle, -ta)
+            angles[tt, ta] = np.arccos(np.dot(
                 (verts[ang[1], :] - verts[ang[0], :]) /
-                numpy.sqrt(numpy.sum((verts[ang[1], :] - verts[ang[0], :]) ** 2, axis=0)),
+                np.sqrt(np.sum((verts[ang[1], :] - verts[ang[0], :]) ** 2, axis=0)),
                 (verts[ang[2], :] - verts[ang[0], :]) /
-                numpy.sqrt(numpy.sum((verts[ang[2], :] - verts[ang[0], :]) ** 2, axis=0))))
-
+                np.sqrt(np.sum((verts[ang[2], :] - verts[ang[0], :]) ** 2, axis=0))))
     return angles
 
 
@@ -100,10 +99,10 @@ def compute_triangle_normals(triangles, vertices):
     """Calculates triangle normals."""
     tri_u = vertices[triangles[:, 1], :] - vertices[triangles[:, 0], :]
     tri_v = vertices[triangles[:, 2], :] - vertices[triangles[:, 0], :]
-    tri_norm = numpy.cross(tri_u, tri_v)
+    tri_norm = np.cross(tri_u, tri_v)
 
     try:
-        triangle_normals = tri_norm / numpy.sqrt(numpy.sum(tri_norm ** 2, axis=1))[:, numpy.newaxis]
+        triangle_normals = tri_norm / np.sqrt(np.sum(tri_norm ** 2, axis=1))[:, np.newaxis]
     except FloatingPointError:
         #TODO: NaN generation would stop execution, however for normals this case could maybe be
         # handled in a better way.
@@ -112,39 +111,36 @@ def compute_triangle_normals(triangles, vertices):
 
 
 def compute_region_areas_cortex(triangle_areas, vertex_triangles, region_mapping):
-    regions = numpy.unique(region_mapping)
-    region_surface_area = numpy.zeros((numpy.max(numpy.unique(regions))+1, 1))
-    avt = numpy.array(vertex_triangles)
+    regions = np.unique(region_mapping)
+    region_surface_area = np.zeros((np.max(np.unique(regions))+1, 1))
+    avt = np.array(vertex_triangles)
     #NOTE: Slightly overestimates as it counts overlapping border triangles,
     #      but, not really a problem provided triangle-size << region-size.
     for k in regions:
         regs = map(set, avt[region_mapping == k])
         region_triangles = set.union(*regs)
         region_surface_area[k] = triangle_areas[list(region_triangles)].sum()
-
     return region_surface_area
 
 
 def compute_region_orientation_cortex(vertex_normals, region_mapping):
-    regions = numpy.unique(region_mapping)
-    average_orientation = numpy.zeros((numpy.max(numpy.unique(regions))+1, 3))
+    regions = np.unique(region_mapping)
+    average_orientation = np.zeros((np.max(np.unique(regions))+1, 3))
     #Average orientation of the region
     for k in regions:
         orient = vertex_normals[region_mapping == k, :]
-        avg_orient = numpy.mean(orient, axis=0)
-        average_orientation[k, :] = avg_orient / numpy.sqrt(numpy.sum(avg_orient ** 2))
-
+        avg_orient = np.mean(orient, axis=0)
+        average_orientation[k, :] = avg_orient / np.sqrt(np.sum(avg_orient ** 2))
     return average_orientation
 
 
 def compute_region_center_cortex(vertices, region_mapping):
-    regions = numpy.unique(region_mapping)
-    region_center= numpy.zeros((numpy.max(numpy.unique(region_mapping))+1, 3))
+    regions = np.unique(region_mapping)
+    region_center= np.zeros((np.max(np.unique(region_mapping))+1, 3))
     #Average orientation of the region
     for k in regions:
         vert = vertices[region_mapping == k, :]
-        region_center[k, :] = numpy.mean(vert, axis=0)
-
+        region_center[k, :] = np.mean(vert, axis=0)
     return region_center
 
 
@@ -199,7 +195,7 @@ if __name__ == '__main__':
         tri = tri.astype(int)
 
         curr_center = np.mean(verts, axis=0)
-        indx = int(corr_table[np.nonzero(corr_table[:, 0] == np.int(val)), 1] - 1)
+        indx = int(corr_table[np.nonzero(corr_table[:, 0] == np.int(val)), 1])
         centers[indx, :] = curr_center
         # Now calculate average orientations
         number_of_vertices = int(verts.shape[0])
@@ -226,7 +222,7 @@ if __name__ == '__main__':
     # add the name to centers
     list_name = np.loadtxt(open(os.path.join('share', 'reference_table_' + PARCEL + ".csv"), "r"), delimiter=",", skiprows=1, usecols=(1, ), dtype='str')
 
-    f = open(os.path.join(PRD, SUBJ_ID, 'connectivity/centresl.txt'), 'w')
+    f = open(os.path.join(PRD, SUBJ_ID, 'connectivity/centres.txt'), 'w')
     for i, name in enumerate(list_name):
         f.write(str(name) +' ')
         for j in range(3):

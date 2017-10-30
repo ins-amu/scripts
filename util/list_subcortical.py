@@ -1,5 +1,6 @@
 import numpy as np
 import os
+
 PRD = os.environ['PRD']
 os.chdir(os.path.join(PRD, 'surface', 'subcortical'))
 

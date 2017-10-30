@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import sys
+
 rl = sys.argv[1]
 PRD = os.environ['PRD']
 os.chdir(os.path.join(PRD, 'surface'))

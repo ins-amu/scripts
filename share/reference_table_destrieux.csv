@@ -9,81 +9,81 @@ label,name,c1,c2,c3,id,val_fs,cortical,alpha
 17,Left-Hippocampus,220,216,20,7,1366236,0,255
 18,Left-Amygdala,103,255,255,8,16777063,0,255
 26,Left-Accumbens-area,255,165,0,9,42495,0,255
-11101  ctx_lh_G_and_S_frontomargin           ,,23,220,60,10,3988503,1,255
-11102  ctx_lh_G_and_S_occipital_inf          ,,23,60,180,11,11811863,1,255
-11103  ctx_lh_G_and_S_paracentral            ,,63,100,60,12,3957823,1,255
-11104  ctx_lh_G_and_S_subcentral             ,,63,20,220,13,14423103,1,255
-11105  ctx_lh_G_and_S_transv_frontopol       ,,13,0,250,14,16384013,1,255
-11106  ctx_lh_G_and_S_cingul-Ant             ,,26,60,0,15,15386,1,255
-11107  ctx_lh_G_and_S_cingul-Mid-Ant         ,,26,60,75,16,4930586,1,255
-11108  ctx_lh_G_and_S_cingul-Mid-Post        ,,26,60,150,17,9845786,1,255
-11109  ctx_lh_G_cingul-Post-dorsal           ,,25,60,250,18,16399385,1,255
-11110  ctx_lh_G_cingul-Post-ventral          ,,60,25,25,19,1644860,1,255
-11111  ctx_lh_G_cuneus                       ,,180,20,20,20,1316020,1,255
-11112  ctx_lh_G_front_inf-Opercular          ,,220,20,100,21,6558940,1,255
-11113  ctx_lh_G_front_inf-Orbital            ,,140,60,60,22,3947660,1,255
-11114  ctx_lh_G_front_inf-Triangul           ,,180,220,140,23,9231540,1,255
-11115  ctx_lh_G_front_middle                 ,,140,100,180,24,11822220,1,255
-11116  ctx_lh_G_front_sup                    ,,180,20,140,25,9180340,1,255
-11117  ctx_lh_G_Ins_lg_and_S_cent_ins        ,,23,10,10,26,657943,1,255
-11118  ctx_lh_G_insular_short                ,,225,140,140,27,9211105,1,255
-11119  ctx_lh_G_occipital_middle             ,,180,60,180,28,11812020,1,255
-11120  ctx_lh_G_occipital_sup                ,,20,220,60,29,3988500,1,255
-11121  ctx_lh_G_oc-temp_lat-fusifor          ,,60,20,140,30,9180220,1,255
-11122  ctx_lh_G_oc-temp_med-Lingual          ,,220,180,140,31,9221340,1,255
-11123  ctx_lh_G_oc-temp_med-Parahip          ,,65,100,20,32,1336385,1,255
-11124  ctx_lh_G_orbital                      ,,220,60,20,33,1326300,1,255
-11125  ctx_lh_G_pariet_inf-Angular           ,,20,60,220,34,14433300,1,255
-11126  ctx_lh_G_pariet_inf-Supramar          ,,100,100,60,35,3957860,1,255
-11127  ctx_lh_G_parietal_sup                 ,,220,180,220,36,14464220,1,255
-11128  ctx_lh_G_postcentral                  ,,20,180,140,37,9221140,1,255
-11129  ctx_lh_G_precentral                   ,,60,140,180,38,11832380,1,255
-11130  ctx_lh_G_precuneus                    ,,25,20,140,39,9180185,1,255
-11131  ctx_lh_G_rectus                       ,,20,60,100,40,6568980,1,255
-11132  ctx_lh_G_subcallosal                  ,,60,220,20,41,1367100,1,255
-11133  ctx_lh_G_temp_sup-G_T_transv          ,,60,60,220,42,14433340,1,255
-11134  ctx_lh_G_temp_sup-Lateral             ,,220,60,220,43,14433500,1,255
-11135  ctx_lh_G_temp_sup-Plan_polar          ,,65,220,60,44,3988545,1,255
-11136  ctx_lh_G_temp_sup-Plan_tempo          ,,25,140,20,45,1346585,1,255
-11137  ctx_lh_G_temporal_inf                 ,,220,220,100,46,6610140,1,255
-11138  ctx_lh_G_temporal_middle              ,,180,60,60,47,3947700,1,255
-11139  ctx_lh_Lat_Fis-ant-Horizont           ,,61,20,220,48,14423101,1,255
-11140  ctx_lh_Lat_Fis-ant-Vertical           ,,61,20,60,49,3937341,1,255
-11141  ctx_lh_Lat_Fis-post                   ,,61,60,100,50,6569021,1,255
-11142  ctx_lh_Medial_wall                    ,,25,25,25,51,1644825,1,255
-11143  ctx_lh_Pole_occipital                 ,,140,20,60,52,3937420,1,255
-11144  ctx_lh_Pole_temporal                  ,,220,180,20,53,1357020,1,255
-11145  ctx_lh_S_calcarine                    ,,63,180,180,54,11842623,1,255
-11146  ctx_lh_S_central                      ,,221,20,10,55,660701,1,255
-11147  ctx_lh_S_cingul-Marginalis            ,,221,20,100,56,6558941,1,255
-11148  ctx_lh_S_circular_insula_ant          ,,221,60,140,57,9190621,1,255
-11149  ctx_lh_S_circular_insula_inf          ,,221,20,220,58,14423261,1,255
-11150  ctx_lh_S_circular_insula_sup          ,,61,220,220,59,14474301,1,255
-11151  ctx_lh_S_collat_transv_ant            ,,100,200,200,60,13158500,1,255
-11152  ctx_lh_S_collat_transv_post           ,,10,200,200,61,13158410,1,255
-11153  ctx_lh_S_front_inf                    ,,221,220,20,62,1367261,1,255
-11154  ctx_lh_S_front_middle                 ,,141,20,100,63,6558861,1,255
-11155  ctx_lh_S_front_sup                    ,,61,220,100,64,6609981,1,255
-11156  ctx_lh_S_interm_prim-Jensen           ,,141,60,20,65,1326221,1,255
-11157  ctx_lh_S_intrapariet_and_P_trans      ,,143,20,220,66,14423183,1,255
-11158  ctx_lh_S_oc_middle_and_Lunatus        ,,101,60,220,67,14433381,1,255
-11159  ctx_lh_S_oc_sup_and_transversal       ,,21,20,140,68,9180181,1,255
-11160  ctx_lh_S_occipital_ant                ,,61,20,180,69,11801661,1,255
-11161  ctx_lh_S_oc-temp_lat                  ,,221,140,20,70,1346781,1,255
-11162  ctx_lh_S_oc-temp_med_and_Lingual      ,,141,100,220,71,14443661,1,255
-11163  ctx_lh_S_orbital_lateral              ,,221,100,20,72,1336541,1,255
-11164  ctx_lh_S_orbital_med-olfact           ,,181,200,20,73,1362101,1,255
-11165  ctx_lh_S_orbital-H_Shaped             ,,101,20,20,74,1315941,1,255
-11166  ctx_lh_S_parieto_occipital            ,,101,100,180,75,11822181,1,255
-11167  ctx_lh_S_pericallosal                 ,,181,220,20,76,1367221,1,255
-11168  ctx_lh_S_postcentral                  ,,21,140,200,77,13143061,1,255
-11169  ctx_lh_S_precentral-inf-part          ,,21,20,240,78,15733781,1,255
-11170  ctx_lh_S_precentral-sup-part          ,,21,20,200,79,13112341,1,255
-11171  ctx_lh_S_suborbital                   ,,21,20,60,80,3937301,1,255
-11172  ctx_lh_S_subparietal                  ,,101,60,60,81,3947621,1,255
-11173  ctx_lh_S_temporal_inf                 ,,21,180,180,82,11842581,1,255
-11174  ctx_lh_S_temporal_sup                 ,,223,220,60,83,3988703,1,255
-11175  ctx_lh_S_temporal_transverse,,221,60,60,84,3947741,1,255
+11101,ctx_lh_G_and_S_frontomargin,23,220,60,10,3988503,1,255
+11102,ctx_lh_G_and_S_occipital_inf,23,60,180,11,11811863,1,255
+11103,ctx_lh_G_and_S_paracentral,63,100,60,12,3957823,1,255
+11104,ctx_lh_G_and_S_subcentral,63,20,220,13,14423103,1,255
+11105,ctx_lh_G_and_S_transv_frontopol,13,0,250,14,16384013,1,255
+11106,ctx_lh_G_and_S_cingul-Ant,26,60,0,15,15386,1,255
+11107,ctx_lh_G_and_S_cingul-Mid-Ant,26,60,75,16,4930586,1,255
+11108,ctx_lh_G_and_S_cingul-Mid-Post,26,60,150,17,9845786,1,255
+11109,ctx_lh_G_cingul-Post-dorsal,25,60,250,18,16399385,1,255
+11110,ctx_lh_G_cingul-Post-ventral,60,25,25,19,1644860,1,255
+11111,ctx_lh_G_cuneus,180,20,20,20,1316020,1,255
+11112,ctx_lh_G_front_inf-Opercular,220,20,100,21,6558940,1,255
+11113,ctx_lh_G_front_inf-Orbital,140,60,60,22,3947660,1,255
+11114,ctx_lh_G_front_inf-Triangul,180,220,140,23,9231540,1,255
+11115,ctx_lh_G_front_middle,140,100,180,24,11822220,1,255
+11116,ctx_lh_G_front_sup,180,20,140,25,9180340,1,255
+11117,ctx_lh_G_Ins_lg_and_S_cent_ins,23,10,10,26,657943,1,255
+11118,ctx_lh_G_insular_short,225,140,140,27,9211105,1,255
+11119,ctx_lh_G_occipital_middle,180,60,180,28,11812020,1,255
+11120,ctx_lh_G_occipital_sup,20,220,60,29,3988500,1,255
+11121,ctx_lh_G_oc-temp_lat-fusifor,60,20,140,30,9180220,1,255
+11122,ctx_lh_G_oc-temp_med-Lingual,220,180,140,31,9221340,1,255
+11123,ctx_lh_G_oc-temp_med-Parahip,65,100,20,32,1336385,1,255
+11124,ctx_lh_G_orbital,220,60,20,33,1326300,1,255
+11125,ctx_lh_G_pariet_inf-Angular,20,60,220,34,14433300,1,255
+11126,ctx_lh_G_pariet_inf-Supramar,100,100,60,35,3957860,1,255
+11127,ctx_lh_G_parietal_sup,220,180,220,36,14464220,1,255
+11128,ctx_lh_G_postcentral,20,180,140,37,9221140,1,255
+11129,ctx_lh_G_precentral,60,140,180,38,11832380,1,255
+11130,ctx_lh_G_precuneus,25,20,140,39,9180185,1,255
+11131,ctx_lh_G_rectus,20,60,100,40,6568980,1,255
+11132,ctx_lh_G_subcallosal,60,220,20,41,1367100,1,255
+11133,ctx_lh_G_temp_sup-G_T_transv,60,60,220,42,14433340,1,255
+11134,ctx_lh_G_temp_sup-Lateral,220,60,220,43,14433500,1,255
+11135,ctx_lh_G_temp_sup-Plan_polar,65,220,60,44,3988545,1,255
+11136,ctx_lh_G_temp_sup-Plan_tempo,25,140,20,45,1346585,1,255
+11137,ctx_lh_G_temporal_inf,220,220,100,46,6610140,1,255
+11138,ctx_lh_G_temporal_middle,180,60,60,47,3947700,1,255
+11139,ctx_lh_Lat_Fis-ant-Horizont,61,20,220,48,14423101,1,255
+11140,ctx_lh_Lat_Fis-ant-Vertical,61,20,60,49,3937341,1,255
+11141,ctx_lh_Lat_Fis-post,61,60,100,50,6569021,1,255
+11142,ctx_lh_Medial_wall,25,25,25,51,1644825,1,255
+11143,ctx_lh_Pole_occipital,140,20,60,52,3937420,1,255
+11144,ctx_lh_Pole_temporal,220,180,20,53,1357020,1,255
+11145,ctx_lh_S_calcarine,63,180,180,54,11842623,1,255
+11146,ctx_lh_S_central,221,20,10,55,660701,1,255
+11147,ctx_lh_S_cingul-Marginalis,221,20,100,56,6558941,1,255
+11148,ctx_lh_S_circular_insula_ant,221,60,140,57,9190621,1,255
+11149,ctx_lh_S_circular_insula_inf,221,20,220,58,14423261,1,255
+11150,ctx_lh_S_circular_insula_sup,61,220,220,59,14474301,1,255
+11151,ctx_lh_S_collat_transv_ant,100,200,200,60,13158500,1,255
+11152,ctx_lh_S_collat_transv_post,10,200,200,61,13158410,1,255
+11153,ctx_lh_S_front_inf,221,220,20,62,1367261,1,255
+11154,ctx_lh_S_front_middle,141,20,100,63,6558861,1,255
+11155,ctx_lh_S_front_sup,61,220,100,64,6609981,1,255
+11156,ctx_lh_S_interm_prim-Jensen,141,60,20,65,1326221,1,255
+11157,ctx_lh_S_intrapariet_and_P_trans,143,20,220,66,14423183,1,255
+11158,ctx_lh_S_oc_middle_and_Lunatus,101,60,220,67,14433381,1,255
+11159,ctx_lh_S_oc_sup_and_transversal,21,20,140,68,9180181,1,255
+11160,ctx_lh_S_occipital_ant,61,20,180,69,11801661,1,255
+11161,ctx_lh_S_oc-temp_lat,221,140,20,70,1346781,1,255
+11162,ctx_lh_S_oc-temp_med_and_Lingual,141,100,220,71,14443661,1,255
+11163,ctx_lh_S_orbital_lateral,221,100,20,72,1336541,1,255
+11164,ctx_lh_S_orbital_med-olfact,181,200,20,73,1362101,1,255
+11165,ctx_lh_S_orbital-H_Shaped,101,20,20,74,1315941,1,255
+11166,ctx_lh_S_parieto_occipital,101,100,180,75,11822181,1,255
+11167,ctx_lh_S_pericallosal,181,220,20,76,1367221,1,255
+11168,ctx_lh_S_postcentral,21,140,200,77,13143061,1,255
+11169,ctx_lh_S_precentral-inf-part,21,20,240,78,15733781,1,255
+11170,ctx_lh_S_precentral-sup-part,21,20,200,79,13112341,1,255
+11171,ctx_lh_S_suborbital,21,20,60,80,3937301,1,255
+11172,ctx_lh_S_subparietal,101,60,60,81,3947621,1,255
+11173,ctx_lh_S_temporal_inf,21,180,180,82,11842581,1,255
+11174,ctx_lh_S_temporal_sup,223,220,60,83,3988703,1,255
+11175,ctx_lh_S_temporal_transverse,221,60,60,84,3947741,1,255
 47,Right-Cerebellum-Cortex,230,148,34,85,2266342,0,255
 49,Right-Thalamus-Proper,0,118,14,86,947712,0,255
 50,Right-Caudate,122,186,220,87,14465658,0,255
@@ -92,78 +92,78 @@ label,name,c1,c2,c3,id,val_fs,cortical,alpha
 53,Right-Hippocampus,220,216,20,90,1366236,0,255
 54,Right-Amygdala,103,255,255,91,16777063,0,255
 58,Right-Accumbens-area,255,165,0,92,42495,0,255
-12101  ctx_rh_G_and_S_frontomargin            ,,23,220,60,93,3988503,1,255
-12102  ctx_rh_G_and_S_occipital_inf           ,,23,60,180,94,11811863,1,255
-12103  ctx_rh_G_and_S_paracentral             ,,63,100,60,95,3957823,1,255
-12104  ctx_rh_G_and_S_subcentral              ,,63,20,220,96,14423103,1,255
-12105  ctx_rh_G_and_S_transv_frontopol        ,,13,0,250,97,16384013,1,255
-12106  ctx_rh_G_and_S_cingul-Ant              ,,26,60,0,98,15386,1,255
-12107  ctx_rh_G_and_S_cingul-Mid-Ant          ,,26,60,75,99,4930586,1,255
-12108  ctx_rh_G_and_S_cingul-Mid-Post         ,,26,60,150,100,9845786,1,255
-12109  ctx_rh_G_cingul-Post-dorsal            ,,25,60,250,101,16399385,1,255
-12110  ctx_rh_G_cingul-Post-ventral           ,,60,25,25,102,1644860,1,255
-12111  ctx_rh_G_cuneus                        ,,180,20,20,103,1316020,1,255
-12112  ctx_rh_G_front_inf-Opercular           ,,220,20,100,104,6558940,1,255
-12113  ctx_rh_G_front_inf-Orbital             ,,140,60,60,105,3947660,1,255
-12114  ctx_rh_G_front_inf-Triangul            ,,180,220,140,106,9231540,1,255
-12115  ctx_rh_G_front_middle                  ,,140,100,180,107,11822220,1,255
-12116  ctx_rh_G_front_sup                     ,,180,20,140,108,9180340,1,255
-12117  ctx_rh_G_Ins_lg_and_S_cent_ins         ,,23,10,10,109,657943,1,255
-12118  ctx_rh_G_insular_short                 ,,225,140,140,110,9211105,1,255
-12119  ctx_rh_G_occipital_middle              ,,180,60,180,111,11812020,1,255
-12120  ctx_rh_G_occipital_sup                 ,,20,220,60,112,3988500,1,255
-12121  ctx_rh_G_oc-temp_lat-fusifor           ,,60,20,140,113,9180220,1,255
-12122  ctx_rh_G_oc-temp_med-Lingual           ,,220,180,140,114,9221340,1,255
-12123  ctx_rh_G_oc-temp_med-Parahip           ,,65,100,20,115,1336385,1,255
-12124  ctx_rh_G_orbital                       ,,220,60,20,116,1326300,1,255
-12125  ctx_rh_G_pariet_inf-Angular            ,,20,60,220,117,14433300,1,255
-12126  ctx_rh_G_pariet_inf-Supramar           ,,100,100,60,118,3957860,1,255
-12127  ctx_rh_G_parietal_sup                  ,,220,180,220,119,14464220,1,255
-12128  ctx_rh_G_postcentral                   ,,20,180,140,120,9221140,1,255
-12129  ctx_rh_G_precentral                    ,,60,140,180,121,11832380,1,255
-12130  ctx_rh_G_precuneus                     ,,25,20,140,122,9180185,1,255
-12131  ctx_rh_G_rectus                        ,,20,60,100,123,6568980,1,255
-12132  ctx_rh_G_subcallosal                   ,,60,220,20,124,1367100,1,255
-12133  ctx_rh_G_temp_sup-G_T_transv           ,,60,60,220,125,14433340,1,255
-12134  ctx_rh_G_temp_sup-Lateral              ,,220,60,220,126,14433500,1,255
-12135  ctx_rh_G_temp_sup-Plan_polar           ,,65,220,60,127,3988545,1,255
-12136  ctx_rh_G_temp_sup-Plan_tempo           ,,25,140,20,128,1346585,1,255
-12137  ctx_rh_G_temporal_inf                  ,,220,220,100,129,6610140,1,255
-12138  ctx_rh_G_temporal_middle               ,,180,60,60,130,3947700,1,255
-12139  ctx_rh_Lat_Fis-ant-Horizont            ,,61,20,220,131,14423101,1,255
-12140  ctx_rh_Lat_Fis-ant-Vertical            ,,61,20,60,132,3937341,1,255
-12141  ctx_rh_Lat_Fis-post                    ,,61,60,100,133,6569021,1,255
-12142  ctx_rh_Medial_wall                     ,,25,25,25,134,1644825,1,255
-12143  ctx_rh_Pole_occipital                  ,,140,20,60,135,3937420,1,255
-12144  ctx_rh_Pole_temporal                   ,,220,180,20,136,1357020,1,255
-12145  ctx_rh_S_calcarine                     ,,63,180,180,137,11842623,1,255
-12146  ctx_rh_S_central                       ,,221,20,10,138,660701,1,255
-12147  ctx_rh_S_cingul-Marginalis             ,,221,20,100,139,6558941,1,255
-12148  ctx_rh_S_circular_insula_ant           ,,221,60,140,140,9190621,1,255
-12149  ctx_rh_S_circular_insula_inf           ,,221,20,220,141,14423261,1,255
-12150  ctx_rh_S_circular_insula_sup           ,,61,220,220,142,14474301,1,255
-12151  ctx_rh_S_collat_transv_ant             ,,100,200,200,143,13158500,1,255
-12152  ctx_rh_S_collat_transv_post            ,,10,200,200,144,13158410,1,255
-12153  ctx_rh_S_front_inf                     ,,221,220,20,145,1367261,1,255
-12154  ctx_rh_S_front_middle                  ,,141,20,100,146,6558861,1,255
-12155  ctx_rh_S_front_sup                     ,,61,220,100,147,6609981,1,255
-12156  ctx_rh_S_interm_prim-Jensen            ,,141,60,20,148,1326221,1,255
-12157  ctx_rh_S_intrapariet_and_P_trans       ,,143,20,220,149,14423183,1,255
-12158  ctx_rh_S_oc_middle_and_Lunatus         ,,101,60,220,150,14433381,1,255
-12159  ctx_rh_S_oc_sup_and_transversal        ,,21,20,140,151,9180181,1,255
-12160  ctx_rh_S_occipital_ant                 ,,61,20,180,152,11801661,1,255
-12161  ctx_rh_S_oc-temp_lat                   ,,221,140,20,153,1346781,1,255
-12162  ctx_rh_S_oc-temp_med_and_Lingual       ,,141,100,220,154,14443661,1,255
-12163  ctx_rh_S_orbital_lateral               ,,221,100,20,155,1336541,1,255
-12164  ctx_rh_S_orbital_med-olfact            ,,181,200,20,156,1362101,1,255
-12165  ctx_rh_S_orbital-H_Shaped              ,,101,20,20,157,1315941,1,255
-12166  ctx_rh_S_parieto_occipital             ,,101,100,180,158,11822181,1,255
-12167  ctx_rh_S_pericallosal                  ,,181,220,20,159,1367221,1,255
-12168  ctx_rh_S_postcentral                   ,,21,140,200,160,13143061,1,255
-12169  ctx_rh_S_precentral-inf-part           ,,21,20,240,161,15733781,1,255
-12170  ctx_rh_S_precentral-sup-part           ,,21,20,200,162,13112341,1,255
-12171  ctx_rh_S_suborbital                    ,,21,20,60,163,3937301,1,255
-12172  ctx_rh_S_subparietal                   ,,101,60,60,164,3947621,1,255
-12173  ctx_rh_S_temporal_inf                  ,,21,180,180,165,11842581,1,255
-12174  ctx_rh_S_temporal_sup                  ,,223,220,60,166,3988703,1,255
-12175  ctx_rh_S_temporal_transverse ,,221,60,60,167,3947741,1,255
+12101,ctx_rh_G_and_S_frontomargin,23,220,60,93,3988503,1,255
+12102,ctx_rh_G_and_S_occipital_inf,23,60,180,94,11811863,1,255
+12103,ctx_rh_G_and_S_paracentral,63,100,60,95,3957823,1,255
+12104,ctx_rh_G_and_S_subcentral,63,20,220,96,14423103,1,255
+12105,ctx_rh_G_and_S_transv_frontopol,13,0,250,97,16384013,1,255
+12106,ctx_rh_G_and_S_cingul-Ant,26,60,0,98,15386,1,255
+12107,ctx_rh_G_and_S_cingul-Mid-Ant,26,60,75,99,4930586,1,255
+12108,ctx_rh_G_and_S_cingul-Mid-Post,26,60,150,100,9845786,1,255
+12109,ctx_rh_G_cingul-Post-dorsal,25,60,250,101,16399385,1,255
+12110,ctx_rh_G_cingul-Post-ventral,60,25,25,102,1644860,1,255
+12111,ctx_rh_G_cuneus,180,20,20,103,1316020,1,255
+12112,ctx_rh_G_front_inf-Opercular,220,20,100,104,6558940,1,255
+12113,ctx_rh_G_front_inf-Orbital,140,60,60,105,3947660,1,255
+12114,ctx_rh_G_front_inf-Triangul,180,220,140,106,9231540,1,255
+12115,ctx_rh_G_front_middle,140,100,180,107,11822220,1,255
+12116,ctx_rh_G_front_sup,180,20,140,108,9180340,1,255
+12117,ctx_rh_G_Ins_lg_and_S_cent_ins,23,10,10,109,657943,1,255
+12118,ctx_rh_G_insular_short,225,140,140,110,9211105,1,255
+12119,ctx_rh_G_occipital_middle,180,60,180,111,11812020,1,255
+12120,ctx_rh_G_occipital_sup,20,220,60,112,3988500,1,255
+12121,ctx_rh_G_oc-temp_lat-fusifor,60,20,140,113,9180220,1,255
+12122,ctx_rh_G_oc-temp_med-Lingual,220,180,140,114,9221340,1,255
+12123,ctx_rh_G_oc-temp_med-Parahip,65,100,20,115,1336385,1,255
+12124,ctx_rh_G_orbital,220,60,20,116,1326300,1,255
+12125,ctx_rh_G_pariet_inf-Angular,20,60,220,117,14433300,1,255
+12126,ctx_rh_G_pariet_inf-Supramar,100,100,60,118,3957860,1,255
+12127,ctx_rh_G_parietal_sup,220,180,220,119,14464220,1,255
+12128,ctx_rh_G_postcentral,20,180,140,120,9221140,1,255
+12129,ctx_rh_G_precentral,60,140,180,121,11832380,1,255
+12130,ctx_rh_G_precuneus,25,20,140,122,9180185,1,255
+12131,ctx_rh_G_rectus,20,60,100,123,6568980,1,255
+12132,ctx_rh_G_subcallosal,60,220,20,124,1367100,1,255
+12133,ctx_rh_G_temp_sup-G_T_transv,60,60,220,125,14433340,1,255
+12134,ctx_rh_G_temp_sup-Lateral,220,60,220,126,14433500,1,255
+12135,ctx_rh_G_temp_sup-Plan_polar,65,220,60,127,3988545,1,255
+12136,ctx_rh_G_temp_sup-Plan_tempo,25,140,20,128,1346585,1,255
+12137,ctx_rh_G_temporal_inf,220,220,100,129,6610140,1,255
+12138,ctx_rh_G_temporal_middle,180,60,60,130,3947700,1,255
+12139,ctx_rh_Lat_Fis-ant-Horizont,61,20,220,131,14423101,1,255
+12140,ctx_rh_Lat_Fis-ant-Vertical,61,20,60,132,3937341,1,255
+12141,ctx_rh_Lat_Fis-post,61,60,100,133,6569021,1,255
+12142,ctx_rh_Medial_wall,25,25,25,134,1644825,1,255
+12143,ctx_rh_Pole_occipital,140,20,60,135,3937420,1,255
+12144,ctx_rh_Pole_temporal,220,180,20,136,1357020,1,255
+12145,ctx_rh_S_calcarine,63,180,180,137,11842623,1,255
+12146,ctx_rh_S_central,221,20,10,138,660701,1,255
+12147,ctx_rh_S_cingul-Marginalis,221,20,100,139,6558941,1,255
+12148,ctx_rh_S_circular_insula_ant,221,60,140,140,9190621,1,255
+12149,ctx_rh_S_circular_insula_inf,221,20,220,141,14423261,1,255
+12150,ctx_rh_S_circular_insula_sup,61,220,220,142,14474301,1,255
+12151,ctx_rh_S_collat_transv_ant,100,200,200,143,13158500,1,255
+12152,ctx_rh_S_collat_transv_post,10,200,200,144,13158410,1,255
+12153,ctx_rh_S_front_inf,221,220,20,145,1367261,1,255
+12154,ctx_rh_S_front_middle,141,20,100,146,6558861,1,255
+12155,ctx_rh_S_front_sup,61,220,100,147,6609981,1,255
+12156,ctx_rh_S_interm_prim-Jensen,141,60,20,148,1326221,1,255
+12157,ctx_rh_S_intrapariet_and_P_trans,143,20,220,149,14423183,1,255
+12158,ctx_rh_S_oc_middle_and_Lunatus,101,60,220,150,14433381,1,255
+12159,ctx_rh_S_oc_sup_and_transversal,21,20,140,151,9180181,1,255
+12160,ctx_rh_S_occipital_ant,61,20,180,152,11801661,1,255
+12161,ctx_rh_S_oc-temp_lat,221,140,20,153,1346781,1,255
+12162,ctx_rh_S_oc-temp_med_and_Lingual,141,100,220,154,14443661,1,255
+12163,ctx_rh_S_orbital_lateral,221,100,20,155,1336541,1,255
+12164,ctx_rh_S_orbital_med-olfact,181,200,20,156,1362101,1,255
+12165,ctx_rh_S_orbital-H_Shaped,101,20,20,157,1315941,1,255
+12166,ctx_rh_S_parieto_occipital,101,100,180,158,11822181,1,255
+12167,ctx_rh_S_pericallosal,181,220,20,159,1367221,1,255
+12168,ctx_rh_S_postcentral,21,140,200,160,13143061,1,255
+12169,ctx_rh_S_precentral-inf-part,21,20,240,161,15733781,1,255
+12170,ctx_rh_S_precentral-sup-part,21,20,200,162,13112341,1,255
+12171,ctx_rh_S_suborbital,21,20,60,163,3937301,1,255
+12172,ctx_rh_S_subparietal,101,60,60,164,3947621,1,255
+12173,ctx_rh_S_temporal_inf,21,180,180,165,11842581,1,255
+12174,ctx_rh_S_temporal_sup,223,220,60,166,3988703,1,255
+12175,ctx_rh_S_temporal_transverse,221,60,60,167,3947741,1,255

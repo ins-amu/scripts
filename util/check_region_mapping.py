@@ -1,5 +1,11 @@
 import os
 import sys
+from copy import deepcopy
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from collections import Counter
+import numpy as np
+
 PRD = os.environ['PRD']
 CHECK = os.environ['CHECK']
 if "DISPLAY" in os.environ:
@@ -8,10 +14,7 @@ else:
     DISPLAY = ""
 region_mapping_corr = float(os.environ['REGION_MAPPING_CORR'])
 os.chdir(os.path.join(PRD, 'surface'))
-from copy import deepcopy
-from pylab import *
-from mpl_toolkits.mplot3d import Axes3D
-from collections import Counter
+
 
 def breadth_first_search(iposi, itrian, ilab):
     queue = [iposi]
@@ -87,14 +90,14 @@ def check_region_mapping(texture, vert, trian, ilab):
     itrian = np.array(itrian).astype('int')
     bool_itrian = np.in1d(itrian, ipos[0]).reshape(itrian.shape[0], 3)
     itrian[np.nonzero(bool_itrian == False)] = 0
-    citri = vstack([vstack([itrian[:,0], itrian[:,1]]).T, vstack([itrian[:,1],itrian[:,2]]).T, vstack([itrian[:,2],itrian[:,0]]).T])
+    citri = np.vstack([np.vstack([itrian[:,0], itrian[:,1]]).T, np.vstack([itrian[:,1],itrian[:,2]]).T, np.vstack([itrian[:,2],itrian[:,0]]).T])
     bcitri = (citri!=0).sum(1)
     valp = citri[bcitri==2]
-    fig = figure(figsize=(15, 15))
+    fig = plt.figure(figsize=(15, 15))
     fig.suptitle('region ' + str(int(ilab)))
     ax = fig.add_subplot(111, projection='3d') 
-    xlabel('x')
-    ylabel('y')
+    plt.xlabel('x')
+    plt.ylabel('y')
     for iv in np.arange(valp.shape[0]):
         ax.plot(vert[valp[iv], 0], vert[valp[iv], 1], vert[valp[iv], 2])
     # old function
@@ -113,9 +116,9 @@ if __name__ == '__main__':
 
     rl = sys.argv[1]
     
-    vert = loadtxt(rl+'_vertices_low.txt')
-    trian = loadtxt(rl+'_triangles_low.txt')
-    texture = loadtxt(rl + '_region_mapping_low.txt')
+    vert = np.loadtxt(rl+'_vertices_low.txt')
+    trian = np.loadtxt(rl+'_triangles_low.txt')
+    texture = np.loadtxt(rl + '_region_mapping_low.txt')
 
     res = np.array(calculate_connected(texture, vert, trian))
     wrong_labels = res[np.where(res[:,1]>0.),0][0]
@@ -151,15 +154,15 @@ if __name__ == '__main__':
                     print('failure total, no check mode')
             else:
                 print("no check, selecting automatically the smallest components")
-                choice_user=argmin((len(V1), len(V2)))+1
+                choice_user = np.argmin((len(V1), len(V2)))+1
             if choice_user==3:
                 print("keep that correction")
-                savetxt(rl + '_region_mapping_low.txt', new_texture)
+                np.savetxt(rl + '_region_mapping_low.txt', new_texture)
             elif choice_user==1:
-                texture  =  correct_sub_region(texture, trian, V1)
+                texture = correct_sub_region(texture, trian, V1)
             elif  choice_user==2:
                 texture =  correct_sub_region(texture, trian, V2)
             else: 
                 print('failure of the choice')
 
-        savetxt(rl + '_region_mapping_low.txt', texture)
+        np.savetxt(rl + '_region_mapping_low.txt', texture)

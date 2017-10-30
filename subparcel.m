@@ -203,8 +203,8 @@ end
 for ind_j=(size(list_region, 1)-size(name_region_subcortical, 1)+1):size(list_region, 1) 
     [a, b, c] = ind2sub(size(vol), find(vol==list_region(ind_j))); 
     centres(ind_j, 2:4) = [mean(a), mean(b), mean(c)];
-    centres(ind_j, 1) = list_region(ind_j)-(curr_K-1)*70; 
-    orientation_divided(ind_j, :) = average_orientations(list_region(ind_j)-(curr_K-1)*70,:); 
+    centres(ind_j, 1) = list_region(ind_j)-(curr_K-1)*size(name_region_cortical, 1); 
+    orientation_divided(ind_j, :) = average_orientations(list_region(ind_j)-(curr_K-1)*size(name_region_cortical, 1),:); 
 end
 
 fid = fopen([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/centres.txt'], 'w'); 
