@@ -33,7 +33,7 @@ fi
 setUp() {
   set +e
   mkdir -p "$PRD"/test_"$NAME_TEST"
-  cp -r "$PRD"/data "$PRD"/test_"$NAME_TEST"/data
+  cp -rn "$PRD"/data "$PRD"/test_"$NAME_TEST"/data
   PRD="$PRD"/test_"$NAME_TEST"
 }
 

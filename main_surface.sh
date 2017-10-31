@@ -144,7 +144,7 @@ else
 fi
 
 
-if [ -z "$PARCEL" ] || [ "$PARCEL" != "desikan" -a "$PARCEL" != "destrieux" -a "$PARCEL" != "HCP-MMP" ]; then
+if [ -z "$PARCEL" ] || [ "$PARCEL" != "desikan" -a "$PARCEL" != "destrieux" -a "$PARCEL" != "HCP-MMP" -a "$PARCEL" != "Yeo-7nets" -a "$PARCEL" != "Yeo-17nets" ]; then
   echo "set PARCEL parameter to desikan" | tee -a "$PRD"/log_processing_parameters.txt
   PARCEL="desikan"
 else
@@ -542,6 +542,27 @@ fi
 # http://community.mrtrix.org/t/registration-of-structural-and-diffusion-weighted-data/203/8
 
 
+# generating FSl brain.mgz
+if [ ! -f "$PRD"/connectivity/brain.nii.gz ]; then
+  # brain.mgz seems to be superior to diff to T1
+  # as the main problem for registration is the wmgm interface that we want to
+  # remove and BET stripping is unfortunate in many situations, 
+  # and FS pial eddited volumes already present
+  # stride from FS to FSL: RAS to LAS
+  # see: http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
+  # we could do
+  # mrconvert $FS/$SUBJ_ID/mri/brain.mgz $PRD/connectivity/brain.nii.gz \
+  #           -datatype float32 -stride -1,+2,+3,+4 -force -nthreads "$NB_THREADS" 
+  # instead we use the pure brain from aparc+aseg:
+    echo "generating masked brain in FSL orientation"
+  mri_binarize --i $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
+               --o $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz --min 0.5 --dilate 1 
+  mri_mask $FS/$SUBJ_ID/mri/brain.mgz $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz \
+           $FS/$SUBJ_ID/mri/brain_masked.mgz
+  mrconvert $FS/$SUBJ_ID/mri/brain_masked.mgz $PRD/connectivity/brain.nii.gz \
+            -force -datatype float32 -stride -1,+2,+3
+fi
+
 # low b extraction to FSL
 if [ ! -f "$PRD"/connectivity/lowb.nii.gz ]; then
   view_step=1
@@ -577,29 +598,6 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
          -overlay.load $PRD/connectivity/dwi.mif \
          -overlay.opacity 1. -norealign
 fi
-
-# generating FSl brain.mgz
-if [ ! -f "$PRD"/connectivity/brain.nii.gz ]; then
-  # brain.mgz seems to be superior to diff to T1
-  # as the main problem for registration is the wmgm interface that we want to
-  # remove and BET stripping is unfortunate in many situations, 
-  # and FS pial eddited volumes already present
-  # stride from FS to FSL: RAS to LAS
-  # see: http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
-  # we could do
-  # mrconvert $FS/$SUBJ_ID/mri/brain.mgz $PRD/connectivity/brain.nii.gz \
-  #           -datatype float32 -stride -1,+2,+3,+4 -force -nthreads "$NB_THREADS" 
-  # instead we use the pure brain from aparc+aseg:
-    echo "generating masked brain in FSL orientation"
-  mri_binarize --i $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
-               --o $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz --min 0.5 --dilate 1 
-  mri_mask $FS/$SUBJ_ID/mri/brain.mgz $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz \
-           $FS/$SUBJ_ID/mri/brain_masked.mgz
-  mrconvert $FS/$SUBJ_ID/mri/brain_masked.mgz $PRD/connectivity/brain.nii.gz \
-            -force -datatype float32 -stride -1,+2,+3
-fi
-
-
 
 # aparc+aseg to FSL
 if [ ! -f "$PRD"/connectivity/aparc+aseg.nii.gz ]; then
@@ -867,7 +865,7 @@ if [ ! -e "$PRD"/connectivity/whole_brain_post.tck ]; then
     number_tracks=$(($NUMBER_TRACKS/$SIFT_MULTIPLIER))
     if [ "$ACT" = "yes" ]; then
         echo "trimming tracks using sift/act" 
-        tcksift $PRD/connectivity/whole_brain.tck \s
+        tcksift $PRD/connectivity/whole_brain.tck \
                 $PRD/connectivity/wm_CSD.mif \
                 $PRD/connectivity/whole_brain_post.tck \
                 -act $PRD/connectivity/act.mif \

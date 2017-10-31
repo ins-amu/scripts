@@ -91,10 +91,10 @@ elif PARCEL=='destrieux':
 elif PARCEL=='HCP-MMP':
     raise NotImplementedError #TODO volumetric parcellation script
     L, _, _ = read_annot(os.path.join('share', rl + '.HCP-MMP1.annot'))
-elif PARCEL=='Yeo_7nets':
+elif PARCEL=='Yeo-7nets':
     raise NotImplementedError #TODO volumetric parcellation script
     L, _, _ = read_annot(os.path.join('share', rl + '.Yeo_7nets.annot'))
-elif PARCEL=='Yeo_17nets':
+elif PARCEL=='Yeo-17nets':
     raise NotImplementedError #TODO volumetric parcellation script
     L, _, _ = read_annot(os.path.join('share', rl + '.Yeo_17nets.annot'))
 # using the ref table instead of the annot to reorder the region indices as we want for the region mapping
