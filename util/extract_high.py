@@ -4,13 +4,17 @@ import sys
 
 rl = sys.argv[1]
 PRD = os.environ['PRD']
+HCP = os.environ['HCP']
 os.chdir(os.path.join(PRD, 'surface'))
 
 # read lh_info
 with open(rl + 'info.txt', 'r') as f:
     lines = f.readlines()
 
-c_ras_line = lines[32]
+if HCP=="yes":
+	c_ras_line = lines[17]
+else:
+    c_ras_line = lines[32]
 ista = c_ras_line.index(' (') + 2
 iend = c_ras_line.index(')\n')
 lc_ras = c_ras_line[ista:iend].split(',')
