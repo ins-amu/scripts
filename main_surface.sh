@@ -64,7 +64,7 @@ fi
 
 if [ -z "$MATLAB" ]; then
   echo "Matlab path missing"
-  exit 1
+  # exit 1 # not mandatory if K_LIST=""
 fi
 
 if [ -z "$SUBJECTS_DIR" ]; then

@@ -1,5 +1,8 @@
 # To build this image, you'll need to download FreeSurfer, MNE
 # and have a valid FreeSurfer license file, and put them into your docker directory.
+# To build:  cd path_to_scripts; docker build -t docker_scripts .
+# To run: run -it path_to_your_data_folder_on_host:/opt/processing/ docker_scripts /bin/bash
+# Then run scripts as usual: bash main_surface -c /opt/processing/configuration_file.sh
 
 FROM ubuntu:16.04
 MAINTAINER timpx <timpx@eml.cc>
@@ -57,7 +60,7 @@ ENV FIX_VERTEX_AREA= \
 RUN git clone https://github.com/mrtrix3/mrtrix3 && cd mrtrix3 \
  && git checkout 0.3.16 && ./configure -nogui && ./build
 ENV MRT3=/opt/mrtrix3
-ENV PATH=/opt/mrtrix3/bin:$PATH
+ENV PATH=/opt/mrtrix3/release/bin:/opt/mrtrix3/scripts:$PATH
 
 # OpenMEEG
 RUN git clone https://github.com/openmeeg/openmeeg \
@@ -84,6 +87,11 @@ RUN conda install -c conda-forge jupyterlab \
 # Makefile as entry point
 RUN git clone https://github.com/ins-amu/scripts
 WORKDIR /opt/scripts
-# ENTRYPOINT ["make"] #TODO
+RUN mkdir /opt/processing
+
+#TODO for compatibility with tvb-make
+# ENTRYPOINT ["make"] 
+
+
 
 
