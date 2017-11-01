@@ -102,7 +102,7 @@ export NUMBER_TRACKS=10000000
 
 # choice of the parcellation
 # options ["desikan", "destrieux", "HCP-MMP"]; default: "desikan" 
-export parcel="desikan"
+export PARCEL="desikan"
 
 # use topup and eddy distortion correction
 # this depends of you images

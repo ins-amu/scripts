@@ -146,7 +146,7 @@ fi
 
 if [ -z "$PARCEL" ] || [ "$PARCEL" != "desikan" -a "$PARCEL" != "destrieux" -a "$PARCEL" != "HCP-MMP" -a "$PARCEL" != "Yeo-7nets" -a "$PARCEL" != "Yeo-17nets" ]; then
   echo "set PARCEL parameter to desikan" | tee -a "$PRD"/log_processing_parameters.txt
-  PARCEL="desikan"
+  export PARCEL="desikan"
 else
   echo "PARCEL parameter is "$PARCEL"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
