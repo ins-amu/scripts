@@ -336,7 +336,7 @@ popd > /dev/null
 # extract subcortical surfaces 
 if [ ! -f "$PRD"/surface/subcortical/aseg_058_vert.txt ]; then
   echo "generating subcortical surfaces"
-  ./util/aseg2srf -s $SUBJ_ID
+  ./util/aseg2srf -s $SUBJ_ID -d
   mkdir -p $PRD/surface/subcortical
   cp $FS/$SUBJ_ID/ascii/* $PRD/surface/subcortical
   python util/list_subcortical.py
