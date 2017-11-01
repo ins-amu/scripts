@@ -21,7 +21,7 @@ while getopts "c:eqf" opt; do
     c)
       CONFIG=$OPTARG
       if [ ! -f "$CONFIG" -a "$CONFIG" != "test" ];then
-        echo "config file "$CONFIG" unexistent" >&2
+        echo "config file "$CONFIG" does not exist" >&2
         exit 1
       elif [ $CONFIG = "test" ]; then
         echo "test mode"

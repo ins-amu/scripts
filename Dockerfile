@@ -1,8 +1,8 @@
 # To build this image, you'll need to download FreeSurfer, MNE
 # and have a valid FreeSurfer license file, and put them into your scripts directory.
 # To build:  cd path_to_scripts; docker build -t docker_scripts .
-# To run: run -it path_to_your_data_folder_on_host:/opt/processing/ docker_scripts /bin/bash
-# Then run scripts as usual: bash main_surface -c /opt/processing/configuration_file.sh
+# To run: docker run -it -v <path_to_your_data_folder_on_host>:/opt/processing docker_scripts /bin/bash
+# Then run scripts as usual: bash main_surface -c /opt/processing/<name_of_configuration_file.sh>
 
 FROM ubuntu:16.04
 MAINTAINER timpx <timpx@eml.cc>
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y wget \
   && apt-get update \
   && apt-get install -y --allow-unauthenticated g++ libeigen3-dev git python \
       python-numpy zlib1g-dev fsl-complete gcc make cmake libopenblas-dev liblapacke-dev \
-      libhdf5-dev
+      libhdf5-dev libhdf5-serial-dev libmatio-dev python-dev swig libvtk6-dev doxygen libcgal-dev
 
 # external packages
 ADD freesurfer*.tar.gz /opt/
