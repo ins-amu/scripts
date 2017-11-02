@@ -34,6 +34,11 @@ setUp() {
   set +e
   mkdir -p "$PRD"/test_"$NAME_TEST"
   cp -rn "$PRD"/data "$PRD"/test_"$NAME_TEST"/data
+  if [ "$HCP" = "yes" ]; then
+    cp "$PRD"/100307_3T_Diffusion_preproc.zip \
+       "$PRD"/100307_3T_Structural_preproc.zip \
+       "$PRD"/100307_3T_Structural_preproc_extended.zip "$PRD"/test_"$NAME_TEST"
+  fi
   PRD="$PRD"/test_"$NAME_TEST"
 }
 

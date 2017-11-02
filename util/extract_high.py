@@ -11,10 +11,7 @@ os.chdir(os.path.join(PRD, 'surface'))
 with open(rl + 'info.txt', 'r') as f:
     lines = f.readlines()
 
-if HCP=="yes":
-	c_ras_line = lines[17]
-else:
-    c_ras_line = lines[32]
+c_ras_line = lines[32]
 ista = c_ras_line.index(' (') + 2
 iend = c_ras_line.index(')\n')
 lc_ras = c_ras_line[ista:iend].split(',')
