@@ -89,7 +89,6 @@ if [ -z "$QUIET" ] || [ "$QUIET" != "no" -a "$QUIET" != "yes" ]; then
   export QUIET="no"
 else
   echo "QUIET parameter is "$QUIET"" | tee -a "$PRD"/log_processing_parameters.txt
-  # TODO: finish quiet
   export MRTRIX_QUIET=1
 fi
 
