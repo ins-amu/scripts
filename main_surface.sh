@@ -498,7 +498,8 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
 fi
 
 
-# TOCHECK: why not upsampling to vox=1.25 as recommended in mrtrix?
+# Upsampling to vox=1.25 as recommended in mrtrix:
+# http://mrtrix.readthedocs.io/en/latest/fixel_based_analysis/mt_fibre_density_cross-section.html
 # upsampling and reorienting a la fsl
 # reorienting from mrtrix to FSL, RAS to LAS, means -stride -1,+2,+3,+4
 # see: http://mrtrix.readthedocs.io/en/latest/getting_started/image_data.html
@@ -506,20 +507,41 @@ fi
 # with structural and is common with mrtrix3 fixel analysis pipeline
 # see: http://community.mrtrix.org/t/upsampling-dwi-vs-tckgen-defaults/998/2
 if [ ! -f "$PRD"/connectivity/dwi.mif ]; then
-  echo "upsample dwi"
-  mrresize $PRD/connectivity/predwi_denoised_preproc_bias.mif - -scale 2 -force | \
-  mrconvert - -datatype float32 -stride -1,+2,+3,+4 $PRD/connectivity/dwi.mif -force 
+  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+                   | cut -f 1 -d " " | xargs printf "%.3f")
+  upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
+  if [ "$upsampling" = 1 ]; then
+    echo "upsampling dwi"
+    scale_factor=$( bc -l <<< "$native_voxelsize"/1.25 )
+    echo "scale factor for upsampling is "$scale_factor""
+    mrresize $PRD/connectivity/predwi_denoised_preproc_bias.mif - -scale "$scale_factor" -force | \
+    mrconvert - -datatype float32 -stride -1,+2,+3,+4 $PRD/connectivity/dwi.mif -force 
+  else
+    echo "no upsampling of dwi"
+    mrconvert $PRD/connectivity/predwi_denoised_preproc_bias.mif -datatype float32 -stride -1,+2,+3,+4 $PRD/connectivity/dwi.mif -force
+  fi
 fi
 
 if [ ! -f "$PRD"/connectivity/mask.mif ]; then
   # for dwi2fod step, a permissive, dilated mask can be used to minimize
   # streamline premature termination, see BIDS protocol: 
   # https://github.com/BIDS-Apps/MRtrix3_connectome/blob/master/run.py
-  echo "upsample mask"
   view_step=1
-  mrresize $PRD/connectivity/mask_native.mif - -scale 2 -force | \
-  mrconvert - $PRD/connectivity/mask.mif -datatype bit -stride -1,+2,+3 \
-            -force -nthreads "$NB_THREADS"
+  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+                   | cut -f 1 -d " " | xargs printf "%.3f")
+  upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
+  if [ "$upsampling" = 1 ]; then
+    echo "upsampling mask"
+    scale_factor=$( bc -l <<< "$native_voxelsize"/1.25 )
+    echo "scale factor for upsampling is "$scale_factor""
+    mrresize $PRD/connectivity/mask_native.mif - -scale "$scale_factor" -force | \
+    mrconvert - $PRD/connectivity/mask.mif -datatype bit -stride -1,+2,+3 \
+              -force -nthreads "$NB_THREADS"
+  else
+    echo "no upsampling of the mask"
+    mrconvert $PRD/connectivity/mask_native.mif $PRD/connectivity/mask.mif -datatype bit -stride -1,+2,+3 \
+              -force -nthreads "$NB_THREADS"
+  fi
   maskfilter $PRD/connectivity/mask.mif dilate \
              $PRD/connectivity/mask_dilated.mif -npass 2 -force \
              -nthreads "$NB_THREADS" 
@@ -811,9 +833,16 @@ if [ ! -f "$PRD"/connectivity/whole_brain.tck ]; then
   fi
   native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
                    | cut -f 1 -d " " | xargs printf "%.3f")
-  stepsize=$( bc -l <<< "scale=2; "$native_voxelsize"/2" )
+  upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
+  if [ "$upsampling" = 1 ]; then
+    scale_factor=$( bc -l <<< "$native_voxelsize"/1.25 )
+  else
+    scale_factor=1
+  fi
+  echo "scale factor is "$scale_factor""
+  stepsize=$( bc -l <<< "scale="$scale_factor"; "$native_voxelsize"/2" )
   echo "stepsize parameter for tckgen is $stepsize"
-  angle=$( bc -l <<< "scale=2; 90*"$stepsize"/"$native_voxelsize"" )
+  angle=$( bc -l <<< "scale="$scale_factor"; 90*"$stepsize"/"$native_voxelsize"" )
   echo "angle parameter for tckgen is $angle"
   if [ "$ACT" = "yes" ]; then
     # when using msmt_csd in conjunction with ACT, the cutoff threshold

@@ -3,6 +3,7 @@
 # To build:  cd path_to_scripts; docker build -t docker_scripts .
 # To run: docker run -it -v <path_to_your_data_folder_on_host>:/opt/processing docker_scripts /bin/bash
 # Then run scripts as usual: bash main_surface -c /opt/processing/<name_of_configuration_file.sh>
+# delete container and image: docker ps -a; docker rm <container_id>; docker rmi <image>
 
 FROM ubuntu:16.04
 MAINTAINER timpx <timpx@eml.cc>
@@ -17,7 +18,8 @@ RUN apt-get update && apt-get install -y wget \
   && apt-get update \
   && apt-get install -y --allow-unauthenticated g++ libeigen3-dev git python \
       python-numpy zlib1g-dev fsl-complete gcc make cmake libopenblas-dev liblapacke-dev \
-      libhdf5-dev libhdf5-serial-dev libmatio-dev python-dev swig libvtk6-dev doxygen libcgal-dev
+      libhdf5-dev libhdf5-serial-dev libmatio-dev python-dev swig libvtk6-dev doxygen \
+      libcgal-dev libgsl-dev gsl-bin libgsl2
 
 # external packages
 ADD freesurfer*.tar.gz /opt/
@@ -58,7 +60,7 @@ ENV FIX_VERTEX_AREA= \
 
 # Mrtrix3
 RUN git clone https://github.com/mrtrix3/mrtrix3 && cd mrtrix3 \
- && git checkout 0.3.16 && ./configure -nogui && ./build
+ && git checkout 3.0_RC2 && ./configure -nogui && ./build
 ENV MRT3=/opt/mrtrix3
 ENV PATH=/opt/mrtrix3/release/bin:/opt/mrtrix3/scripts:$PATH
 
@@ -84,8 +86,9 @@ RUN conda install -c conda-forge jupyterlab \
  && conda install numpy matplotlib \
  && pip install nibabel mne
 
-# Makefile as entry point
+# Scripts and remesher
 RUN git clone https://github.com/ins-amu/scripts
+RUN cd /opt/scripts/remesher/cmdremesher && make
 WORKDIR /opt/scripts
 RUN mkdir /opt/processing
 
