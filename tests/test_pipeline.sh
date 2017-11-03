@@ -56,7 +56,7 @@ test_function() {
 
 # Variables to change from config file:
 export TOPUP="no" # to accelerate things a little, eddy takes several hours
-export NB_THREADS=1
+export NB_THREADS=2
 export CLEAN_AFTER_TEST=0
 
 ( export NAME_TEST="fsl_5"; export FSL="fsl5.0-"; setUp; test_function ) &
