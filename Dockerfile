@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y wget \
   && apt-get install -y --allow-unauthenticated g++ libeigen3-dev git python \
       python-numpy zlib1g-dev fsl-complete gcc make cmake libopenblas-dev liblapacke-dev \
       libhdf5-dev libhdf5-serial-dev libmatio-dev python-dev swig libvtk6-dev doxygen \
-      libcgal-dev libgsl-dev gsl-bin libgsl2
+      libcgal-dev libgsl-dev gsl-bin libgsl2 unzip zip
 
 # external packages
 ADD freesurfer*.tar.gz /opt/
@@ -62,7 +62,7 @@ ENV FIX_VERTEX_AREA= \
 RUN git clone https://github.com/mrtrix3/mrtrix3 && cd mrtrix3 \
  && git checkout 3.0_RC2 && ./configure -nogui && ./build
 ENV MRT3=/opt/mrtrix3
-ENV PATH=/opt/mrtrix3/release/bin:/opt/mrtrix3/scripts:$PATH
+ENV PATH=/opt/mrtrix3/bin:$PATH
 
 # OpenMEEG
 RUN git clone https://github.com/openmeeg/openmeeg \
