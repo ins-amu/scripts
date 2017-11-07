@@ -1110,7 +1110,7 @@ if [ -n "$K_LIST" ]; then
       else
       tck2connectome $PRD/connectivity/whole_brain_post.tck \
                      $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif \
-                     $PRD/connectivity/weights.csv -assignment_radial_search 2 \
+                     $PRD/connectivity/weights_"$curr_K".csv -assignment_radial_search 2 \
                      -out_assignments $PRD/connectivity/edges_2_nodes_"$curr_K".csv \
                      -force -nthreads "$NB_THREADS"
       fi
