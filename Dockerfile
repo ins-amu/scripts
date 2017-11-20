@@ -94,7 +94,3 @@ RUN mkdir /opt/processing
 
 #TODO for compatibility with tvb-make
 # ENTRYPOINT ["make"] 
-
-
-
-

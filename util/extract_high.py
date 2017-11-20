@@ -4,7 +4,6 @@ import sys
 
 rl = sys.argv[1]
 PRD = os.environ['PRD']
-HCP = os.environ['HCP']
 os.chdir(os.path.join(PRD, 'surface'))
 
 # read lh_info

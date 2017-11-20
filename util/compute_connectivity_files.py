@@ -134,9 +134,9 @@ def compute_region_orientation_cortex(vertex_normals, region_mapping):
     return average_orientation
 
 
-def compute_region_center_cortex(vertices, region_mapping):
+def compute_region_center_cortex(vertices, region_mapping, list_name):
     regions = np.unique(region_mapping)
-    region_center= np.zeros((np.max(np.unique(region_mapping))+1, 3))
+    region_center= np.zeros((list_name.shape[0], 3))
     #Average orientation of the region
     for k in regions:
         vert = vertices[region_mapping == k, :]
@@ -165,8 +165,11 @@ if __name__ == '__main__':
     np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity', 'weights.txt'), weights, fmt='%d')
     np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity', 'tract_lengths.txt'), tract_lengths, fmt='%.3f')
 
+    # name of the centers
+    list_name = np.loadtxt(open(os.path.join('share', 'reference_table_' + PARCEL + ".csv"), "r"), delimiter=",", skiprows=1, usecols=(1, ), dtype='str')
+
     # compute centers
-    centers = compute_region_center_cortex(verts, region_mapping)
+    centers = compute_region_center_cortex(verts, region_mapping, list_name)
 
     # calculate average orientations
     number_of_vertices = int(verts.shape[0])
@@ -219,8 +222,6 @@ if __name__ == '__main__':
     np.savetxt(os.path.join(PRD, SUBJ_ID, 'connectivity/average_orientations.txt'),
             orientations, fmt='%.2f %.2f %.2f')
 
-    # add the name to centers
-    list_name = np.loadtxt(open(os.path.join('share', 'reference_table_' + PARCEL + ".csv"), "r"), delimiter=",", skiprows=1, usecols=(1, ), dtype='str')
 
     f = open(os.path.join(PRD, SUBJ_ID, 'connectivity/centres.txt'), 'w')
     for i, name in enumerate(list_name):

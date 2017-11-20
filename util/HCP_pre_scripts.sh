@@ -11,11 +11,6 @@ if [ -z "$SUBJ_ID" ]; then
   exit 1
 fi
 
-if [ -z "$FS" ]; then
-  echo "FS path missing"
-  exit 1
-fi
-
 # unzip data dowloaded from HCP connectomeDB
 unzip "$PRD"/"$SUBJ_ID"_3T_Diffusion_preproc.zip -d "$PRD"
 unzip "$PRD"/"$SUBJ_ID"_3T_Structural_preproc.zip -d "$PRD"
