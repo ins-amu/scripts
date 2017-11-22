@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y wget \
 # external packages
 ADD freesurfer*.tar.gz /opt/
 ADD license.txt /opt/freesurfer/license.txt
+ADD MNE*.tar.gz /opt/
 
 # FS, FSL, MNE env vars 
 ENV FIX_VERTEX_AREA= \
