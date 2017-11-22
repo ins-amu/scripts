@@ -110,9 +110,9 @@ def compute_triangle_normals(triangles, vertices):
     return triangle_normals
 
 
-def compute_region_areas_cortex(triangle_areas, vertex_triangles, region_mapping):
+def compute_region_areas_cortex(triangle_areas, vertex_triangles, region_mapping, list_name):
     regions = np.unique(region_mapping)
-    region_surface_area = np.zeros((np.max(np.unique(regions))+1, 1))
+    region_surface_area = np.zeros((list_name.shape[0], 1))
     avt = np.array(vertex_triangles)
     #NOTE: Slightly overestimates as it counts overlapping border triangles,
     #      but, not really a problem provided triangle-size << region-size.
@@ -123,9 +123,9 @@ def compute_region_areas_cortex(triangle_areas, vertex_triangles, region_mapping
     return region_surface_area
 
 
-def compute_region_orientation_cortex(vertex_normals, region_mapping):
+def compute_region_orientation_cortex(vertex_normals, region_mapping, list_name):
     regions = np.unique(region_mapping)
-    average_orientation = np.zeros((np.max(np.unique(regions))+1, 3))
+    average_orientation = np.zeros((list_name.shape[0], 3))
     #Average orientation of the region
     for k in regions:
         orient = vertex_normals[region_mapping == k, :]
@@ -181,11 +181,11 @@ if __name__ == '__main__':
     vertex_normals = compute_vertex_normals(number_of_vertices, vertex_triangles,
                                             tri, triangle_angles,
                                             triangle_normals, verts)
-    orientations = compute_region_orientation_cortex(vertex_normals, region_mapping)
+    orientations = compute_region_orientation_cortex(vertex_normals, region_mapping, list_name)
 
     # compute areas
     triangle_areas = compute_triangle_areas(verts, tri)
-    areas = compute_region_areas_cortex(triangle_areas, vertex_triangles, region_mapping)
+    areas = compute_region_areas_cortex(triangle_areas, vertex_triangles, region_mapping, list_name)
 
     # subcorticals
     corr_table = np.loadtxt(open(os.path.join('share', 'reference_table_' + PARCEL + ".csv"), "r"), delimiter=",", skiprows=1, usecols=(0, 5))

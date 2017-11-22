@@ -4,6 +4,7 @@
 # To run: docker run -it -v <path_to_your_data_folder_on_host>:/opt/processing docker_scripts /bin/bash
 # Then run scripts as usual: bash main_surface -c /opt/processing/<name_of_configuration_file.sh>
 # delete container and image: docker ps -a; docker rm <container_id>; docker rmi <image>
+# also you can use: docker images
 
 FROM ubuntu:16.04
 MAINTAINER timpx <timpx@eml.cc>
@@ -93,4 +94,4 @@ WORKDIR /opt/scripts
 RUN mkdir /opt/processing
 
 #TODO for compatibility with tvb-make
-# ENTRYPOINT ["make"] 
+# ENTRYPOINT ["make"]
