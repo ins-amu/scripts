@@ -1148,7 +1148,7 @@ if [ -n "$K_LIST" ]; then
 fi
 
 ######################## compute MEG and EEG forward projection matrices
-if [ "$FORWARD_MODEL" = "yes" ]
+if [ "$FORWARD_MODEL" = "yes" ]; then
   # make BEM surfaces
   if [ ! -h "$FS"/"$SUBJ_ID"/bem/inner_skull.surf ]; then
     echo "generating bem surfaces"

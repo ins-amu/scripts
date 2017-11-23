@@ -1,7 +1,7 @@
 # To build this image, you'll need to download FreeSurfer, MNE
 # and have a valid FreeSurfer license file, and put them into your scripts directory.
 # To build:  cd path_to_scripts; docker build -t docker_scripts .
-# To run: docker run -it -v <path_to_your_data_folder_on_host>:/opt/processing docker_scripts /bin/bash
+# To run: docker run -it -v <path_to_your_subject_folder_on_host>:/opt/processing docker_scripts /bin/bash
 # Then run scripts as usual: bash main_surface -c /opt/processing/<name_of_configuration_file.sh>
 # delete container and image: docker ps -a; docker rm <container_id>; docker rmi <image>
 # also you can use: docker images
