@@ -62,7 +62,7 @@ ENV FIX_VERTEX_AREA= \
 
 # Mrtrix3
 RUN git clone https://github.com/mrtrix3/mrtrix3 && cd mrtrix3 \
- && git checkout 3.0_RC2 && ./configure -nogui && ./build
+ && git checkout 3.0_RC2 && ./configure -nogui && NUMBER_OF_PROCESSORS=1 ./build
 ENV MRT3=/opt/mrtrix3
 ENV PATH=/opt/mrtrix3/bin:$PATH
 
