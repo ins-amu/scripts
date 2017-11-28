@@ -744,8 +744,8 @@ if [ "$ACT" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]; then
     5ttgen fsl $PRD/connectivity/brain_2_diff.nii.gz $PRD/connectivity/act.mif \
            -premasked -force  -nthreads "$NB_THREADS"
   elif [ "$FTTGEN" = "fs" ]; then
-    5ttgen fs $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/act.mif \
-           -premasked -force  -nthreads "$NB_THREADS"    
+    5ttgen freesurfer $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/act.mif \
+           -force  -nthreads "$NB_THREADS"    
   fi
   5tt2vis $PRD/connectivity/act.mif $PRD/connectivity/act_vis.mif -force \
         -nthreads "$NB_THREADS"
