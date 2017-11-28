@@ -131,6 +131,14 @@ export SEED="gmwmi"
 # options: ["fs", "fsl"]; default: "fsl"
 export ASEG="fsl" 
 
+# 5ttgen
+# options: ["fs", "fsl"]; default: "fsl"
+export 5TTGEN="fsl" 
+
+# compute forward model for MEG and EEG
+# options: ["yes", "no"]; default: "yes"
+export FORWARD_MODEL="yes"
+
 # number of threads
 # default: value in ~/.mrtrix.conf file if present, or 1 if not present
 # Needs to be an integer

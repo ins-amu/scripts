@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# run with bash tests/test_pipeline -c /path/to/config_file
 
 # import and check config
 while getopts "c:e" opt; do
@@ -77,6 +78,7 @@ export CLEAN_AFTER_TEST=0
 ( export NAME_TEST="sift_multiplier"; export SIFT="sift"; export SIFT_MULTIPLIER=2; setUp; test_function; Teardown ) &
 ( export NAME_TEST="seed_dynamic"; export SEED="dynamic"; setUp; test_function; Teardown ) &
 ( export NAME_TEST="aseg_fs"; export ASEG="fs"; setUp; test_function; Teardown ) &
+( export NAME_TEST="5ttgen_fs"; export FTTGEN="fs"; setUp; test_function; Teardown ) &
 ( export NAME_TEST="no_mne"; export MNE="no"; setUp; test_function; Teardown ) &
 ( export NAME_TEST="nb_threads_2"; export NB_THREADS="3"; setUp; test_function; Teardown ) &
 

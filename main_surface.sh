@@ -192,9 +192,16 @@ else
   echo "ASEG parameter is "$ASEG"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
+if [ -z "$FTTGEN" ] || [ "$FTTGEN" != "fs" -a "$FTTGEN" != "fsl" ]; then
+  echo "set FTTGEN parameter to fsl" | tee -a "$PRD"/log_processing_parameters.txt
+  FTTGEN="fsl"
+else
+  echo "FTTGEN parameter is "$FTTGEN"" | tee -a "$PRD"/log_processing_parameters.txt
+fi
+
 if [ -z "$FORWARD_MODEL" ] || [ "$FORWARD_MODEL" != "yes" -a "$FORWARD_MODEL" != "no" ]; then
   echo "set FORWARD_MODEL parameter to yes" | tee -a "$PRD"/log_processing_parameters.txt
-  ASEG="fsl"
+  FORWARD_MODEL="yes"
 else
   echo "FORWARD_MODEL parameter is "$FORWARD_MODEL"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
@@ -733,8 +740,13 @@ fi
 if [ "$ACT" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]; then
   echo "prepare files for act"
   view_step=1
-  5ttgen fsl $PRD/connectivity/brain_2_diff.nii.gz $PRD/connectivity/act.mif \
-         -premasked -force  -nthreads "$NB_THREADS"
+  if [ "$FTTGEN" = "fsl" ]; then
+    5ttgen fsl $PRD/connectivity/brain_2_diff.nii.gz $PRD/connectivity/act.mif \
+           -premasked -force  -nthreads "$NB_THREADS"
+  elif [ "$FTTGEN" = "fs" ]; then
+    5ttgen fs $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/act.mif \
+           -premasked -force  -nthreads "$NB_THREADS"    
+  fi
   5tt2vis $PRD/connectivity/act.mif $PRD/connectivity/act_vis.mif -force \
         -nthreads "$NB_THREADS"
 fi
