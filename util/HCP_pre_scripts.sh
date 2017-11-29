@@ -39,12 +39,14 @@ cp "$PRD"/"$SUBJ_ID"/T1w/Diffusion/bvecs "$PRD"/connectivity/bvecs
 cp "$PRD"/"$SUBJ_ID"/T1w/Diffusion/bvals "$PRD"/connectivity/bvals
 
 # Crop HCP data to avoid RAM issues
-mrcrop "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
+gunzip "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz
+mrcrop "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii \
        "$PRD"/connectivity/data_crop.nii.gz \
        -mask "$PRD"/"$SUBJ_ID"/T1w/Diffusion/nodif_brain_mask.nii.gz -force
 mrcrop "$PRD"/"$SUBJ_ID"/T1w/Diffusion/nodif_brain_mask.nii.gz \
        "$PRD"/connectivity/nodif_brain_mask_crop.nii.gz \
        -mask "$PRD"/"$SUBJ_ID"/T1w/Diffusion/nodif_brain_mask.nii.gz -force
+
 
 mrconvert "$PRD"/connectivity/data_crop.nii.gz \
           "$PRD"/connectivity/predwi.mif \
