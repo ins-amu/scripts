@@ -68,7 +68,7 @@ mrconvert "$PRD"/connectivity/data_crop.nii.gz \
           "$PRD"/connectivity/predwi_denoised_preproc_bias.mif \
           -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
           -datatype float32 -force
-mrconvert "$PRD"/nodif_brain_mask_crop.nii.gz \
+mrconvert "$PRD"/connectivity/nodif_brain_mask_crop.nii.gz \
           "$PRD"/connectivity/mask_native.mif -datatype float32 \
           -force
 
