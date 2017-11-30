@@ -229,7 +229,8 @@ view_step=0
 
 ######## HCP pre_scripts
 if [ "$HCP" = "yes" ]; then
-  if [ ! -f "$PRD"/connectivity/mask_native.mif ]; then
+  if [ ! -d "$FS"/"$SUBJ_ID"/ ]; then
+    echo "running HCP pre_scripts"
     bash util/HCP_pre_scripts.sh
   fi
 fi
@@ -905,7 +906,7 @@ if [ ! -f "$PRD"/connectivity/whole_brain.tck ]; then
 fi
 
 # postprocessing
-if [ ! -e "$PRD"/connectivity/whole_brain_post.tck ]; then
+if [ ! -f "$PRD"/connectivity/whole_brain_post.tck -a ! -h "$PRD"/connectivity/whole_brain_post.tck ]; then
   echo "$PRD"/connectivity/whole_brain_post.tck
   if [ "$SIFT" = "sift" ]; then
     echo "using sift"
