@@ -133,7 +133,7 @@ export ASEG="fsl"
 
 # 5ttgen
 # options: ["fs", "fsl"]; default: "fsl"
-export 5TTGEN="fsl" 
+export FTTGEN="fsl" 
 
 # compute forward model for MEG and EEG
 # options: ["yes", "no"]; default: "yes"

@@ -38,27 +38,37 @@ cp "$PRD"/"$SUBJ_ID"/T1w/T1w_acpc_dc_restore_brain.nii.gz "$PRD"/connectivity/br
 cp "$PRD"/"$SUBJ_ID"/T1w/Diffusion/bvecs "$PRD"/connectivity/bvecs
 cp "$PRD"/"$SUBJ_ID"/T1w/Diffusion/bvals "$PRD"/connectivity/bvals
 
-mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
+# Crop HCP data to avoid RAM issues
+gunzip "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz
+mrcrop "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii \
+       "$PRD"/connectivity/data_crop.nii.gz \
+       -mask "$PRD"/"$SUBJ_ID"/T1w/Diffusion/nodif_brain_mask.nii.gz -force
+mrcrop "$PRD"/"$SUBJ_ID"/T1w/Diffusion/nodif_brain_mask.nii.gz \
+       "$PRD"/connectivity/nodif_brain_mask_crop.nii.gz \
+       -mask "$PRD"/"$SUBJ_ID"/T1w/Diffusion/nodif_brain_mask.nii.gz -force
+
+
+mrconvert "$PRD"/connectivity/data_crop.nii.gz \
           "$PRD"/connectivity/predwi.mif \
           -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
           -datatype float32 -force
-mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
+mrconvert "$PRD"/connectivity/data_crop.nii.gz \
           "$PRD"/connectivity/predwi_denoised.mif \
           -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
           -datatype float32 -force
-mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
+mrconvert "$PRD"/connectivity/data_crop.nii.gz \
           "$PRD"/connectivity/predwi_denoised_preproc.mif \
           -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
           -datatype float32 -force
-mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
+mrconvert "$PRD"/connectivity/data_crop.nii.gz \
           "$PRD"/connectivity/predwi_denoised_preproc_bias.mif \
           -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
           -datatype float32 -force
-mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/data.nii.gz \
+mrconvert "$PRD"/connectivity/data_crop.nii.gz \
           "$PRD"/connectivity/predwi_denoised_preproc_bias.mif \
           -fslgrad "$PRD"/connectivity/bvecs "$PRD"/connectivity/bvals \
           -datatype float32 -force
-mrconvert "$PRD"/"$SUBJ_ID"/T1w/Diffusion/nodif_brain_mask.nii.gz \
+mrconvert "$PRD"/connectivity/nodif_brain_mask_crop.nii.gz \
           "$PRD"/connectivity/mask_native.mif -datatype float32 \
           -force
 
