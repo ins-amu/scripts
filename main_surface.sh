@@ -62,8 +62,8 @@ if [ -z "$SUBJ_ID" ]; then
   exit 1
 fi
 
-if [ -z "$MATLAB" ]; then
-  echo "Matlab path missing"
+if [ -z "$MATLAB" ] || [ -z "$MCR" ]; then
+  echo "Matlab ou MCR path missing"
   # exit 1 # not mandatory if K_LIST=""
 fi
 
@@ -1105,7 +1105,11 @@ if [ -n "$K_LIST" ]; then
     mkdir -p $PRD/$SUBJ_ID/connectivity_"$curr_K"
     if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz ]; then
       echo "compute subparcellations for $curr_K"
-      $MATLAB -r "run subparcel.m; quit;" -nodesktop -nodisplay 
+      if [ -n "$MATLAB" ]; then
+        $MATLAB -r "run subparcel.m; quit;" -nodesktop -nodisplay 
+      else
+        sh util/run_subparcel.sh $MCR 
+      fi
       gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
     fi
     if [ ! -f $PRD/$SUBJ_ID/region_mapping_"$curr_K".txt ]; then
