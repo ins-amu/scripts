@@ -28,8 +28,7 @@
 export PRD=/path_to_root_dir/
 
 # subject name
-# this will determine the name of your subject
-# in brainvisa and in the final directory
+# this will determine the name of your subject in the final directory
 export SUBJ_ID=name_subj
 
 # Matlab path if you have it
