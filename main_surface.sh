@@ -759,7 +759,7 @@ fi
 
 # Response function estimation
 # Check if multi or single shell
-shells=$(mrinfo -shells $PRD/connectivity/dwi.mif)
+shells=$(mrinfo -shell_bvalues $PRD/connectivity/dwi.mif)
 echo "shell b values are $shells"
 nshells=($shells)
 no_shells=${#nshells[@]}
