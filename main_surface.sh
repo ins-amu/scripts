@@ -371,7 +371,7 @@ if [ ! -f "$PRD"/connectivity/predwi.mif ]; then
   i_im=1
   echo "generate dwi mif file"
   echo "if asked, please select a series of images by typing a number"
-  mrconvert $PRD/data/DWI/raw.mif $PRD/connectivity/predwi_"$i_im".mif \
+  mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_"$i_im".mif \
             -export_pe_table $PRD/connectivity/pe_table \
             -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
             -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"  
