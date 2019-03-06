@@ -17,7 +17,8 @@
 # for surface pipeline: 
 # bash path_to_scripts/main_surface.sh -c path_to_config/config.sh
 
-
+# The defaults indicates the options chosen by the pipeline if the option is 
+# not set
 
 #### Mandatory path parameters
 
@@ -27,30 +28,38 @@
 export PRD=/path_to_root_dir/
 
 # subject name
-# this will determine the name of your subject
-# in brainvisa and in the final directory
+# this will determine the name of your subject in the final directory
 export SUBJ_ID=name_subj
 
-# Matlab Runtime Compiler path
-# if you have matlab, do mcrinstaller at the matlab prompt
-# to find the location of the MCR
-# alternatively you can uncomment the following line and comment the MCR line
+# Matlab path if you have it
 # export MATLAB=/path_to_matlab/
-# export MATLAB=$(which matlab)
-# if you don't have matlab, download the MCR (linux 64 bits) here: 
+export MATLAB=$(which matlab)
+# if you don't have matlab, download and install the MCR (linux 64 bits) here: 
 # http://www.mathworks.com/products/compiler/mcr/index.html
-export MCR=/path_to_matlab_runtime_compiler/
+# and uncomment the following line
+# export MCR=/path_to_matlab_runtime_compiler/
+# export MCR=/usr/local/MATLAB/MATLAB_Runtime/v93
 
+#### Standard options
 
-#### Additional optional parameters
-# The defaults indicates the options chosen by the pipeline if the option is 
-# not set
-
-# error handling: in case of error, the pipeline 
-# stops immediately
-# default: not set
+# error handling: in case of error, the pipeline stops immediately
+# Can also be set with option -e to main_surface.sh
+# default: not set; 
 # set -e
 
+# Force: all choices are made automatically without asking the user
+# WARNING: can lead to issues
+# options: ["no", "yes"]; default: "no"
+# Can also be set with option -f to main_surface.sh
+export FORCE="no"
+
+# Quiet: run the pipeline without any output
+# options: ["no", "yes"]; default: "no"
+# Can also be set with option -q to main_surface.sh
+export QUIET="no"
+
+
+#### Optional parameters
 # FSL prefix in case of use of fsl5.0 and fsl 4 is present
 # for instance FSL="fsl5.0' or FSL="" otherwise
 # if only fsl5.0 is installed, leave empty
@@ -88,25 +97,21 @@ export REGION_MAPPING_CORR="0.42"
 # Number of Nodes:  70  140 280  560  1120 2240
 # default: ""
 # Needs to be a list of integers
-export K_LIST="0 1.5 2 3 4 5"
+export K_LIST="0 1 2 3 4 5"
 
 # number of tracks used in the tractography step.
 # default: 10.000.000
 # Needs to be an integer
 export NUMBER_TRACKS=10000000
 
-# TODO
-# uniquely for region pipeline (main_region.sh)
 # choice of the parcellation
-# export parcel=AAL
+# options ["desikan", "destrieux", "HCP-MMP"]; default: "desikan" 
+export parcel="desikan"
 
-# TODO
 # use topup and eddy distortion correction
 # this depends of you images
-# be careful with "reversed", depending on your data, 
-# you may have to change the main_surface script
 # options: ["no", "eddy_correct"], default: "eddy_correct"
-export TOPUP="no"
+export TOPUP="eddy_correct"
 
 # use Anatomically Constrained Tractography (yes/no)
 # options ["yes", "no"]; default: "yes"
@@ -129,6 +134,14 @@ export SEED="gmwmi"
 # subcortical segmentation correction
 # options: ["fs", "fsl"]; default: "fsl"
 export ASEG="fsl" 
+
+# 5ttgen
+# options: ["fs", "fsl"]; default: "fsl"
+export FTTGEN="fsl" 
+
+# compute forward model for MEG and EEG
+# options: ["yes", "no"]; default: "yes"
+export FORWARD_MODEL="yes"
 
 # number of threads
 # default: value in ~/.mrtrix.conf file if present, or 1 if not present

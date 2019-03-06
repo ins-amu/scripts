@@ -16,31 +16,38 @@
 #### Checks and preset variables
 
 # import and check config
-while getopts ":c:" opt; do
+while getopts "c:eqf" opt; do
   case $opt in
-  c)
-    CONFIG=$OPTARG
-    echo "use config file $CONFIG" >&2
-    if [ ! -f $CONFIG ]
-    then
-    echo "config file unexistent" >&2
-    exit 1
-    fi
-    source "$CONFIG"
-    ;;
-  \?)
-    echo "Invalid option: -$OPTARG" >&2
-    exit 1
-    ;;
-  :)
-    echo "Option -$OPTARG requires an argument." >&2
-    exit 1
-    ;;
-  esac
+    c)
+      CONFIG=$OPTARG
+      if [ ! -f "$CONFIG" -a "$CONFIG" != "test" ];then
+        echo "config file "$CONFIG" does not exist" >&2
+        exit 1
+      elif [ $CONFIG = "test" ]; then
+        echo "test mode"
+      else
+        echo "Using config file $CONFIG." >&2
+        source "$CONFIG"
+      fi
+      ;;
+    e) 
+      set -e 
+      ;;
+    q)
+      QUIET="yes"
+      ;;
+    f)
+      FORCE="yes"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    esac
 done
 
 if [ -z "$CONFIG" ]; then
-  echo "you must provide a config file"
+  echo "You must provide a config file."
   exit 1
 fi
 
@@ -55,9 +62,9 @@ if [ -z "$SUBJ_ID" ]; then
   exit 1
 fi
 
-if [ -z "$MATLAB" ] && [ -z "$MCR"]; then
-  echo "matlab or MCR path missing"
-  exit 1
+if [ -z "$MATLAB" ] || [ -z "$MCR" ]; then
+  echo "Matlab ou MCR path missing"
+  # exit 1 # not mandatory if K_LIST=""
 fi
 
 if [ -z "$SUBJECTS_DIR" ]; then
@@ -69,6 +76,21 @@ fi
 
 # set default parameters if not set in config file
 echo "##### $( date ) #####" | tee -a "$PRD"/log_processing_parameters.txt
+
+if [ -z "$FORCE" ] || [ "$FORCE" != "no" -a "$FORCE" != "yes" ]; then
+  echo "set FORCE parameter to no" | tee -a "$PRD"/log_processing_parameters.txt
+  FORCE="no"
+else
+  echo "FORCE parameter is "$FORCE"" | tee -a "$PRD"/log_processing_parameters.txt
+fi
+
+if [ -z "$QUIET" ] || [ "$QUIET" != "no" -a "$QUIET" != "yes" ]; then
+  echo "set QUIET parameter to no" | tee -a "$PRD"/log_processing_parameters.txt
+  export QUIET="no"
+else
+  echo "QUIET parameter is "$QUIET"" | tee -a "$PRD"/log_processing_parameters.txt
+  export MRTRIX_QUIET=1
+fi
 
 if [ -z "$FSL" ] || [ "$FSL" != "fsl5.0" ]; then
   echo "set FSL parameter to empty" | tee -a "$PRD"/log_processing_parameters.txt
@@ -120,6 +142,14 @@ else
   echo "K_LIST parameter is "$K_LIST"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
+
+if [ -z "$PARCEL" ] || [ "$PARCEL" != "desikan" -a "$PARCEL" != "destrieux" -a "$PARCEL" != "HCP-MMP" -a "$PARCEL" != "Yeo-7nets" -a "$PARCEL" != "Yeo-17nets" ]; then
+  echo "set PARCEL parameter to desikan" | tee -a "$PRD"/log_processing_parameters.txt
+  export PARCEL="desikan"
+else
+  echo "PARCEL parameter is "$PARCEL"" | tee -a "$PRD"/log_processing_parameters.txt
+fi
+
 if [ -z "$TOPUP" ] || [ "$TOPUP" != "no" -a "$TOPUP" != "eddy_correct" ]; then
   echo "set TOPUP parameter to no" | tee -a "$PRD"/log_processing_parameters.txt
   TOPUP="no"
@@ -162,6 +192,20 @@ else
   echo "ASEG parameter is "$ASEG"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
+if [ -z "$FTTGEN" ] || [ "$FTTGEN" != "fs" -a "$FTTGEN" != "fsl" ]; then
+  echo "set FTTGEN parameter to fsl" | tee -a "$PRD"/log_processing_parameters.txt
+  FTTGEN="fsl"
+else
+  echo "FTTGEN parameter is "$FTTGEN"" | tee -a "$PRD"/log_processing_parameters.txt
+fi
+
+if [ -z "$FORWARD_MODEL" ] || [ "$FORWARD_MODEL" != "yes" -a "$FORWARD_MODEL" != "no" ]; then
+  echo "set FORWARD_MODEL parameter to yes" | tee -a "$PRD"/log_processing_parameters.txt
+  FORWARD_MODEL="yes"
+else
+  echo "FORWARD_MODEL parameter is "$FORWARD_MODEL"" | tee -a "$PRD"/log_processing_parameters.txt
+fi
+
 if [ -z  "$NB_THREADS" ] || ! [[ "$NUMBER_TRACKS" =~ ^[0-9]+$ ]]; then
   if [ -f ~/.mrtrix.conf ]; then
     number_threads_mrtrix_conf=$(grep 'NumberOfThreads' ~/.mrtrix.conf | cut -f 2 -d " ")
@@ -184,29 +228,30 @@ fi
 view_step=0
 
 ######## HCP pre_scripts
-if [ -n "$HCP" ]; then
-  if [ ! -f "$PRD"/connectivity/mask_native.mif ]; then
-    bash HCP_pre_scripts.sh
+if [ "$HCP" = "yes" ]; then
+  if [ ! -d "$FS"/"$SUBJ_ID"/ ]; then
+    echo "running HCP pre_scripts"
+    bash util/HCP_pre_scripts.sh
   fi
 fi
 
 
 ######### build cortical surface and region mapping
-if [ ! -f $PRD/data/T1/T1.nii.gz ]; then
+if [ ! -f "$PRD"/data/T1/T1.nii.gz ]; then
   echo "generating T1 from DICOM"
   mrconvert $PRD/data/T1/ $PRD/data/T1/T1.nii.gz -nthreads "$NB_THREADS"
 fi
 
 ###################### freesurfer
-if [ ! -d $FS/$SUBJ_ID ] ; then
+if [ ! -d "$FS"/"$SUBJ_ID" ] ; then
   echo "running recon-all of freesurfer"
   recon-all -i $PRD/data/T1/T1.nii.gz -s $SUBJ_ID -all
 fi
 
 ###################################### left hemisphere
 # export pial into text file
-mkdir -p $PRD/surface
-if [ ! -f $PRD/surface/lh.pial.asc ]; then
+mkdir -p "$PRD"/surface
+if [ ! -f "$PRD"/surface/lh.pial.asc ]; then
   echo "importing left pial surface from freesurfer"
   mris_convert "$FS"/"$SUBJ_ID"/surf/lh.pial "$PRD"/surface/lh.pial.asc
   # take care of the c_(ras) shift which is not done by FS (thks FS!)
@@ -214,39 +259,39 @@ if [ ! -f $PRD/surface/lh.pial.asc ]; then
 fi
 
 # triangles and vertices high
-if [ ! -f $PRD/surface/lh_vertices_high.txt ]; then
+if [ ! -f "$PRD"/surface/lh_vertices_high.txt ]; then
   echo "extracting left vertices and triangles"
-  python extract_high.py lh
+  python util/extract_high.py lh
 fi
 
 # decimation using remesher
 if [ ! -f $PRD/surface/lh_vertices_low.txt ]; then
   echo "left decimation using remesher"
   # -> to mesh
-  python txt2off.py $PRD/surface/lh_vertices_high.txt $PRD/surface/lh_triangles_high.txt $PRD/surface/lh_high.off
+  python util/txt2off.py $PRD/surface/lh_vertices_high.txt $PRD/surface/lh_triangles_high.txt $PRD/surface/lh_high.off
   #  decimation
   ./remesher/cmdremesher/cmdremesher $PRD/surface/lh_high.off $PRD/surface/lh_low.off
   # export to list vertices triangles
-  python off2txt.py $PRD/surface/lh_low.off $PRD/surface/lh_vertices_low.txt $PRD/surface/lh_triangles_low.txt
+  python util/off2txt.py $PRD/surface/lh_low.off $PRD/surface/lh_vertices_low.txt $PRD/surface/lh_triangles_low.txt
 fi
 
 # create the left region mapping
-if [ ! -f $PRD/surface/lh_region_mapping_low_not_corrected.txt ]; then
+if [ ! -f "$PRD"/surface/lh_region_mapping_low_not_corrected.txt ]; then
   echo "generating the left region mapping on the decimated surface"
-  python region_mapping.py lh
+  python util/region_mapping.py lh
 fi
 
 # correct
-if [ ! -f $PRD/surface/lh_region_mapping_low.txt ]; then
+if [ ! -f "$PRD"/surface/lh_region_mapping_low.txt ]; then
     echo "correct the left region mapping"
-    python correct_region_mapping.py lh
+    python util/correct_region_mapping.py lh
     echo "check left region mapping"
-    python check_region_mapping.py lh
+    python util/check_region_mapping.py lh
 fi
 
 ###################################### right hemisphere
 # export pial into text file
-if [ ! -f $PRD/surface/rh.pial.asc ]; then
+if [ ! -f "$PRD"/surface/rh.pial.asc ]; then
   echo "importing right pial surface from freesurfer"
   mris_convert $FS/$SUBJ_ID/surf/rh.pial $PRD/surface/rh.pial.asc
   # take care of the c_(ras) shift which is not done by FS (thks FS!)
@@ -254,34 +299,34 @@ if [ ! -f $PRD/surface/rh.pial.asc ]; then
 fi
 
 # triangles and vertices high
-if [ ! -f $PRD/surface/rh_vertices_high.txt ]; then
+if [ ! -f "$PRD"/surface/rh_vertices_high.txt ]; then
   echo "extracting right vertices and triangles"
-  python extract_high.py rh
+  python util/extract_high.py rh
 fi
 
 # decimation using brainvisa
-if [ ! -f $PRD/surface/rh_vertices_low.txt ]; then
+if [ ! -f "$PRD"/surface/rh_vertices_low.txt ]; then
   echo "right decimation using remesher"
   # -> to mesh
-  python txt2off.py $PRD/surface/rh_vertices_high.txt $PRD/surface/rh_triangles_high.txt $PRD/surface/rh_high.off
+  python util/txt2off.py $PRD/surface/rh_vertices_high.txt $PRD/surface/rh_triangles_high.txt $PRD/surface/rh_high.off
   #  decimation
   ./remesher/cmdremesher/cmdremesher $PRD/surface/rh_high.off $PRD/surface/rh_low.off
   # export to list vertices triangles
-  python off2txt.py $PRD/surface/rh_low.off $PRD/surface/rh_vertices_low.txt $PRD/surface/rh_triangles_low.txt
+  python util/off2txt.py $PRD/surface/rh_low.off $PRD/surface/rh_vertices_low.txt $PRD/surface/rh_triangles_low.txt
 fi
 
 # create the right region mapping
-if [ ! -f $PRD/surface/rh_region_mapping_low_not_corrected.txt ]; then
+if [ ! -f "$PRD"/surface/rh_region_mapping_low_not_corrected.txt ]; then
   echo "generating the right region mapping on the decimated surface"
-  python region_mapping.py rh
+  python util/region_mapping.py rh
 fi
 
 # correct
-if [ ! -f $PRD/surface/rh_region_mapping_low.txt ]; then
+if [ ! -f "$PRD"/surface/rh_region_mapping_low.txt ]; then
   echo " correct the right region mapping"
-  python correct_region_mapping.py rh
+  python util/correct_region_mapping.py rh
   echo "check right region mapping"
-  python check_region_mapping.py rh
+  python util/check_region_mapping.py rh
 fi
 ###################################### both hemisphere
 # prepare final directory
@@ -289,9 +334,9 @@ mkdir -p $PRD/$SUBJ_ID
 mkdir -p $PRD/$SUBJ_ID/surface
 
 # reunify both region_mapping, vertices and triangles
-if [ ! -f $PRD/$SUBJ_ID/surface/region_mapping.txt ]; then
+if [ ! -f "$PRD"/"$SUBJ_ID"/surface/region_mapping.txt ]; then
   echo "reunify both region mappings"
-  python reunify_both_regions.py
+  python util/reunify_both_regions.py
 fi
 
 # zip to put in final format
@@ -303,12 +348,12 @@ popd > /dev/null
 
 ########################### subcortical surfaces
 # extract subcortical surfaces 
-if [ ! -f $PRD/surface/subcortical/aseg_058_vert.txt ]; then
+if [ ! -f "$PRD"/surface/subcortical/aseg_058_vert.txt ]; then
   echo "generating subcortical surfaces"
-  ./aseg2srf -s $SUBJ_ID
+  ./util/aseg2srf -s $SUBJ_ID
   mkdir -p $PRD/surface/subcortical
   cp $FS/$SUBJ_ID/ascii/* $PRD/surface/subcortical
-  python list_subcortical.py
+  python util/list_subcortical.py
 fi
 
 ########################## build connectivity using mrtrix 3
@@ -320,7 +365,7 @@ mkdir -p $PRD/$SUBJ_ID/connectivity
 # See: http://mrtrix.readthedocs.io/en/0.3.16/workflows/DWI_preprocessing_for_quantitative_analysis.html
 
 # handle encoding scheme
-if [ ! -f $PRD/connectivity/predwi.mif ]; then 
+if [ ! -f "$PRD"/connectivity/predwi.mif ]; then 
   view_step=1
   select_images="n"
   i_im=1
@@ -330,28 +375,30 @@ if [ ! -f $PRD/connectivity/predwi.mif ]; then
             -export_pe_table $PRD/connectivity/pe_table \
             -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
             -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"  
-  echo "Do you want to add another image serie (different phase encoding)? [y, n]"
-  read select_images
-  while [ "$select_images" != "y" ] && [ "$select_images" != "n" ]; do
-    echo " please answer y or n"
-    read select_images
-  done
   cp $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi.mif
-  while [ "$select_images" == "y" ]; do
-    i_im=$(($i_im + 1))
-    mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_"$i_im".mif \
-              -export_pe_table $PRD/connectivity/pe_table \
-              -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
-              -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"
-    mrcat $PRD/connectivity/predwi.mif $PRD/connectivity/predwi_"$i_im".mif \
-          $PRD/connectivity/predwi.mif -axis 3 -nthreads "$NB_THREADS" -force
+  if [ "$FORCE" = "no" ]; then
     echo "Do you want to add another image serie (different phase encoding)? [y, n]"
     read select_images
     while [ "$select_images" != "y" ] && [ "$select_images" != "n" ]; do
       echo " please answer y or n"
       read select_images
     done
-  done
+    while [ "$select_images" == "y" ]; do
+      i_im=$(($i_im + 1))
+      mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_"$i_im".mif \
+                -export_pe_table $PRD/connectivity/pe_table \
+                -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
+                -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"
+      mrcat $PRD/connectivity/predwi.mif $PRD/connectivity/predwi_"$i_im".mif \
+            $PRD/connectivity/predwi.mif -axis 3 -nthreads "$NB_THREADS" -force
+      echo "Do you want to add another image serie (different phase encoding)? [y, n]"
+      read select_images
+      while [ "$select_images" != "y" ] && [ "$select_images" != "n" ]; do
+        echo " please answer y or n"
+        read select_images
+      done
+    done
+  fi
   mrinfo $PRD/connectivity/predwi.mif \
         -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
         -export_pe_table $PRD/connectivity/pe_table -force 
@@ -363,7 +410,7 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
 fi
 
 # denoising the volumes
-if [ ! -f $PRD/connectivity/predwi_denoised.mif ]; then
+if [ ! -f "$PRD"/connectivity/predwi_denoised.mif ]; then
   # denoising the combined-directions file is preferable to denoising \
   # predwi1 and 2 separately because of a higher no of volumes
   # see: https://github.com/MRtrix3/mrtrix3/issues/747
@@ -392,16 +439,16 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
 fi
 
 # topup/eddy corrections
-if [ ! -f $PRD/connectivity/predwi_denoised_preproc.mif ]; then
+if [ ! -f "$PRD"/connectivity/predwi_denoised_preproc.mif ]; then
   view_step=1
   if [ "$TOPUP" = "eddy_correct" ]; then
-    # eddy maybe topup corrections depending of the encoding scheme
+    # eddy and maybe topup corrections depending of the encoding scheme
+    # TODO: removed repol option for now, as it is not in current FSL debian release
     echo "apply eddy and maybe topup if reverse phase-encoding scheme"
     dwipreproc $PRD/connectivity/predwi_denoised.mif \
                $PRD/connectivity/predwi_denoised_preproc.mif \
                -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
-               -rpe_header -eddy_options ' --repol' -cuda -force \
-               -nthreads "$NB_THREADS"    
+               -rpe_header -cuda -force -nthreads "$NB_THREADS"    
   else # no topup/eddy
     echo "no topup/eddy applied"
     mrconvert $PRD/connectivity/predwi_denoised.mif \
@@ -421,7 +468,7 @@ fi
 
 # TOCHECK: Masking step before or after biascorrect?
 # Native-resolution mask creation
-if [ ! -f $PRD/connectivity/mask_native.mif ]; then
+if [ ! -f "$PRD"/connectivity/mask_native.mif ]; then
   echo "create dwi mask"
   view_step=1
   dwi2mask $PRD/connectivity/predwi_denoised_preproc.mif \
@@ -431,13 +478,13 @@ fi
 if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ]  && [ -n "$DISPLAY" ]; then
   echo "check native mask mif file"
   view_step=0
-  mrview $PRD/connectivity/predwi_denoised_preproc.mif \
+  mrview "$PRD"/connectivity/predwi_denoised_preproc.mif \
          -overlay.load $PRD/connectivity/mask_native.mif \
          -overlay.opacity 0.5
 fi
 
 # Bias field correction
-if [ ! -f $PRD/connectivity/predwi_denoised_preproc_bias.mif ]; then
+if [ ! -f "$PRD"/connectivity/predwi_denoised_preproc_bias.mif ]; then
   # ANTS seems better than FSL
   # see http://mrtrix.readthedocs.io/en/0.3.16/workflows/DWI_preprocessing_for_quantitative_analysis.html
   if [ -n "$ANTSPATH" ]; then
@@ -465,28 +512,50 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
 fi
 
 
-# TOCHECK: why not upsampling to vox=1.25 as recommended in mrtrix?
+# Upsampling to vox=1.25 as recommended in mrtrix:
+# http://mrtrix.readthedocs.io/en/latest/fixel_based_analysis/mt_fibre_density_cross-section.html
 # upsampling and reorienting a la fsl
 # reorienting from mrtrix to FSL, RAS to LAS, means -stride -1,+2,+3,+4
 # see: http://mrtrix.readthedocs.io/en/latest/getting_started/image_data.html
 # upsampling (Dyrby TB. Neuroimage. 2014 Dec;103:202-13.) can help registration
 # with structural and is common with mrtrix3 fixel analysis pipeline
 # see: http://community.mrtrix.org/t/upsampling-dwi-vs-tckgen-defaults/998/2
-if [ ! -f $PRD/connectivity/dwi.mif ]; then
-  echo "upsample dwi"
-  mrresize $PRD/connectivity/predwi_denoised_preproc_bias.mif - -scale 2 -force | \
-  mrconvert - -datatype float32 -stride -1,+2,+3,+4 $PRD/connectivity/dwi.mif -force 
+if [ ! -f "$PRD"/connectivity/dwi.mif ]; then
+  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+                   | cut -f 1 -d " " | xargs printf "%.3f")
+  upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
+  if [ "$upsampling" = 1 ]; then
+    echo "upsampling dwi"
+    scale_factor=$( bc -l <<< "$native_voxelsize"/1.25 )
+    echo "scale factor for upsampling is "$scale_factor""
+    mrresize $PRD/connectivity/predwi_denoised_preproc_bias.mif - -scale "$scale_factor" -force | \
+    mrconvert - -datatype float32 -stride -1,+2,+3,+4 $PRD/connectivity/dwi.mif -force 
+  else
+    echo "no upsampling of dwi"
+    mrconvert $PRD/connectivity/predwi_denoised_preproc_bias.mif -datatype float32 -stride -1,+2,+3,+4 $PRD/connectivity/dwi.mif -force
+  fi
 fi
 
-if [ ! -f $PRD/connectivity/mask.mif ]; then
+if [ ! -f "$PRD"/connectivity/mask.mif ]; then
   # for dwi2fod step, a permissive, dilated mask can be used to minimize
   # streamline premature termination, see BIDS protocol: 
   # https://github.com/BIDS-Apps/MRtrix3_connectome/blob/master/run.py
-  echo "upsample mask"
   view_step=1
-  mrresize $PRD/connectivity/mask_native.mif - -scale 2 -force | \
-  mrconvert - $PRD/connectivity/mask.mif -datatype bit -stride -1,+2,+3 \
-            -force -nthreads "$NB_THREADS"
+  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+                   | cut -f 1 -d " " | xargs printf "%.3f")
+  upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
+  if [ "$upsampling" = 1 ]; then
+    echo "upsampling mask"
+    scale_factor=$( bc -l <<< "$native_voxelsize"/1.25 )
+    echo "scale factor for upsampling is "$scale_factor""
+    mrresize $PRD/connectivity/mask_native.mif - -scale "$scale_factor" -force | \
+    mrconvert - $PRD/connectivity/mask.mif -datatype bit -stride -1,+2,+3 \
+              -force -nthreads "$NB_THREADS"
+  else
+    echo "no upsampling of the mask"
+    mrconvert $PRD/connectivity/mask_native.mif $PRD/connectivity/mask.mif -datatype bit -stride -1,+2,+3 \
+              -force -nthreads "$NB_THREADS"
+  fi
   maskfilter $PRD/connectivity/mask.mif dilate \
              $PRD/connectivity/mask_dilated.mif -npass 2 -force \
              -nthreads "$NB_THREADS" 
@@ -509,8 +578,29 @@ fi
 # http://community.mrtrix.org/t/registration-of-structural-and-diffusion-weighted-data/203/8
 
 
+# generating FSl brain.mgz
+if [ ! -f "$PRD"/connectivity/brain.nii.gz ]; then
+  # brain.mgz seems to be superior to diff to T1
+  # as the main problem for registration is the wmgm interface that we want to
+  # remove and BET stripping is unfortunate in many situations, 
+  # and FS pial eddited volumes already present
+  # stride from FS to FSL: RAS to LAS
+  # see: http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
+  # we could do
+  # mrconvert $FS/$SUBJ_ID/mri/brain.mgz $PRD/connectivity/brain.nii.gz \
+  #           -datatype float32 -stride -1,+2,+3,+4 -force -nthreads "$NB_THREADS" 
+  # instead we use the pure brain from aparc+aseg:
+    echo "generating masked brain in FSL orientation"
+  mri_binarize --i $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
+               --o $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz --min 0.5 --dilate 1 
+  mri_mask $FS/$SUBJ_ID/mri/brain.mgz $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz \
+           $FS/$SUBJ_ID/mri/brain_masked.mgz
+  mrconvert $FS/$SUBJ_ID/mri/brain_masked.mgz $PRD/connectivity/brain.nii.gz \
+            -force -datatype float32 -stride -1,+2,+3
+fi
+
 # low b extraction to FSL
-if [ ! -f $PRD/connectivity/lowb.nii.gz ]; then
+if [ ! -f "$PRD"/connectivity/lowb.nii.gz ]; then
   view_step=1
   if [ "$REGISTRATION" = "regular" ] || [ "$REGISTRATION" = "boundary" ]; then
     echo "extracting b0 vols for registration"
@@ -545,36 +635,19 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
          -overlay.opacity 1. -norealign
 fi
 
-# generating FSl brain.mgz
-if [ ! -f $PRD/connectivity/brain.nii.gz ]; then
-  # brain.mgz seems to be superior to diff to T1
-  # as the main problem for registration is the wmgm interface that we want to
-  # remove and BET stripping is unfortunate in many situations, 
-  # and FS pial eddited volumes already present
-  # stride from FS to FSL: RAS to LAS
-  # see: http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
-  # we could do
-  # mrconvert $FS/$SUBJ_ID/mri/brain.mgz $PRD/connectivity/brain.nii.gz \
-  #           -datatype float32 -stride -1,+2,+3,+4 -force -nthreads "$NB_THREADS" 
-  # instead we use the pure brain from aparc+aseg:
-    echo "generating masked brain in FSL orientation"
-  mri_binarize --i $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
-               --o $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz--min 0.5 --dilate 1 
-  mri_mask $FS/$SUBJ_ID/mri/brain.mgz $FS/$SUBJ_ID/mri/aparc+aseg_mask.mgz \
-           $FS/$SUBJ_ID/mri/brain_masked.mgz
-  mrconvert $FS/$SUBJ_ID/mri/brain_masked.mgz $PRD/connectivity/brain.nii.gz \
-            -force -datatype float32 -stride -1,+2,+3,+4 
-fi
-
-
-
 # aparc+aseg to FSL
-if [ ! -f $PRD/connectivity/aparc+aseg.nii.gz ]; then
+if [ ! -f "$PRD"/connectivity/aparc+aseg.nii.gz ]; then
   echo "generating FSL orientation for aparc+aseg"
   # stride from FS to FSL: RAS to LAS
-  mrconvert $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
-            $PRD/connectivity/aparc+aseg.nii.gz -stride -1,+2,+3,+4 -force \
+  if [ $PARCEL = "desikan" ]; then
+    mrconvert $FS/$SUBJ_ID/mri/aparc+aseg.mgz \
+            $PRD/connectivity/aparc+aseg.nii.gz -stride -1,+2,+3 -force \
             -nthreads "$NB_THREADS" 
+  elif [ $PARCEL = "destrieux" ]; then
+    mrconvert $FS/$SUBJ_ID/mri/aparc.a2009s+aseg.mgz \
+            $PRD/connectivity/aparc+aseg.nii.gz -stride -1,+2,+3 -force \
+            -nthreads "$NB_THREADS" 
+  fi
 fi
 
 # check orientations
@@ -597,7 +670,7 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
 fi
 
 # aparcaseg to diff by inverse transform
-if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]; then
+if [ ! -f "$PRD"/connectivity/aparcaseg_2_diff.nii.gz ]; then
   view_step=1
   if [ "$REGISTRATION" = "regular" ] || [ "$REGISTRATION" = "pseudo" ]; then
     # 6 dof; see:
@@ -642,7 +715,7 @@ if [ ! -f $PRD/connectivity/aparcaseg_2_diff.nii.gz ]; then
 fi
 
 # brain to diff by inverse transform
-if [ ! -f $PRD/connectivity/brain_2_diff.nii.gz ]; then
+if [ ! -f "$PRD"/connectivity/brain_2_diff.nii.gz ]; then
   echo "register brain to diff"
   view_step=1
   mrtransform $PRD/connectivity/brain.nii.gz \
@@ -668,8 +741,13 @@ fi
 if [ "$ACT" = "yes" ] && [ ! -f $PRD/connectivity/act.mif ]; then
   echo "prepare files for act"
   view_step=1
-  5ttgen fsl $PRD/connectivity/brain_2_diff.nii.gz $PRD/connectivity/act.mif \
-         -premasked -force  -nthreads "$NB_THREADS"
+  if [ "$FTTGEN" = "fsl" ]; then
+    5ttgen fsl $PRD/connectivity/brain_2_diff.nii.gz $PRD/connectivity/act.mif \
+           -premasked -force  -nthreads "$NB_THREADS"
+  elif [ "$FTTGEN" = "fs" ]; then
+    5ttgen freesurfer $PRD/connectivity/aparcaseg_2_diff.nii.gz $PRD/connectivity/act.mif \
+           -force  -nthreads "$NB_THREADS"    
+  fi
   5tt2vis $PRD/connectivity/act.mif $PRD/connectivity/act_vis.mif -force \
         -nthreads "$NB_THREADS"
 fi
@@ -689,7 +767,7 @@ echo "no of shells are $no_shells"
 
 if [ "$no_shells" -gt 2 ]; then
 # Multishell
-  if [ ! -f $PRD/connectivity/response_wm.txt ]; then
+  if [ ! -f "$PRD"/connectivity/response_wm.txt ]; then
     view_step=1
     if [ "$ACT" = "yes" ]; then 
       echo "estimating response using msmt algorithm"
@@ -714,7 +792,7 @@ if [ "$no_shells" -gt 2 ]; then
   fi
 else
 # Single shell only
-  if [ ! -f $PRD/connectivity/response_wm.txt ]; then
+  if [ ! -f "$PRD"/connectivity/response_wm.txt ]; then
     echo "estimating response using dhollander algorithm"
     view_step=1
     # dwi2response tournier $PRD/connectivity/dwi.mif $PRD/connectivity/response.txt -force -voxels $PRD/connectivity/RF_voxels.mif -mask $PRD/connectivity/mask.mif
@@ -736,7 +814,7 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
 fi
 
 # Fibre orientation distribution estimation
-if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]; then
+if [ ! -f "$PRD"/connectivity/wm_CSD.mif ]; then
   # Both for multishell and single shell since we use dhollander in the 
   # single shell case
   # see: http://community.mrtrix.org/t/wm-odf-and-response-function-with-dhollander-option---single-shell-versus-multi-shell/572/4
@@ -744,38 +822,47 @@ if [ ! -f $PRD/connectivity/wm_CSD$lmax.mif ]; then
   view_step=1
   dwi2fod msmt_csd $PRD/connectivity/dwi.mif \
           $PRD/connectivity/response_wm.txt \
-          $PRD/connectivity/wm_CSD$lmax.mif \
+          $PRD/connectivity/wm_CSD.mif \
           $PRD/connectivity/response_gm.txt \
-          $PRD/connectivity/gm_CSD$lmax.mif \
+          $PRD/connectivity/gm_CSD.mif \
           $PRD/connectivity/response_csf.txt \
-          $PRD/connectivity/csf_CSD$lmax.mif \
+          $PRD/connectivity/csf_CSD.mif \
           -mask $PRD/connectivity/mask_dilated.mif -force \
           -nthreads "$NB_THREADS"
 fi
 if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "check ODF image"
   view_step=0
-  mrconvert $PRD/connectivity/wm_CSD$lmax.mif - -coord 3 0 \
+  mrconvert $PRD/connectivity/wm_CSD.mif - -coord 3 0 \
   -nthreads "$NB_THREADS" -force \
-  | mrcat $PRD/connectivity/csf_CSD$lmax.mif \
-          $PRD/connectivity/gm_CSD$lmax.mif - \
+  | mrcat $PRD/connectivity/csf_CSD.mif \
+          $PRD/connectivity/gm_CSD.mif - \
           $PRD/connectivity/tissueRGB.mif -axis 3 -nthreads "$NB_THREADS" \
           -force
   mrview $PRD/connectivity/tissueRGB.mif \
-         -odf.load_sh $PRD/connectivity/wm_CSD$lmax.mif 
+         -odf.load_sh $PRD/connectivity/wm_CSD.mif 
 fi
 
 
 # tractography
-if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
+if [ ! -f "$PRD"/connectivity/whole_brain.tck ]; then
   if [ "$SIFT" = "sift" ]; then
     # temporarily change number of tracks for sift
     number_tracks=$(($NUMBER_TRACKS*$SIFT_MULTIPLIER))
   fi
   native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
                    | cut -f 1 -d " " | xargs printf "%.3f")
-  stepsize=$( bc -l <<< "scale=2; "$native_voxelsize"/2" )
-  angle=$( bc -l <<< "scale=2; 90*"$stepsize"/"$native_voxelsize"" )
+  upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
+  if [ "$upsampling" = 1 ]; then
+    scale_factor=$( bc -l <<< "$native_voxelsize"/1.25 )
+  else
+    scale_factor=1
+  fi
+  echo "scale factor is "$scale_factor""
+  stepsize=$( bc -l <<< "scale="$scale_factor"; "$native_voxelsize"/2" )
+  echo "stepsize parameter for tckgen is $stepsize"
+  angle=$( bc -l <<< "scale="$scale_factor"; 90*"$stepsize"/"$native_voxelsize"" )
+  echo "angle parameter for tckgen is $angle"
   if [ "$ACT" = "yes" ]; then
     # when using msmt_csd in conjunction with ACT, the cutoff threshold
     # can be reduced to 0.06
@@ -787,9 +874,9 @@ if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
                 $PRD/connectivity/gmwmi_mask.mif -force \
                 -nthreads "$NB_THREADS"
       # TODO: min length check andreas paper
-      tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
+      tckgen $PRD/connectivity/wm_CSD.mif \
              $PRD/connectivity/whole_brain.tck \
-             -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif 
+             -seed_gmwmi $PRD/connectivity/gmwmi_mask.mif \
              -act $PRD/connectivity/act.mif -select "$NUMBER_TRACKS" \
              -seed_unidirectional -crop_at_gmwmi -backtrack \
              -minlength 4 -maxlength 250 -step "$stepsize" -angle "$angle" \
@@ -798,9 +885,9 @@ if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
        # -dynamic seeding may work slightly better than gmwmi, 
        # see Smith RE Neuroimage. 2015 Oct 1;119:338-51.
       echo "seeding dynamically"   
-      tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
+      tckgen $PRD/connectivity/wm_CSD.mif \
              $PRD/connectivity/whole_brain.tck \
-             -seed_dynamic $PRD/connectivity/wm_CSD$lmax.mif \
+             -seed_dynamic $PRD/connectivity/wm_CSD.mif \
              -act $PRD/connectivity/act.mif -select "$NUMBER_TRACKS" \
              -crop_at_gmwmi -backtrack -minlength 4 -maxlength 250 \
              -step "$stepsize" -angle "$angle" -cutoff 0.06 -force \
@@ -809,24 +896,25 @@ if [ ! -f $PRD/connectivity/whole_brain.tck ]; then
   else
     echo "generating tracks without using act" 
     echo "seeding dynamically" 
-    tckgen $PRD/connectivity/wm_CSD"$lmax".mif \
+    tckgen $PRD/connectivity/wm_CSD.mif \
            $PRD/connectivity/whole_brain.tck \
-           -seed_dynamic $PRD/connectivity/wm_CSD"$lmax".mif \
+           -seed_dynamic $PRD/connectivity/wm_CSD.mif \
            -mask $PRD/connectivity/mask.mif -select "$NUMBER_TRACKS" \
-           -maxlength 250 -step "$stepsize" -angle "$angle" -cutoff 1  \
+           -maxlength 250  -step "$stepsize"  -angle "$angle" -cutoff 0.1 \
            -force -nthreads "$NB_THREADS"
   fi
 fi
 
 # postprocessing
-if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
+if [ ! -f "$PRD"/connectivity/whole_brain_post.tck -a ! -h "$PRD"/connectivity/whole_brain_post.tck ]; then
+  echo "$PRD"/connectivity/whole_brain_post.tck
   if [ "$SIFT" = "sift" ]; then
     echo "using sift"
     number_tracks=$(($NUMBER_TRACKS/$SIFT_MULTIPLIER))
     if [ "$ACT" = "yes" ]; then
         echo "trimming tracks using sift/act" 
         tcksift $PRD/connectivity/whole_brain.tck \
-                $PRD/connectivity/wm_CSD"$lmax".mif \
+                $PRD/connectivity/wm_CSD.mif \
                 $PRD/connectivity/whole_brain_post.tck \
                 -act $PRD/connectivity/act.mif \
                 -out_mu $PRD/connectivity/mu.txt \
@@ -835,7 +923,7 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
     else
         echo "trimming tracks using sift/without act" 
         tcksift $PRD/connectivity/whole_brain.tck \
-                $PRD/connectivity/wm_CSD"$lmax".mif \
+                $PRD/connectivity/wm_CSD.mif \
                 $PRD/connectivity/whole_brain_post.tck \
                 -out_mu $PRD/connectivity/mu.txt \
                 -term_number $NUMBER_TRACKS -force \
@@ -847,7 +935,7 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
     if [ "$ACT" = "yes" ]; then
       echo "using act" 
       tcksift2 $PRD/connectivity/whole_brain.tck \
-               $PRD/connectivity/wm_CSD"$lmax".mif \
+               $PRD/connectivity/wm_CSD.mif \
                $PRD/connectivity/streamline_weights.csv\
                -act $PRD/connectivity/act.mif \
                -out_mu $PRD/connectivity/mu.txt \
@@ -855,7 +943,7 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
                -fd_scale_gm -force -nthreads "$NB_THREADS"
     else
       tcksift2 $PRD/connectivity/whole_brain.tck \
-               $PRD/connectivity/wm_CSD"$lmax".mif \
+               $PRD/connectivity/wm_CSD.mif \
                $PRD/connectivity/streamline_weights.csv \
                -out_mu $PRD/connectivity/mu.txt \
                -out_coeffs $PRD/connectivity/streamline_coeffs.csv \
@@ -869,11 +957,12 @@ if [ ! -f $PRD/connectivity/whole_brain_post.tck ]; then
 fi
 
 ## now compute connectivity and length matrix
-if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$ASEG".mif ]; then
-  echo "compute FS labels"
+if [ ! -f "$PRD"/connectivity/aparcaseg_2_diff_"$ASEG".mif ]; then
+  echo "compute parcellation labels"
+  python util/compute_luts.py
   labelconvert $PRD/connectivity/aparcaseg_2_diff.nii.gz \
-               $FREESURFER_HOME/FreeSurferColorLUT.txt \
-               fs_region.txt $PRD/connectivity/aparcaseg_2_diff_fs.mif \
+               $PRD/connectivity/lut_in.txt $PRD/connectivity/lut_out.txt\
+               $PRD/connectivity/aparcaseg_2_diff_fs.mif \
                -force -nthreads "$NB_THREADS"
   echo "$ASEG"
   if [ "$ASEG" = "fsl" ]; then
@@ -884,13 +973,13 @@ if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$ASEG".mif ]; then
     # TODO; -sgm_amyg_hipp option to consider
     echo "fix FS subcortical labels to generate FSL labels"
     labelsgmfix $PRD/connectivity/aparcaseg_2_diff_fs.mif \
-                $PRD/connectivity/brain_2_diff.nii.gz fs_region.txt \
+                $PRD/connectivity/brain_2_diff.nii.gz $PRD/connectivity/lut_out.txt \
                 $PRD/connectivity/aparcaseg_2_diff_fsl.mif -premasked \
                 -force -nthreads "$NB_THREADS"   
   fi 
 fi
 
-if [ ! -f $PRD/connectivity/weights.csv ]; then
+if [ ! -f "$PRD"/connectivity/weights.csv ]; then
   echo "compute connectivity matrix weights"
   if [ "$SIFT" = "sift2" ]; then
     # -tck_weights_in flag only needed for sift2 but not for sift/no processing
@@ -909,7 +998,7 @@ if [ ! -f $PRD/connectivity/weights.csv ]; then
   fi
 fi
 
-if [ ! -f $PRD/connectivity/tract_lengths.csv ]; then
+if [ ! -f "$PRD"/connectivity/tract_lengths.csv ]; then
   echo "compute connectivity matrix edge lengths"
   view_step=1
   # mean length result: weight by the length, then average
@@ -942,7 +1031,7 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
                        -files single -nthreads "$NB_THREADS"
     fi
   fi
-  # TOCHECK: in mrview, load the lut table (fs_region.txt) for node correspondence, 
+  # TOCHECK: in mrview, load the lut table ($PRD/connectivity/lut_out.txt) for node correspondence, 
   # and exemplars.tck if wanting to see edges as streamlines 
   mrview $PRD/connectivity/aparcaseg_2_diff_$ASEG.mif \
          -connectome.init $PRD/connectivity/aparcaseg_2_diff_$ASEG.mif \
@@ -993,12 +1082,11 @@ fi
 # Compute other files
 # we do not compute hemisphere
 # subcortical is already done
-cp cortical.txt $PRD/$SUBJ_ID/connectivity/cortical.txt
 
-# compute centers, areas and orientations
-if [ ! -f $PRD/$SUBJ_ID/connectivity/weights.txt ]; then
+# compute centers, areas, cortical and orientations
+if [ ! -f "$PRD"/"$SUBJ_ID"/connectivity/cortical.txt ]; then
   echo "generate useful files for TVB"
-  python compute_connectivity_files.py
+  python util/compute_connectivity_files.py
 fi
 
 # zip to put in final format
@@ -1015,22 +1103,18 @@ if [ -n "$K_LIST" ]; then
   for K in $K_LIST; do
     export curr_K=$(( 2**K ))
     mkdir -p $PRD/$SUBJ_ID/connectivity_"$curr_K"
-    if [ -n "$MATLAB" ]; then
-      if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz ]; then
-        echo "compute subparcellations for $curr_K"
+    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz ]; then
+      echo "compute subparcellations for $curr_K"
+      if [ -n "$MATLAB" ]; then
         $MATLAB -r "run subparcel.m; quit;" -nodesktop -nodisplay 
-        gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
+      else
+        sh util/run_subparcel.sh $MCR 
       fi
-    else
-      if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz ]; then
-        echo "compute subparcellations for subparcellation $curr_K"
-        sh subparcel/distrib/run_subparcel.sh $MCR  
-        gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
-      fi
+      gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
     fi
     if [ ! -f $PRD/$SUBJ_ID/region_mapping_"$curr_K".txt ]; then
       echo "generate region mapping for subparcellation "$curr_K""
-      python region_mapping_other_parcellations.py
+      python util/region_mapping_other_parcellations.py
     fi
     if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif ]; then
       mrconvert $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz \
@@ -1050,12 +1134,12 @@ if [ -n "$K_LIST" ]; then
       else
       tck2connectome $PRD/connectivity/whole_brain_post.tck \
                      $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif \
-                     $PRD/connectivity/weights.csv -assignment_radial_search 2 \
+                     $PRD/connectivity/weights_"$curr_K".csv -assignment_radial_search 2 \
                      -out_assignments $PRD/connectivity/edges_2_nodes_"$curr_K".csv \
                      -force -nthreads "$NB_THREADS"
       fi
     fi
-    if [ ! -f $PRD/connectivity/tract_lengths_"$curr_K".csv ]; then
+    if [ ! -f "$PRD"/connectivity/tract_lengths_"$curr_K".csv ]; then
       echo "compute connectivity matrix edge lengths subparcellation "$curr_K""
       view_step=1
       # mean length result: weight by the length, then average
@@ -1069,9 +1153,9 @@ if [ -n "$K_LIST" ]; then
                      -stat_edge mean -force -nthreads "$NB_THREADS"
       #fi
     fi
-    if [ ! -f $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt ]; then
+    if [ ! -f "$PRD"/"$SUBJ_ID"/connectivity_"$curr_K"/weights.txt ]; then
       echo "generate files for TVB subparcellation "$curr_K""
-      python compute_connectivity_sub.py $PRD/connectivity/weights_"$curr_K".csv $PRD/connectivity/tract_lengths_"$curr_K".csv $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt $PRD/$SUBJ_ID/connectivity_"$curr_K"/tract_lengths.txt
+      python util/compute_connectivity_sub.py $PRD/connectivity/weights_"$curr_K".csv $PRD/connectivity/tract_lengths_"$curr_K".csv $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt $PRD/$SUBJ_ID/connectivity_"$curr_K"/tract_lengths.txt
     fi
     pushd . > /dev/null
     cd $PRD/$SUBJ_ID/connectivity_"$curr_K" > /dev/null
@@ -1081,78 +1165,81 @@ if [ -n "$K_LIST" ]; then
 fi
 
 ######################## compute MEG and EEG forward projection matrices
-# make BEM surfaces
-if [ ! -h ${FS}/${SUBJ_ID}/bem/inner_skull.surf ]; then
-  echo "generating bem surfaces"
-  mne_watershed_bem --subject ${SUBJ_ID} --overwrite
-  ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_inner_skull_surface \
-        ${FS}/${SUBJ_ID}/bem/inner_skull.surf
-  ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skin_surface  \
-        ${FS}/${SUBJ_ID}/bem/outer_skin.surf
-  ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skull_surface \
-        ${FS}/${SUBJ_ID}/bem/outer_skull.surf
-fi
-
-# export to ascii
-if [ ! -f ${FS}/${SUBJ_ID}/bem/inner_skull.asc ]; then
-  echo "importing bem surface from freesurfer"
-  mris_convert $FS/$SUBJ_ID/bem/inner_skull.surf $FS/$SUBJ_ID/bem/inner_skull.asc
-  mris_convert $FS/$SUBJ_ID/bem/outer_skull.surf $FS/$SUBJ_ID/bem/outer_skull.asc
-  mris_convert $FS/$SUBJ_ID/bem/outer_skin.surf $FS/$SUBJ_ID/bem/outer_skin.asc
-fi
-
-# triangles and vertices bem
-if [ ! -f $PRD/$SUBJ_ID/surface/inner_skull_vertices.txt ]; then
-  echo "extracting bem vertices and triangles"
-  python extract_bem.py inner_skull 
-  python extract_bem.py outer_skull 
-  python extract_bem.py outer_skin 
-fi
-
-if [ ! -f ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif ]; then
-  echo "generating head bem"
-  view_step=1
-  mkheadsurf -s $SUBJ_ID
-  mne_surf2bem --surf ${FS}/${SUBJ_ID}/surf/lh.seghead --id 4 --check \
-               --fif ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif --overwrite
-fi
-
-if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
-  echo "check bem surfaces"
-  view_step=0
-  # TODO: use mrview instead
-  freeview -v ${FS}/${SUBJ_ID}/mri/T1.mgz \
-           -f ${FS}/${SUBJ_ID}/bem/inner_skull.surf:color=yellow:edgecolor=yellow \
-           ${FS}/${SUBJ_ID}/bem/outer_skull.surf:color=blue:edgecolor=blue \
-           ${FS}/${SUBJ_ID}/bem/outer_skin.surf:color=red:edgecolor=red
-fi
-
-# Setup BEM
-if [ ! -f ${FS}/${SUBJ_ID}/bem/*-bem.fif ]; then
-  worked=0
-  outershift=0
-  while [ "$worked" == 0 ]; do
-    echo "try generate forward model with 0 shift"
-    worked=1
-    mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 \
-                            --outershift $outershift || worked=0 
-    if [ "$worked" == 0 ]; then
-      echo "try generate foward model with 1 shift"
+if [ "$FORWARD_MODEL" = "yes" ]; then
+  # make BEM surfaces
+  if [ ! -h "$FS"/"$SUBJ_ID"/bem/inner_skull.surf ]; then
+    echo "generating bem surfaces"
+    mne_watershed_bem --subject ${SUBJ_ID} --overwrite
+    ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_inner_skull_surface \
+          ${FS}/${SUBJ_ID}/bem/inner_skull.surf
+    ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skin_surface  \
+          ${FS}/${SUBJ_ID}/bem/outer_skin.surf
+    ln -s ${FS}/${SUBJ_ID}/bem/watershed/${SUBJ_ID}_outer_skull_surface \
+          ${FS}/${SUBJ_ID}/bem/outer_skull.surf
+  fi
+  
+  # export to ascii
+  if [ ! -f "$FS"/"$SUBJ_ID"/bem/inner_skull.asc ]; then
+    echo "importing bem surface from freesurfer"
+    mris_convert $FS/$SUBJ_ID/bem/inner_skull.surf $FS/$SUBJ_ID/bem/inner_skull.asc
+    mris_convert $FS/$SUBJ_ID/bem/outer_skull.surf $FS/$SUBJ_ID/bem/outer_skull.asc
+    mris_convert $FS/$SUBJ_ID/bem/outer_skin.surf $FS/$SUBJ_ID/bem/outer_skin.asc
+  fi
+  
+  # triangles and vertices bem
+  if [ ! -f $PRD/$SUBJ_ID/surface/inner_skull_vertices.txt ]; then
+    echo "extracting bem vertices and triangles"
+    python util/extract_bem.py inner_skull 
+    python util/extract_bem.py outer_skull 
+    python util/extract_bem.py outer_skin 
+  fi
+  
+  if [ ! -f "$FS"/"$SUBJ_ID"/bem/"$SUBJ_ID"-head.fif ]; then
+    echo "generating head bem"
+    view_step=1
+    mkheadsurf -s $SUBJ_ID
+    mne_surf2bem --surf ${FS}/${SUBJ_ID}/surf/lh.seghead --id 4 --check \
+                 --fif ${FS}/${SUBJ_ID}/bem/${SUBJ_ID}-head.fif --overwrite
+  fi
+  
+  if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
+    echo "check bem surfaces"
+    view_step=0
+    # TODO: use mrview instead
+    freeview -v ${FS}/${SUBJ_ID}/mri/T1.mgz \
+             -f ${FS}/${SUBJ_ID}/bem/inner_skull.surf:color=yellow:edgecolor=yellow \
+             ${FS}/${SUBJ_ID}/bem/outer_skull.surf:color=blue:edgecolor=blue \
+             ${FS}/${SUBJ_ID}/bem/outer_skin.surf:color=red:edgecolor=red
+  fi
+  
+  # Setup BEM
+  if [ ! -f "$FS"/"$SUBJ_ID"/bem/*-bem.fif ]; then
+    worked=0
+    outershift=0
+    while [ "$worked" == 0 ]; do
+      echo "try generate forward model with 0 shift"
       worked=1
-      mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift 1 \
-      || worked=0 
-    fi
-    if [ "$worked" == 0 ] && [ "$CHECK" = "yes" ]; then
-      echo 'you can try using a different shifting value for outer skull, 
-           please enter a value in mm'
-      read outershift;
-      echo $outershift
-    elif [ "$worked" == 0 ]; then
-      echo "bem did not worked"
-      worked=1
-    elif [ "$worked" == 1 ]; then
-      echo "success!"
-    fi
-  done
+      mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 \
+                              --outershift $outershift || worked=0 
+      if [ "$worked" == 0 ]; then
+        echo "try generate foward model with 1 shift"
+        worked=1
+        mne_setup_forward_model --subject ${SUBJ_ID} --surf --ico 4 --outershift 1 \
+        || worked=0 
+      fi
+      if [ "$worked" == 0 ] && [ "$CHECK" = "yes" ]; then
+        echo 'you can try using a different shifting value for outer skull, 
+             please enter a value in mm'
+        read outershift;
+        echo $outershift
+      elif [ "$worked" == 0 ]; then
+        echo "bem did not worked"
+        worked=1
+      elif [ "$worked" == 1 ]; then
+        echo "success!"
+      fi
+    done
+  fi
 fi
-
+echo "SUCCESS"
+exit

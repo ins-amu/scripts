@@ -10,6 +10,7 @@ curr_K = str2num(curr_K);
 K = log(curr_K)/log(2) 
 PRD = fullfile(getenv('PRD'), '/')
 SUBJ_ID = getenv('SUBJ_ID')
+PARCEL = getenv('PARCEL')
 
 % get rid of subcortical regions and white matter
 
@@ -163,19 +164,23 @@ mat2nii(vol,Out,size(data),32,Msk);
 
 %%%%%%%%%%%%%%%%%
 
-% compute centers and orientations
-fid = fopen('name_regions.txt');
-name_region = textscan(fid, '%s');
+%% compute centers and orientations
+% load name_regions and cortical
+fid = fopen(['share/reference_table_' PARCEL '.csv']);
+textscan(fid, '%*s %*s %*s %*s %*s %*s %*s %*s', 1);
+ref = textscan(fid, '%d %s %d %d %d %d %d %d %d', 'delimiter', ',');
 fclose(fid);
 
-load('cortical.txt');
+name_region = ref{2};
+cortical = ref{8};
+
 cortical(find(cortical==0))=false;
-name_region_subcortical = name_region{1}(find(cortical==0));
+name_region_subcortical = name_region(find(cortical==0));
 name_region_subcortical = name_region_subcortical(2:end);
-name_region_cortical = name_region{1}(find(cortical==1));
+name_region_cortical = name_region(find(cortical==1));
 
 load([PRD,'/', SUBJ_ID, '/connectivity/average_orientations.txt']);
-average_orientations = reshape(average_orientations, [88,3]);
+average_orientations = reshape(average_orientations, [size(name_region, 1),3]);
 average_orientations_subcortical = average_orientations(find(cortical==0), :);
 average_orientations_subcortical = average_orientations_subcortical(2:end, :);
 average_orientations_cortical = average_orientations(find(cortical==1), :);
@@ -198,8 +203,8 @@ end
 for ind_j=(size(list_region, 1)-size(name_region_subcortical, 1)+1):size(list_region, 1) 
     [a, b, c] = ind2sub(size(vol), find(vol==list_region(ind_j))); 
     centres(ind_j, 2:4) = [mean(a), mean(b), mean(c)];
-    centres(ind_j, 1) = list_region(ind_j)-(curr_K-1)*70; 
-    orientation_divided(ind_j, :) = average_orientations(list_region(ind_j)-(curr_K-1)*70,:); 
+    centres(ind_j, 1) = list_region(ind_j)-(curr_K-1)*size(name_region_cortical, 1); 
+    orientation_divided(ind_j, :) = average_orientations(list_region(ind_j)-(curr_K-1)*size(name_region_cortical, 1),:); 
 end
 
 fid = fopen([PRD, '/', SUBJ_ID, '/connectivity_', num2str(curr_K),'/centres.txt'], 'w'); 
