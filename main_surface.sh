@@ -13,6 +13,8 @@
 # TODO: add the missing mrviews
 # TOCHECK: test/retest
 
+source config.sh
+
 #### Checks and preset variables
 
 # import and check config
@@ -249,6 +251,7 @@ if [ ! -d "$FS"/"$SUBJ_ID" ] ; then
 fi
 
 ###################################### left hemisphere
+### PIAL SURFACE ###
 # export pial into text file
 mkdir -p "$PRD"/surface
 if [ ! -f "$PRD"/surface/lh.pial.asc ]; then
@@ -258,11 +261,13 @@ if [ ! -f "$PRD"/surface/lh.pial.asc ]; then
   mris_info "$FS"/"$SUBJ_ID"/surf/lh.pial >& "$PRD"/surface/lhinfo.txt
 fi
 
+
 # triangles and vertices high
 if [ ! -f "$PRD"/surface/lh_vertices_high.txt ]; then
   echo "extracting left vertices and triangles"
   python util/extract_high.py lh
 fi
+
 
 # decimation using remesher
 if [ ! -f $PRD/surface/lh_vertices_low.txt ]; then
@@ -289,7 +294,49 @@ if [ ! -f "$PRD"/surface/lh_region_mapping_low.txt ]; then
     python util/check_region_mapping.py lh
 fi
 
+### WM SURFACE ###
+# export white matter surface into text file
+mkdir -p $PRD/surface
+if [ ! -f $PRD/surface/lh.white.asc ]; then
+  echo "importing left white matter surfaces from freesurfer"
+  mris_convert "$FS"/"$SUBJ_ID"/surf/lh.white "$PRD"/surface/lh.white.asc
+fi
+
+# triangles and vertices high
+if [ ! -f $PRD/surface/lh_white_vertices_high.txt ]; then
+  echo "extracting left vertices and triangles for white matter surface"
+  python util/extract_white_high.py lh
+fi
+
+# decimation using remesher
+if [ ! -f $PRD/surface/lh_white_vertices_low.txt ]; then
+  echo "left white matter decimation using remesher"
+  # -> to mesh
+  python util/txt2off.py $PRD/surface/lh_white_vertices_high.txt $PRD/surface/lh_white_triangles_high.txt $PRD/surface/lh_white_high.off
+  #  decimation
+  ./remesher/cmdremesher/cmdremesher $PRD/surface/lh_white_high.off $PRD/surface/lh_white_low.off
+  # export to list vertices triangles
+  python util/off2txt.py $PRD/surface/lh_white_low.off $PRD/surface/lh_white_vertices_low.txt $PRD/surface/lh_white_triangles_low.txt
+fi
+
+# create the left region mapping
+if [ ! -f $PRD/surface/lh_white_region_mapping_low_not_corrected.txt ]; then
+  echo "generating the left white matter region mapping on the decimated white matter surface"
+  python util/region_mapping_white.py lh
+fi
+
+# correct
+if [ ! -f $PRD/surface/lh_white_region_mapping_low.txt ]; then
+    echo "correct the left white matter region mapping"
+    python util/correct_region_mapping_white.py lh
+    echo "check left white matter region mapping"
+    python util/check_region_mapping_white.py lh
+fi
+
+
+
 ###################################### right hemisphere
+### PIAL SURAFCE ###
 # export pial into text file
 if [ ! -f "$PRD"/surface/rh.pial.asc ]; then
   echo "importing right pial surface from freesurfer"
@@ -328,6 +375,47 @@ if [ ! -f "$PRD"/surface/rh_region_mapping_low.txt ]; then
   echo "check right region mapping"
   python util/check_region_mapping.py rh
 fi
+
+### WM SURAFCE ###
+# export white matter surface into text file
+mkdir -p $PRD/surface
+if [ ! -f $PRD/surface/rh.white.asc ]; then
+  echo "importing right white matter surfaces from freesurfer"
+  mris_convert "$FS"/"$SUBJ_ID"/surf/rh.white "$PRD"/surface/rh.white.asc
+fi
+
+# triangles and vertices high
+if [ ! -f $PRD/surface/rh_white_vertices_high.txt ]; then
+  echo "extracting right vertices and triangles for white matter surface"
+  python util/extract_white_high.py rh
+fi
+
+# decimation using remesher
+if [ ! -f $PRD/surface/rh_white_vertices_low.txt ]; then
+  echo "right white matter decimation using remesher"
+  # -> to mesh
+  python util/txt2off.py $PRD/surface/rh_white_vertices_high.txt $PRD/surface/rh_white_triangles_high.txt $PRD/surface/rh_white_high.off
+  #  decimation
+  ./remesher/cmdremesher/cmdremesher $PRD/surface/rh_white_high.off $PRD/surface/rh_white_low.off
+  # export to list vertices triangles
+  python util/off2txt.py $PRD/surface/rh_white_low.off $PRD/surface/rh_white_vertices_low.txt $PRD/surface/rh_white_triangles_low.txt
+fi
+
+# create the right region mapping
+if [ ! -f $PRD/surface/rh_white_region_mapping_low_not_corrected.txt ]; then
+  echo "generating the right white matter region mapping on the decimated white matter surface"
+  python util/region_mapping_white.py rh
+fi
+
+# correct
+if [ ! -f $PRD/surface/rh_white_region_mapping_low.txt ]; then
+    echo "correct the right white matter region mapping"
+    python util/correct_region_mapping_white.py rh
+    echo "check right white matter region mapping"
+    python util/check_region_mapping_white.py rh
+fi
+
+
 ###################################### both hemisphere
 # prepare final directory
 mkdir -p $PRD/$SUBJ_ID
@@ -360,7 +448,6 @@ fi
 mkdir -p $PRD/connectivity
 mkdir -p $PRD/$SUBJ_ID/connectivity
 
-
 ## preprocessing
 # See: http://mrtrix.readthedocs.io/en/0.3.16/workflows/DWI_preprocessing_for_quantitative_analysis.html
 
@@ -371,10 +458,11 @@ if [ ! -f "$PRD"/connectivity/predwi.mif ]; then
   i_im=1
   echo "generate dwi mif file"
   echo "if asked, please select a series of images by typing a number"
-  mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_"$i_im".mif \
-            -export_pe_table $PRD/connectivity/pe_table \
+  mrconvert $PRD/data/DWI/data.nii.gz $PRD/connectivity/predwi_"$i_im".mif \
+             -fslgrad $PRD/data/DWI/bvecs.bvec $PRD/data/DWI/bvals.bval \
             -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
             -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"  
+#  -export_pe_table $PRD/connectivity/pe_table \
   cp $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi.mif
   if [ "$FORCE" = "no" ]; then
     echo "Do you want to add another image serie (different phase encoding)? [y, n]"
@@ -438,7 +526,8 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
          $PRD/connectivity/noise_res.mif  
 fi
 
-# topup/eddy corrections
+
+# topup/eddy corrections**
 if [ ! -f "$PRD"/connectivity/predwi_denoised_preproc.mif ]; then
   view_step=1
   if [ "$TOPUP" = "eddy_correct" ]; then
@@ -448,7 +537,9 @@ if [ ! -f "$PRD"/connectivity/predwi_denoised_preproc.mif ]; then
     dwipreproc $PRD/connectivity/predwi_denoised.mif \
                $PRD/connectivity/predwi_denoised_preproc.mif \
                -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
-               -rpe_header -cuda -force -nthreads "$NB_THREADS"    
+               -rpe_none -pe_dir $PE  -force \
+               -nthreads "$NB_THREADS"    
+#-rpe_header -cuda -force -nthreads "$NB_THREADS"    
   else # no topup/eddy
     echo "no topup/eddy applied"
     mrconvert $PRD/connectivity/predwi_denoised.mif \
@@ -457,6 +548,7 @@ if [ ! -f "$PRD"/connectivity/predwi_denoised_preproc.mif ]; then
               -force -nthreads "$NB_THREADS"
   fi
 fi
+
 # check preproc files
 if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ]  && [ -n "$DISPLAY" ]; then
   echo "check preprocessed mif file (no topup/no eddy)"
@@ -521,8 +613,9 @@ fi
 # with structural and is common with mrtrix3 fixel analysis pipeline
 # see: http://community.mrtrix.org/t/upsampling-dwi-vs-tckgen-defaults/998/2
 if [ ! -f "$PRD"/connectivity/dwi.mif ]; then
-  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -spacing \
                    | cut -f 1 -d " " | xargs printf "%.3f")
+
   upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
   if [ "$upsampling" = 1 ]; then
     echo "upsampling dwi"
@@ -541,7 +634,7 @@ if [ ! -f "$PRD"/connectivity/mask.mif ]; then
   # streamline premature termination, see BIDS protocol: 
   # https://github.com/BIDS-Apps/MRtrix3_connectome/blob/master/run.py
   view_step=1
-  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -spacing \
                    | cut -f 1 -d " " | xargs printf "%.3f")
   upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
   if [ "$upsampling" = 1 ]; then
@@ -657,6 +750,7 @@ if [ ! -f $PRD/connectivity/aparc+aseg_reorient.nii.gz ]; then
   "$FSL"fslreorient2std $PRD/connectivity/aparc+aseg.nii.gz \
                   $PRD/connectivity/aparc+aseg_reorient.nii.gz
 fi
+
 # check parcellation to brain.mgz
 if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   # TODO: mrview discrete colour scheme?
@@ -723,6 +817,7 @@ if [ ! -f "$PRD"/connectivity/brain_2_diff.nii.gz ]; then
               -linear $PRD/connectivity/diffusion_2_struct_mrtrix.txt \
               -inverse -force 
 fi
+
 # check brain and parcellation to diff
 if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "check parcellation registration to diffusion space"
@@ -759,7 +854,7 @@ fi
 
 # Response function estimation
 # Check if multi or single shell
-shells=$(mrinfo -shells $PRD/connectivity/dwi.mif)
+shells=$(mrinfo -shell_bvalues $PRD/connectivity/dwi.mif)
 echo "shell b values are $shells"
 nshells=($shells)
 no_shells=${#nshells[@]}
@@ -805,6 +900,7 @@ else
                  -nthreads "$NB_THREADS"
   fi
 fi
+
 if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "check ODF image"
   view_step=0
@@ -812,6 +908,7 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
          -overlay.load $PRD/connectivity/RF_voxels.mif \
          -overlay.opacity 0.5
 fi
+
 
 # Fibre orientation distribution estimation
 if [ ! -f "$PRD"/connectivity/wm_CSD.mif ]; then
@@ -844,13 +941,14 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
 fi
 
 
+
 # tractography
 if [ ! -f "$PRD"/connectivity/whole_brain.tck ]; then
   if [ "$SIFT" = "sift" ]; then
     # temporarily change number of tracks for sift
     number_tracks=$(($NUMBER_TRACKS*$SIFT_MULTIPLIER))
   fi
-  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -spacing \
                    | cut -f 1 -d " " | xargs printf "%.3f")
   upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
   if [ "$upsampling" = 1 ]; then
@@ -905,6 +1003,10 @@ if [ ! -f "$PRD"/connectivity/whole_brain.tck ]; then
   fi
 fi
 
+
+
+
+
 # postprocessing
 if [ ! -f "$PRD"/connectivity/whole_brain_post.tck -a ! -h "$PRD"/connectivity/whole_brain_post.tck ]; then
   echo "$PRD"/connectivity/whole_brain_post.tck
@@ -936,7 +1038,7 @@ if [ ! -f "$PRD"/connectivity/whole_brain_post.tck -a ! -h "$PRD"/connectivity/w
       echo "using act" 
       tcksift2 $PRD/connectivity/whole_brain.tck \
                $PRD/connectivity/wm_CSD.mif \
-               $PRD/connectivity/streamline_weights.csv\
+               $PRD/connectivity/streamline_weights.csv \
                -act $PRD/connectivity/act.mif \
                -out_mu $PRD/connectivity/mu.txt \
                -out_coeffs $PRD/connectivity/streamline_coeffs.csv \
@@ -955,6 +1057,8 @@ if [ ! -f "$PRD"/connectivity/whole_brain_post.tck -a ! -h "$PRD"/connectivity/w
           $PRD/connectivity/whole_brain_post.tck
   fi
 fi
+
+
 
 ## now compute connectivity and length matrix
 if [ ! -f "$PRD"/connectivity/aparcaseg_2_diff_"$ASEG".mif ]; then
@@ -979,6 +1083,8 @@ if [ ! -f "$PRD"/connectivity/aparcaseg_2_diff_"$ASEG".mif ]; then
   fi 
 fi
 
+
+
 if [ ! -f "$PRD"/connectivity/weights.csv ]; then
   echo "compute connectivity matrix weights"
   if [ "$SIFT" = "sift2" ]; then
@@ -997,6 +1103,9 @@ if [ ! -f "$PRD"/connectivity/weights.csv ]; then
                    -force -nthreads "$NB_THREADS"
   fi
 fi
+
+
+
 
 if [ ! -f "$PRD"/connectivity/tract_lengths.csv ]; then
   echo "compute connectivity matrix edge lengths"
@@ -1038,6 +1147,7 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
          -connectome.load $PRD/connectivity/weights.csv 
 fi
 
+
 # view tractogram and tdi
 if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$DISPLAY" ]; then
   echo "view tractogram and tdi image"
@@ -1074,9 +1184,11 @@ if [ "$view_step" = 1 -a "$CHECK" = "yes" ] || [ "$CHECK" = "force" ] && [ -n "$
   fi
   mrview $PRD/connectivity/aparcaseg_2_diff_$ASEG.mif \
          -overlay.load $PRD/connectivity/whole_brain_post_tdi.mif \
-         -overlay.opacity 0.5 -overlay.interpolation_off \
+         -overlay.opacity 0.5 -overlay.interpolation 0 \
          -tractography.load $PRD/connectivity/whole_brain_post_decimated.tck 
+#         -overlay.opacity 0.5 -overlay.interpolation_off \
 fi
+
 
 
 # Compute other files
@@ -1089,12 +1201,14 @@ if [ ! -f "$PRD"/"$SUBJ_ID"/connectivity/cortical.txt ]; then
   python util/compute_connectivity_files.py
 fi
 
+
 # zip to put in final format
 pushd . > /dev/null
 cd $PRD/$SUBJ_ID/connectivity > /dev/null
 zip $PRD/$SUBJ_ID/connectivity.zip areas.txt average_orientations.txt \
   weights.txt tract_lengths.txt cortical.txt centres.txt -q
 popd > /dev/null 
+
 
 
 ################### subparcellations
@@ -1243,3 +1357,5 @@ if [ "$FORWARD_MODEL" = "yes" ]; then
 fi
 echo "SUCCESS"
 exit
+
+END_COMMENT
