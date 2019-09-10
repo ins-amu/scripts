@@ -26,11 +26,11 @@
 # this is where all data and processed data are
 # we advice to also put this config file in this directory
 
-export PRD=/usr/local
+export PRD=/path_to_root_dir/
 
 # subject name
 # this will determine the name of your subject in the final directory
-export SUBJ_ID=subj_name
+export SUBJ_ID=name_subj
 
 # Matlab path if you have it
 # export MATLAB=/path_to_matlab/
@@ -42,7 +42,7 @@ export MATLAB=$(which matlab)
 # and uncomment the following line
 # export MCR=/path_to_matlab_runtime_compiler/
 
-export MCR=/usr/local/MATLAB/MATLAB_Compiler_Runtime/v81
+# export MCR=/usr/local/MATLAB/MATLAB_Runtime/v93
 
 #### Standard options
 
