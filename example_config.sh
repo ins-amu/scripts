@@ -25,7 +25,6 @@
 # the root directory for files 
 # this is where all data and processed data are
 # we advice to also put this config file in this directory
-
 export PRD=/path_to_root_dir/
 
 # subject name
@@ -34,14 +33,11 @@ export SUBJ_ID=name_subj
 
 # Matlab path if you have it
 # export MATLAB=/path_to_matlab/
-
 export MATLAB=$(which matlab)
-
 # if you don't have matlab, download and install the MCR (linux 64 bits) here: 
 # http://www.mathworks.com/products/compiler/mcr/index.html
 # and uncomment the following line
 # export MCR=/path_to_matlab_runtime_compiler/
-
 # export MCR=/usr/local/MATLAB/MATLAB_Runtime/v93
 
 #### Standard options
@@ -150,5 +146,4 @@ export FORWARD_MODEL="yes"
 # number of threads
 # default: value in ~/.mrtrix.conf file if present, or 1 if not present
 # Needs to be an integer
-
 export NB_THREADS=1

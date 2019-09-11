@@ -244,7 +244,6 @@ fi
 
 ###################### freesurfer
 if [ ! -d "$FS"/"$SUBJ_ID" ] ; then
-
   echo "running recon-all of freesurfer"
   recon-all -i $PRD/data/T1/T1.nii.gz -s $SUBJ_ID -all
 fi
@@ -521,10 +520,8 @@ fi
 # with structural and is common with mrtrix3 fixel analysis pipeline
 # see: http://community.mrtrix.org/t/upsampling-dwi-vs-tckgen-defaults/998/2
 if [ ! -f "$PRD"/connectivity/dwi.mif ]; then
-
   native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -spacing \
                    | cut -f 1 -d " " | xargs printf "%.3f")
-  
   upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
   if [ "$upsampling" = 1 ]; then
     echo "upsampling dwi"
@@ -545,7 +542,6 @@ if [ ! -f "$PRD"/connectivity/mask.mif ]; then
   view_step=1
   native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -spacing \
                    | cut -f 1 -d " " | xargs printf "%.3f")
- 
   upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
   if [ "$upsampling" = 1 ]; then
     echo "upsampling mask"
