@@ -373,7 +373,7 @@ if [ ! -f "$PRD"/connectivity/predwi.mif ]; then
   echo "if asked, please select a series of images by typing a number"
   mrconvert $PRD/data/DWI/ $PRD/connectivity/predwi_"$i_im".mif \
             -export_pe_table $PRD/connectivity/pe_table \
-            -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
+	    -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_init \
             -datatype float32 -stride 0,0,0,1 -force -nthreads "$NB_THREADS"  
   cp $PRD/connectivity/predwi_1.mif $PRD/connectivity/predwi.mif
   if [ "$FORCE" = "no" ]; then
@@ -448,7 +448,7 @@ if [ ! -f "$PRD"/connectivity/predwi_denoised_preproc.mif ]; then
     dwipreproc $PRD/connectivity/predwi_denoised.mif \
                $PRD/connectivity/predwi_denoised_preproc.mif \
                -export_grad_mrtrix $PRD/connectivity/bvecs_bvals_final \
-               -rpe_header -cuda -force -nthreads "$NB_THREADS"    
+               -rpe_header -force -nthreads "$NB_THREADS"    
   else # no topup/eddy
     echo "no topup/eddy applied"
     mrconvert $PRD/connectivity/predwi_denoised.mif \
@@ -521,7 +521,7 @@ fi
 # with structural and is common with mrtrix3 fixel analysis pipeline
 # see: http://community.mrtrix.org/t/upsampling-dwi-vs-tckgen-defaults/998/2
 if [ ! -f "$PRD"/connectivity/dwi.mif ]; then
-  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -spacing \
                    | cut -f 1 -d " " | xargs printf "%.3f")
   upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
   if [ "$upsampling" = 1 ]; then
@@ -541,7 +541,7 @@ if [ ! -f "$PRD"/connectivity/mask.mif ]; then
   # streamline premature termination, see BIDS protocol: 
   # https://github.com/BIDS-Apps/MRtrix3_connectome/blob/master/run.py
   view_step=1
-  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -spacing \
                    | cut -f 1 -d " " | xargs printf "%.3f")
   upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
   if [ "$upsampling" = 1 ]; then
@@ -759,7 +759,7 @@ fi
 
 # Response function estimation
 # Check if multi or single shell
-shells=$(mrinfo -shells $PRD/connectivity/dwi.mif)
+shells=$(mrinfo -shell_bvalues $PRD/connectivity/dwi.mif)
 echo "shell b values are $shells"
 nshells=($shells)
 no_shells=${#nshells[@]}
@@ -850,7 +850,7 @@ if [ ! -f "$PRD"/connectivity/whole_brain.tck ]; then
     # temporarily change number of tracks for sift
     number_tracks=$(($NUMBER_TRACKS*$SIFT_MULTIPLIER))
   fi
-  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -vox \
+  native_voxelsize=$(mrinfo $PRD/connectivity/mask_native.mif -spacing \
                    | cut -f 1 -d " " | xargs printf "%.3f")
   upsampling=$(echo ""$native_voxelsize">1.25" | bc) 
   if [ "$upsampling" = 1 ]; then
