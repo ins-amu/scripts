@@ -1,5 +1,5 @@
 # Surface and Connectivity Reconstruction: Imaging Pipeline for TVB Simulations
-## SCRIPTS 0.4
+## SCRIPTS 0.4.1
  
 Please see the [wiki](https://github.com/ins-amu/scripts/wiki)
 
