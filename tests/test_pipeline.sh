@@ -64,7 +64,7 @@ export CLEAN_AFTER_TEST=0
 #( export NAME_TEST="registration_boundary"; export REGISTRATION="boundary"; setUp; test_function; Teardown ) &
 #( export NAME_TEST="registration_pseudo"; export REGISTRATION="pseudo"; setUp; test_function; Teardown ) &
 #( export NAME_TEST="region_mapping_corr"; export REGION_MAPPING_COOR="0.5"; setUp; test_function; Teardown ) &
-#( export NAME_TEST="k_list"; export K_LIST="0 2 5"; setUp; test_function; Teardown  ) &
+( export NAME_TEST="n_subregions_list"; export N_SUBREGIONS_LIST="100 200"; setUp; test_function; Teardown  ) &
 #( export NAME_TEST="no_k_list"; export K_LIST=""; setUp; test_function; Teardown ) &
 #( export NAME_TEST="number_tracks"; export NUMBER_TRACKS=10000; setUp; test_function; Teardown ) &
 #( export NAME_TEST="parcel_destrieux"; PARCEL="destrieux"; setUp; test_function; Teardown ) &
@@ -78,7 +78,7 @@ export CLEAN_AFTER_TEST=0
 #( export NAME_TEST="sift_multiplier"; export SIFT="sift"; export SIFT_MULTIPLIER=2; setUp; test_function; Teardown ) &
 #( export NAME_TEST="seed_dynamic"; export SEED="dynamic"; setUp; test_function; Teardown ) &
 #( export NAME_TEST="aseg_fs"; export ASEG="fs"; setUp; test_function; Teardown ) &
-( export NAME_TEST="5ttgen_fs"; export FTTGEN="fs"; setUp; test_function; Teardown ) &
+#( export NAME_TEST="5ttgen_fs"; export FTTGEN="fs"; setUp; test_function; Teardown ) &
 #( export NAME_TEST="no_mne"; export MNE="no"; setUp; test_function; Teardown ) &
 #( export NAME_TEST="nb_threads_2"; export NB_THREADS="3"; setUp; test_function; Teardown ) &
 

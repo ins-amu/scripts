@@ -62,11 +62,6 @@ if [ -z "$SUBJ_ID" ]; then
   exit 1
 fi
 
-if [ -z "$MATLAB" ] || [ -z "$MCR" ]; then
-  echo "Matlab ou MCR path missing"
-  # exit 1 # not mandatory if K_LIST=""
-fi
-
 if [ -z "$SUBJECTS_DIR" ]; then
   echo "you have to set the SUBJECTS_DIR environnement variable for FreeSurfer" >> "$PRD"/log_processing_parameters.txt
   exit 1
@@ -135,11 +130,11 @@ else
 fi
 
 # TODO: check if list of integers
-if [ -z "$K_LIST" ]; then
-  echo "set K_LIST parameter to empty" | tee -a "$PRD"/log_processing_parameters.txt
+if [ -z "$N_SUBREGIONS_LIST" ]; then
+  echo "set N_SUBREGIONS_LIST parameter to empty" | tee -a "$PRD"/log_processing_parameters.txt
   K_LIST=""
 else
-  echo "K_LIST parameter is "$K_LIST"" | tee -a "$PRD"/log_processing_parameters.txt
+  echo "N_SUBREGIONS_LIST parameter is "$N_SUBREGIONS_LIST"" | tee -a "$PRD"/log_processing_parameters.txt
 fi
 
 
@@ -1099,67 +1094,62 @@ popd > /dev/null
 
 ################### subparcellations
 # compute sub parcellations connectivity if asked
-if [ -n "$K_LIST" ]; then
-  for K in $K_LIST; do
-    export curr_K=$(( 2**K ))
-    mkdir -p $PRD/$SUBJ_ID/connectivity_"$curr_K"
-    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz ]; then
-      echo "compute subparcellations for $curr_K"
-      if [ -n "$MATLAB" ]; then
-        $MATLAB -r "run subparcel.m; quit;" -nodesktop -nodisplay 
-      else
-        sh util/run_subparcel.sh $MCR 
-      fi
-      gzip $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii
+if [ -n "$N_SUBREGIONS_LIST" ]; then
+  for N_SUBREGIONS in $N_SUBREGIONS_LIST; do
+    export N_SUBREGIONS=$N_SUBREGIONS
+    mkdir -p $PRD/$SUBJ_ID/connectivity_"$N_SUBREGIONS"
+    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$N_SUBREGIONS".nii.gz ]; then
+      echo "compute subparcellations for $N_SUBREGIONS regions"
+      python util/subparcel.py $N_SUBREGIONS
     fi
-    if [ ! -f $PRD/$SUBJ_ID/region_mapping_"$curr_K".txt ]; then
-      echo "generate region mapping for subparcellation "$curr_K""
+    if [ ! -f $PRD/$SUBJ_ID/region_mapping_"$N_SUBREGIONS".txt ]; then
+      echo "generate region mapping for subparcellation "$N_SUBREGIONS""
       python util/region_mapping_other_parcellations.py
     fi
-    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif ]; then
-      mrconvert $PRD/connectivity/aparcaseg_2_diff_"$curr_K".nii.gz \
-                   $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif \
+    if [ ! -f $PRD/connectivity/aparcaseg_2_diff_"$N_SUBREGIONS".mif ]; then
+      mrconvert $PRD/connectivity/aparcaseg_2_diff_"$N_SUBREGIONS".nii.gz \
+                   $PRD/connectivity/aparcaseg_2_diff_"$N_SUBREGIONS".mif \
                    -datatype float32 -force
     fi
-    if [ ! -f $PRD/connectivity/weights_"$curr_K".csv ]; then
-      echo "compute connectivity matrix using act for subparcellation "$curr_K""
+    if [ ! -f $PRD/connectivity/weights_"$N_SUBREGIONS".csv ]; then
+      echo "compute connectivity matrix using act for subparcellation "$N_SUBREGIONS""
       if [ "$SIFT" = "sift2" ]; then
       # -tck_weights_in flag only needed for sift2 but not for sift/no processing
       tck2connectome $PRD/connectivity/whole_brain_post.tck \
-                     $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif \
-                     $PRD/connectivity/weights_"$curr_K".csv -assignment_radial_search 2 \
-                     -out_assignments $PRD/connectivity/edges_2_nodes_"$curr_K".csv \
+                     $PRD/connectivity/aparcaseg_2_diff_"$N_SUBREGIONS".mif \
+                     $PRD/connectivity/weights_"$N_SUBREGIONS".csv -assignment_radial_search 2 \
+                     -out_assignments $PRD/connectivity/edges_2_nodes_"$N_SUBREGIONS".csv \
                      -tck_weights_in $PRD/connectivity/streamline_weights.csv \
                      -force -nthreads "$NB_THREADS"
       else
       tck2connectome $PRD/connectivity/whole_brain_post.tck \
-                     $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif \
-                     $PRD/connectivity/weights_"$curr_K".csv -assignment_radial_search 2 \
-                     -out_assignments $PRD/connectivity/edges_2_nodes_"$curr_K".csv \
+                     $PRD/connectivity/aparcaseg_2_diff_"$N_SUBREGIONS".mif \
+                     $PRD/connectivity/weights_"$N_SUBREGIONS".csv -assignment_radial_search 2 \
+                     -out_assignments $PRD/connectivity/edges_2_nodes_"$N_SUBREGIONS".csv \
                      -force -nthreads "$NB_THREADS"
       fi
     fi
-    if [ ! -f "$PRD"/connectivity/tract_lengths_"$curr_K".csv ]; then
-      echo "compute connectivity matrix edge lengths subparcellation "$curr_K""
+    if [ ! -f "$PRD"/connectivity/tract_lengths_"$N_SUBREGIONS".csv ]; then
+      echo "compute connectivity matrix edge lengths subparcellation "$N_SUBREGIONS""
       view_step=1
       # mean length result: weight by the length, then average
       # see: http://community.mrtrix.org/t/tck2connectome-edge-statistic-sift2-questions/1059/2 
       # Not applying sift2, as here the mean is \
       # sum(streamline length * streamline weight)/no streamlines, does not make sense
       tck2connectome $PRD/connectivity/whole_brain_post.tck \
-                     $PRD/connectivity/aparcaseg_2_diff_"$curr_K".mif \
-                     $PRD/connectivity/tract_lengths_"$curr_K".csv \
+                     $PRD/connectivity/aparcaseg_2_diff_"$N_SUBREGIONS".mif \
+                     $PRD/connectivity/tract_lengths_"$N_SUBREGIONS".csv \
                      -assignment_radial_search 2 -zero_diagonal -scale_length \
                      -stat_edge mean -force -nthreads "$NB_THREADS"
       #fi
     fi
-    if [ ! -f "$PRD"/"$SUBJ_ID"/connectivity_"$curr_K"/weights.txt ]; then
-      echo "generate files for TVB subparcellation "$curr_K""
-      python util/compute_connectivity_sub.py $PRD/connectivity/weights_"$curr_K".csv $PRD/connectivity/tract_lengths_"$curr_K".csv $PRD/$SUBJ_ID/connectivity_"$curr_K"/weights.txt $PRD/$SUBJ_ID/connectivity_"$curr_K"/tract_lengths.txt
+    if [ ! -f "$PRD"/"$SUBJ_ID"/connectivity_"$N_SUBREGIONS"/weights.txt ]; then
+      echo "generate files for TVB subparcellation "$N_SUBREGIONS""
+      python util/compute_connectivity_sub.py $PRD/connectivity/weights_"$N_SUBREGIONS".csv $PRD/connectivity/tract_lengths_"$N_SUBREGIONS".csv $PRD/$SUBJ_ID/connectivity_"$N_SUBREGIONS"/weights.txt $PRD/$SUBJ_ID/connectivity_"$N_SUBREGIONS"/tract_lengths.txt
     fi
     pushd . > /dev/null
-    cd $PRD/$SUBJ_ID/connectivity_"$curr_K" > /dev/null
-    zip $PRD/$SUBJ_ID/connectivity_"$curr_K".zip weights.txt tract_lengths.txt centres.txt average_orientations.txt -q 
+    cd $PRD/$SUBJ_ID/connectivity_"$N_SUBREGIONS" > /dev/null
+    zip $PRD/$SUBJ_ID/connectivity_"$N_SUBREGIONS".zip weights.txt tract_lengths.txt centres.txt average_orientations.txt -q 
     popd > /dev/null
   done
 fi
