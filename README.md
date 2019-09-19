@@ -11,7 +11,7 @@ Please see the [wiki](https://github.com/ins-amu/scripts/wiki)
 
 #### Features
 - prepare data for TVB: surface reconstruction, region mapping, connectome.
-- mrtrix 3.0 RC2: SIFT/SIFT2, ACT, 3 types of registration structural/diffusion, denoising, topup/eddy corrections, bias field corrections, mask upsampling and dilatation, multi-shell multi-tissue, dhollander algo, fsl subcortical structure parcellation, tractogram and tdi generation, multi-threaded.
+- mrtrix 3.0 RC3: SIFT/SIFT2, ACT, 3 types of registration structural/diffusion, denoising, topup/eddy corrections, bias field corrections, mask upsampling and dilatation, multi-shell multi-tissue, dhollander algo, fsl subcortical structure parcellation, tractogram and tdi generation, multi-threaded.
 - automatic config checks.
 - convenience script for HCP datasets.
 - handle automatically reverse phase-encoding DWI in most cases.
