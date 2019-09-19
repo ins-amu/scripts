@@ -8,6 +8,7 @@ import scipy
 # This script take a volumetric parcellation and divide each regions into subregions.
 # The optimal number of subdivisions for each region is obtained so that we get the 
 # smallest spread of the distribution of subregion volumes across all subregions after the subdivision
+# NOTE: subparcellations will be different at each run of the algorithm
 
 PRD = os.environ['PRD']
 SUBJ_ID = os.environ['SUBJ_ID']
@@ -62,21 +63,6 @@ l_idx_subdivisions = np.zeros(regions_right.shape[0], dtype=int)
 l_nb_subdivisions = np.array([1, 2, 3, 4, 6, 8, 12, 16, 18, 24])
 size_vol_parcellations = [data_parcellation_cortical_only[data_parcellation_cortical_only==region].shape[0] for region in regions_right]
 
-# iteration right
-# while(sum(l_nb_subdivisions)<N_SUBREGIONS/2):
-#     curr_std = []
-#     for iregion in np.arange(regions_right.shape[0]):
-#         curr_size_vol_parcellation = []
-#         for jregion in np.arange(regions_right.shape[0]):
-#             if iregion!=jregion:
-#                 curr_size_vol_parcellation.extend([size_vol_parcellations[jregion]/(l_nb_subdivisions[jregion]) for _ in np.arange(l_nb_subdivisions[jregion])])
-#             elif iregion==jregion:
-#                 curr_size_vol_parcellation.extend([size_vol_parcellations[iregion]/(l_nb_subdivisions[iregion]+1) for _ in np.arange(l_nb_subdivisions[iregion]+1)])
-#         curr_std.append(np.std(curr_size_vol_parcellation))
-#     l_nb_subdivisions[np.argmin(curr_std)] += 1
-#     import pdb; pdb.set_trace()
-# l_nb_subdivisions = np.tile(l_nb_subdivisions, (2,)) # for other hemisphere
-
 while np.sum(l_nb_subdivisions[l_idx_subdivisions])<N_SUBREGIONS/2:
     curr_std = []
     for iregion in np.arange(regions_right.shape[0]):
@@ -121,7 +107,6 @@ for iregion in range(regions.shape[0]):
             cluster_labels = k_means.labels_
             _, subregion_counts = np.unique(k_means.labels_, return_counts=True)
 
-            # TODO, be sure that the regions are in the same order across patients
             # iteration, reassign regions n the k-means to obtain same number of voxels in each subregion
             error_margin = np.sum(k_means.counts_)/(100*i_div) # 1%
             print(np.int(error_margin/2))
@@ -132,7 +117,6 @@ for iregion in range(regions.shape[0]):
                 for i_cluster in range(n_clusters):
                     cluster_centers[i_cluster] = np.mean(iregion_voxels[cluster_labels==i_cluster], 0) 
                 # for biggest cluster, assign to closest region according to cost function
-                # TODO: add a constraint on the distance to the center of the cluster
                 i_smallest_clusters = np.where(subregion_counts<=(subregion_counts.min()+1))[0]
                 i_bigger_clusters = np.nonzero(subregion_counts>(subregion_counts.min()+1))[0]
                 candidate_clusters, candidate_points, candidate_new_cluster = [], [], []
@@ -235,36 +219,38 @@ np.savetxt(os.path.join(PRD, 'connectivity', 'corr_mat_' + str(N_SUBREGIONS) + '
 
 
 
-    # # find the n
-    # # TODO, be sure that the regions are in the same order across patients
-    # # iteration, reassign regions n the k-means to obtain same number of voxels in each subregion
-    # error_margin = np.sum(k_means.counts_)/(100*l_nb_subdivisions[iregion]) # 1%
-    # while np.any((subregion_counts<np.mean(subregion_counts)-error_margin) | (subregion_counts>np.mean(subregion_counts)+error_margin)):
-    # #for i in range(100):
-    #     print(subregion_counts)
-    #     # estimate new cluster center
-    #     for i_cluster in range(n_clusters):
-    #         cluster_centers[i_cluster] = np.mean(iregion_voxels[cluster_labels==i_cluster], 0) 
+#### legacy attempts
 
-    #     # for biggest cluster, assign to closest region according to cost function
-    #     i_smallest_clusters = np.where(subregion_counts<=(subregion_counts.min()+1))[0]
-    #     i_bigger_clusters = np.nonzero(subregion_counts>(subregion_counts.min()+1))[0]
-    #     candidate_clusters, candidate_points, candidate_new_cluster = [], [], []
-    #     for i_smallest_cluster in i_smallest_clusters:
-    #         indices_smallest = np.where(cluster_labels==i_smallest_cluster)[0]
-    #         for i_bigger_cluster in i_bigger_clusters:
-    #             indices_bigger = np.where(cluster_labels==i_bigger_cluster)[0]
-    #             dist = scipy.spatial.distance.cdist(iregion_voxels[indices_smallest], iregion_voxels[indices_bigger])
-    #             i_cluster_min = np.amin(dist)
-    #             if i_cluster_min < 2:
-    #                 candidate_clusters.append(i_bigger_cluster)
-    #                 candidate_points.append(indices_bigger[np.where(dist==i_cluster_min)[1]])
-    #                 candidate_new_cluster.append(i_smallest_cluster)
-    #     changing_region = np.random.choice(candidate_points[np.argmax(subregion_counts[candidate_clusters])])
-    #     cluster_labels[changing_region] = candidate_new_cluster[np.argmax(subregion_counts[candidate_clusters])]
-        
-    #     # new subregion count
-    #     _, subregion_counts = np.unique(cluster_labels, return_counts=True)
+# # find the n
+# # TODO, be sure that the regions are in the same order across patients
+# # iteration, reassign regions n the k-means to obtain same number of voxels in each subregion
+# error_margin = np.sum(k_means.counts_)/(100*l_nb_subdivisions[iregion]) # 1%
+# while np.any((subregion_counts<np.mean(subregion_counts)-error_margin) | (subregion_counts>np.mean(subregion_counts)+error_margin)):
+# #for i in range(100):
+#     print(subregion_counts)
+#     # estimate new cluster center
+#     for i_cluster in range(n_clusters):
+#         cluster_centers[i_cluster] = np.mean(iregion_voxels[cluster_labels==i_cluster], 0) 
+
+#     # for biggest cluster, assign to closest region according to cost function
+#     i_smallest_clusters = np.where(subregion_counts<=(subregion_counts.min()+1))[0]
+#     i_bigger_clusters = np.nonzero(subregion_counts>(subregion_counts.min()+1))[0]
+#     candidate_clusters, candidate_points, candidate_new_cluster = [], [], []
+#     for i_smallest_cluster in i_smallest_clusters:
+#         indices_smallest = np.where(cluster_labels==i_smallest_cluster)[0]
+#         for i_bigger_cluster in i_bigger_clusters:
+#             indices_bigger = np.where(cluster_labels==i_bigger_cluster)[0]
+#             dist = scipy.spatial.distance.cdist(iregion_voxels[indices_smallest], iregion_voxels[indices_bigger])
+#             i_cluster_min = np.amin(dist)
+#             if i_cluster_min < 2:
+#                 candidate_clusters.append(i_bigger_cluster)
+#                 candidate_points.append(indices_bigger[np.where(dist==i_cluster_min)[1]])
+#                 candidate_new_cluster.append(i_smallest_cluster)
+#     changing_region = np.random.choice(candidate_points[np.argmax(subregion_counts[candidate_clusters])])
+#     cluster_labels[changing_region] = candidate_new_cluster[np.argmax(subregion_counts[candidate_clusters])]
+    
+#     # new subregion count
+#     _, subregion_counts = np.unique(cluster_labels, return_counts=True)
 
 #     fig = plt.figure()
 #     ax = fig.add_subplot(111, projection='3d')
