@@ -224,10 +224,10 @@ view_step=0
 
 ######## HCP pre_scripts
 if [ "$HCP" = "yes" ]; then
-  if [ ! -d "$FS"/"$SUBJ_ID"/ ]; then
+  #if [ ! -d "$FS"/"$SUBJ_ID"/ ]; then
     echo "running HCP pre_scripts"
     bash util/HCP_pre_scripts.sh
-  fi
+  #fi
 fi
 
 

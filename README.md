@@ -3,7 +3,11 @@
  
 Please see the [wiki](https://github.com/ins-amu/scripts/wiki)
 
-#### NEW in 0.4:
+#### New in 0.4.1:
+- Remove need for Matlab
+- new subparcellation scheme where arbitrary number of subregions can be chosen
+
+#### New in 0.4:
 - Dockerfile for easy installation with Docker.
 - Tests. 
 - Reorganization and simplification of the code => compatibility with tvb-make.
