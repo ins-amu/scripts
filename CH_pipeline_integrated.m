@@ -80,6 +80,9 @@ reload_connectome = 0;
 nHarmonics = 100;		% Number of harmonics to compute
 threshold_adjacency = 2;	% z_C in paper
 trim_adjacency = 0;
+rand_trim_type = 'Ascend';
+tckLen_trim_adjacency = 0;
+tckLen_trim_type = '';
 local_spread = 1;		% nbr of neighbooring vertices for local diffusion on mesh
 anisotropy = 0;			% percentage of local connectivity random trimming
 callosectomy = 0;		% percentage of inter-hemispheric connection trimming
@@ -132,14 +135,18 @@ elseif randomize_graph_CC_only
 elseif randomize_graph_intraHemi_only
     rand_type = strcat('_randIntra', num2str(iter_rand));
 else
-    rand_type = '';
+    rand_type = strcat('_rand', num2str(iter_rand));
 end
 
 system(strcat("mkdir -p ", PRD, '/connectivity/img_', SUBJ_ID));
 
 if trim_adjacency > 0
-    trimAdj_prefix = '_trim';
+    trimAdj_prefix = strcat('_randTrim', rand_trim_type);
     trimAdj_all = strcat(trimAdj_prefix, num2str(trim_adjacency*100));
+elseif tckLen_trim_adjacency > 0
+    trimAdj_prefix = strcat('_tckLenTrim', tckLen_trim_type);
+    trimAdj_all = strcat(trimAdj_prefix, num2str(tckLen_trim_adjacency*100));
+
 else 
     trimAdj_prefix = '';
     trimAdj_all = '';
@@ -739,23 +746,20 @@ if compute_harmonics
         A_c = connectome > 0;
         ntrim = round(trim_adjacency * numel(c_idx));
         [vals, vals_idx] = sort(connectome(c_idx));
-        uvals = unique(vals);
-        for vi = 1:numel(uvals)
-            v = uvals(vi);
-            v_idx = find(vals==v);
-            nv = numel(v_idx);
-            if ntrim > nv
-                Acidx = c_idx(vals_idx(v_idx));
-                A_c(Acidx) = 0;
-                ntrim = ntrim - nv;
-            else
-                trim_idx = randperm(nv);
-                trim_idx = trim_idx(1:ntrim);
-                Acidx = c_idx(vals_idx(v_idx(trim_idx)));
-                A_c(Acidx) = 0;
-                ntrim = 0;
-            end    
-        end
+	connectome(c_idx(vals_idx(1:ntrim))) = 0;
+    % track lengths based trimming (percentage of nbr of connections (not weights),
+    % starting with longest fibers).
+    elseif tckLen_trim_adjacency>0
+        ntrim = round(tckLen_trim_adjacency * numel(c_idx));
+        %[vals, vals_idx] = sort(connectome(c_idx));
+        [vals, vals_idx] = sort(tckLengths_nb(c_idx), tckLen_trim_type);
+            %for i_trim = 1:ntrim
+                %if (mod(i_trim, round(ntrim/10) == 0))
+                %    disp(strcat(num2str(round(i_trim/ntrim*100)), '% done')); 
+                %end
+                connectome(c_idx(vals_idx(1:ntrim))) = 0;
+            %end
+        A_c = connectome > 0;
     else
         A_c = connectome ~= 0;
     end
