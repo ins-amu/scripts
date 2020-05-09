@@ -52,6 +52,9 @@ smoothIter = 0;
 save_smoothed_surfs = 0;
 plot_smoothed_meshes = 0;
 test_region_mapping = 0;
+computeMeshStats = 0;
+plotMeshStats = 0;
+saveMeshStats = 0;
 
 % Flags for tractography
 Yeh2018_dsistudio = 0;
@@ -67,43 +70,53 @@ plot_connectome = 0;
 plot_tckLengths = 0;
 compute_tck_stats = 0;
 plot_tck_stats = 0;
+plot_connectomeStats = 0;
 
 % Parameters for connectome
 nsamples = 0;                   % 0: all tracks, otherwise nbr of tracks
 sz_bound = 3;			% parameter k_s in paper
 ext_scaling = 2; 		% length of the track extension in k_s unit
-minTckLength = 20; 		% ~ 1mm per unit, depending on tractography algo
+minTckLength = 10; 		% ~ 1mm per unit, depending on tractography algo
 
 % Flags and parameters for connectome harmonics
 compute_harmonics = 1;
 reload_connectome = 0;
 nHarmonics = 100;		% Number of harmonics to compute
 threshold_adjacency = 2;	% z_C in paper
-trim_adjacency = 0;
+trim_adjacency = 0;  % trimming
 rand_trim_type = 'Ascend';
-tckLen_trim_adjacency = 0;
+tckLen_trim_adjacency = 0;  
 tckLen_trim_type = '';
 local_spread = 1;		% nbr of neighbooring vertices for local diffusion on mesh
-anisotropy = 0;			% percentage of local connectivity random trimming
-callosectomy = 0;		% percentage of inter-hemispheric connection trimming
+anisotropy = 0;			% percentage of local connectivity trimming (max 1)
+  dist_based_local_trim = 0;  % distance based anisotropy, set to 1 to perform
+    AniSorting = 'Descend';   % remove connections by ascending or descending order of length
+callosectomy = 0;   % percentage of inter-hemispheric connections trimmed (max 1)
+  n_graph_chunks = 1;   % number of subgraphs to perform the eigendecomposition on (set to 2 if disconnected hemispheres)
+  dist_based_callo_trim = 1;  % distance-based callosectomy
+    CalloSorting = 'Ascend';  % remove connections by ascending or descending order of length
+separate_hemispheres = 0;     % set to 1 if disconnected hemispheres so that both are shown when projected on cortical surface
 plot_CC_stats = 0;
 rand_graph = [0 0 0];		% Flag for randomization type [interHemis, intraHemis, global]]
 randomize_graph_CC_only = rand_graph(1);
 randomize_graph_intraHemi_only = rand_graph(2);
 randomize_graph_global = rand_graph(3);
-iter_rand = 1;
-sigma_eigs = 10^-9;
-tol_eigs = 10^-9;
-plot_graph = 1;
-plot_harmonics = 1;
+rand_proba = 1;   % for performing gradual randomization
+iter_rand = 0;    % for numbering surrogates
+sigma_eigs = 10^-9; % param of eigendec, check help eig
+tol_eigs = 10^-9;   %   "
+plot_graph = 1;     % set to 1 to plot graph illustration
+plot_harmonics = 1; % set to 1 to show harmonics projected one by one on cortical surface
 nPlottedHarmonics = 20;		% nbr of harmonics to visualize
 
 % Flags and params for MI DMN
 MI_DMN = 1;
+RSN='DMN';
+RSN_Yeo2011 = 0;
 reload_harmonics = 0;
-nBinsMI = [1 16 64]; % always keep 1 first (if v3 wanted) and ascending order
+nBinsMI = [16]; % always keep 1 first (if v3 wanted) and ascending order
 thZscMI = 1;
-MI_ylim = [0 0.1];
+MI_ylim = [0 0.3];
 save_MI = 1;
 
 % Flags and params for MI DSK
@@ -134,8 +147,18 @@ elseif randomize_graph_CC_only
     end
 elseif randomize_graph_intraHemi_only
     rand_type = strcat('_randIntra', num2str(iter_rand));
+else    
+    if iter_rand>0
+      rand_type = strcat('_rand', num2str(iter_rand));
+    else
+      rand_type = '';
+    end
+end
+
+if rand_proba==1
+  rnd_proba = '';
 else
-    rand_type = strcat('_rand', num2str(iter_rand));
+  rnd_proba = strcat('_rndP', num2str(rand_proba*100));
 end
 
 system(strcat("mkdir -p ", PRD, '/connectivity/img_', SUBJ_ID));
@@ -146,10 +169,43 @@ if trim_adjacency > 0
 elseif tckLen_trim_adjacency > 0
     trimAdj_prefix = strcat('_tckLenTrim', tckLen_trim_type);
     trimAdj_all = strcat(trimAdj_prefix, num2str(tckLen_trim_adjacency*100));
-
 else 
     trimAdj_prefix = '';
     trimAdj_all = '';
+end
+
+if RSN_Yeo2011
+  rsn_type = strcat(RSN, '_Yeo2011_');
+else
+  rsn_type = strcat(RSN, '_rsn_');
+end
+
+if n_graph_chunks > 1
+  callo_suffix = strcat('_nchunks', num2str(n_graph_chunks));
+else
+  callo_suffix = '';
+end
+
+if callosectomy == 1
+  %separate_hemispheres = 1;
+end
+
+if separate_hemispheres
+  sep_hemi='_sepHemiCombi';
+else
+  sep_hemi='';
+end
+
+if dist_based_local_trim
+  distAni = strcat('DistBased', AniSorting(1:3));
+else
+  distAni = '';
+end
+
+if dist_based_callo_trim
+  distCallo = CalloSorting(1:3);
+else
+  distCallo = '';
 end
 
 %%%%%%%%%%%%%%%%%%%%
@@ -321,6 +377,34 @@ if test_region_mapping
    end   
 end
 
+if computeMeshStats
+  ds = [] ;
+  for fi = 1:size(faces.all,1)
+      Vs = faces.all(fi,:);
+      d = dist(vertices.all(Vs,:)');
+      ds = [ds, d(2,1)];
+  end
+  if plotMeshStats
+    meshStats_fig = figure('Position', [600 300 250 200], 'Visible', vis);
+    histogram(ds, 'Normalization', 'Probability');
+    xlabel('Distance (mm)');
+    xlim([0 12]);
+    xticks(0:12); 
+    ylabel('Probability');
+    title('Distance between mesh vertices', 'fontsize', 10);
+    if save_figs
+      figname = strcat(PRD, '/connectivity/img_',SUBJ_ID,'/',SUBJ_ID,'_mesh_stats_v01'); pause(1);
+      saveas(meshStats_fig, strcat(figname, '.png'), 'png'); pause(1); 
+      saveas(meshStats_fig, strcat(figname, '.svg'), 'svg'); pause(1); 
+      if strcmp(vis, 'off'), close(meshStats_fig); end
+    end
+    if saveMeshStats
+      save(fullfile(PRD,'connectivity',strcat(SUBJ_ID,'_meshStats.mat')), 'ds');
+    end
+  end
+end
+
+
 %%%%%%%%%%%%%%%%%%%
 %% IMPORT TRACKS %%
 %%%%%%%%%%%%%%%%%%%
@@ -406,8 +490,18 @@ if plot_surf_vs_tracks
     if save_figs
         fname = strcat('surf_vs_tcks_', surf_type, connectome_type, '_smoothIter', num2str(smoothIter), '_nsamples', num2str(nsamples), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling));
         pause(2);
-        export_fig(strcat(PRD, '/connectivity/img_',SUBJ_ID,'/', fname), '-png', '-transparent');
-        pause(2);
+        % top view
+        export_fig(strcat(PRD, '/connectivity/img_',SUBJ_ID,'/', fname, '_top'), '-png', '-transparent');pause(2);
+        saveas(surf_vs_tcks_fig, strcat(PRD, '/connectivity/img_',SUBJ_ID,'/', fname, '_top'), 'svg'); pause(2)
+        % left view
+        set(gcf, 'Position', [600 600 1300 1000]);
+        view(-90,0); pause(1);
+        export_fig(strcat(PRD, '/connectivity/img_',SUBJ_ID,'/', fname, '_left'), '-png', '-transparent');pause(2);
+        saveas(surf_vs_tcks_fig, strcat(PRD, '/connectivity/img_',SUBJ_ID,'/', fname, '_left'), 'svg'); pause(2)
+        % right view
+        view(90,0); pause(1);
+        export_fig(strcat(PRD, '/connectivity/img_',SUBJ_ID,'/', fname, '_right'), '-png', '-transparent');pause(2);
+        saveas(surf_vs_tcks_fig, strcat(PRD, '/connectivity/img_',SUBJ_ID,'/', fname, '_right'), 'svg'); pause(2)
         if close_figs
             close(surf_vs_tcks_fig);
         end
@@ -475,7 +569,7 @@ if smoothen_cortical_mesh
 end
 
 % update suffix for saving files
-save_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling)); 
+save_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_minTckLen', num2str(minTckLength)); 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Compute connectome %%
@@ -691,6 +785,7 @@ if compute_connectome
             pause(2)
             export_fig(strcat(PRD, '/connectivity/img_',SUBJ_ID,'/', fname), '-png', '-transparent');
             pause(2);
+            saveas(tckStats_fig, strcat(PRD, '/connectivity/img_',SUBJ_ID,'/', fname), 'svg'); pause(2);
             display(strcat(fname, ' figure exported'));
             if close_figs
                 close(tckStats_fig);
@@ -700,8 +795,8 @@ if compute_connectome
 end
 
 % update suffix for saving files
-load_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling));
-save_suffix = strcat('_',  surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_10taZsc', num2str(threshold_adjacency*10), trimAdj_all, '_localSpread', num2str(local_spread), '_anisotropy', num2str(anisotropy*100), '_callosectomy', num2str(callosectomy*100), rand_type); %, '_sigmaEigs', num2str(sigma_eigs), '_tolEigs', num2str(tol_eigs));
+load_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_minTckLen', num2str(minTckLength));
+save_suffix = strcat('_',  surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_minTckLen', num2str(minTckLength),'_10taZsc', num2str(threshold_adjacency*10), trimAdj_all, '_localSpread', num2str(local_spread), '_anisotropy', distAni, num2str(anisotropy*100), '_callosectomy', num2str(callosectomy*100), distCallo, callo_suffix, rand_type, rnd_proba, sep_hemi); %, '_sigmaEigs', num2str(sigma_eigs), '_tolEigs', num2str(tol_eigs));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -738,15 +833,20 @@ if compute_harmonics
     mu_c = mean(mean(connectome(c_idx)));           % mean of connections weights
     
     % Adjacency matrix of the connectome
+  	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    disp('Trimming connectome...');
+	  % weighted trimming (z-score based on weights)
     A_c = zeros(size(connectome));              
     if threshold_adjacency
         zsc = (connectome(c_idx) - mu_c) / sigma_c;
         A_c(c_idx) = zsc > threshold_adjacency;
+		% semi-weighted trimming (percentage of nbr of connections (not weight),
+		% starting with smallest weights).
     elseif trim_adjacency>0
         A_c = connectome > 0;
         ntrim = round(trim_adjacency * numel(c_idx));
-        [vals, vals_idx] = sort(connectome(c_idx));
-	connectome(c_idx(vals_idx(1:ntrim))) = 0;
+        [vals, vals_idx] = sort(connectome(c_idx), rand_trim_type);
+	      connectome(c_idx(vals_idx(1:ntrim))) = 0;
     % track lengths based trimming (percentage of nbr of connections (not weights),
     % starting with longest fibers).
     elseif tckLen_trim_adjacency>0
@@ -798,6 +898,26 @@ if compute_harmonics
     
     % random trimming of local connectivity 
     if anisotropy
+      if dist_based_local_trim
+        if local_spread==1
+          load(fullfile(PRD, 'connectivity', 'R_local_1'));
+          R_local = R_local_1;
+        elseif local_spread==2
+          load(fullfile(PRD, 'connectivity', 'R_local_2'));
+          R_local = R_local_2;
+        else
+          error('choose local_spread to be 1 or 2.')
+        end
+        c_idx_local = find(A_local>0);
+        [rows, cols] = ind2sub(size(A_local), c_idx_local);
+        n_lc = numel(c_idx_local);
+        n_trim = round(n_lc * anisotropy);      % total number of connections to trim
+        local_lengths = R_local(c_idx_local);
+        [sorted_local_lengths, local_c_idx] = sort(local_lengths, AniSorting);
+        idx_trimmed = local_c_idx(1:n_trim);
+        A_local(rows(idx_trimmed), cols(idx_trimmed)) = 0;  % remove connections at trimmed indices
+        A_local(cols(idx_trimmed), rows(idx_trimmed)) = 0;  % remove connections at trimmed indices
+      else
         c_idx_local = find(A_local>0);
         [rows, cols] = ind2sub(size(A_local), c_idx_local);
         n_lc = numel(c_idx_local);              % total number of local connections
@@ -806,6 +926,7 @@ if compute_harmonics
         
         A_local(rows(idx_trimmed), cols(idx_trimmed)) = 0;  % remove connections at trimmed indices
         A_local(cols(idx_trimmed), rows(idx_trimmed)) = 0;  % remove connections at trimmed indices
+      end
     end
     
     
@@ -828,7 +949,12 @@ if compute_harmonics
     if callosectomy
         CC_idx = find(CC_tckLengths_nb>0);
         CC_pos = CC_tckLengths_nb(CC_idx);
-        [sorted_CC_tckLen, sorted_CC_idx] = sort(CC_pos, 'descend');
+        if dist_based_callo_trim
+          [sorted_CC_tckLen, sorted_CC_idx] = sort(CC_pos, CalloSorting);
+        else
+          sorted_CC_idx = randperm(numel(CC_pos));  % actually not sorted but kept name for compatibility
+          sorted_CC_tckLen = CC_pos(sorted_CC_idx); 
+        end
         
         trim_sorted_idx = 1:ceil(callosectomy * numel(sorted_CC_tckLen));
         [CC_i, CC_j] = ind2sub(size(A_c), CC_idx(sorted_CC_idx(trim_sorted_idx)));
@@ -838,14 +964,23 @@ if compute_harmonics
     
     % Randomizations
     if randomize_graph_global
-        A_c = randmio_und(A_c, iter_rand);
+        if rand_proba==1
+          A_c = randmio_und(A_c, iter_rand);
+        else
+          n_rows = size(A_c,1); 
+          n_rand = floor(rand_proba*n_rows);
+          rand_idx = randperm(n_rows, n_rand);
+          A_c(rand_idx,rand_idx) = randmio_und(A_c(rand_idx,rand_idx), iter_rand);
+        end
     end
+    
     if randomize_graph_CC_only
         A_CC_c = A_c(size(vertices.left)+1:end, 1:size(vertices.left,1));
         A_CC_rand = randmio_dir(A_CC_c, iter_rand);
         A_c(size(vertices.left)+1:end, 1:size(vertices.left,1)) = A_CC_rand;
         A_c(1:size(vertices.left,1), size(vertices.left)+1:end) = A_CC_rand';
     end
+    
     if randomize_graph_intraHemi_only
         A_left = A_c(1:size(vertices.left), 1:size(vertices.left,1));
         A_left_rand = randmio_und(A_left,iter_rand);
@@ -908,7 +1043,21 @@ if compute_harmonics
     G = graph(A_ctx);
     G_bins = conncomp(G);
     G_idx = find(G_bins==1);        % get node indices of main cluster
-    
+   
+    if n_graph_chunks == 2
+      % find index of second cluster
+      ubin = unique(G_bins);
+      nbin = zeros(numel(ubin),1);
+      for b = 1:numel(ubin)
+        nbin(b) = numel(find(G_bins==ubin(b)));
+      end
+      [nbins, bin_idx] = sort(nbin, 'descend');
+      ubin(bin_idx);
+      val = ubin(bin_idx(2));
+      G_idx2 = find(G_bins==val);
+      G_idx = cat(2, G_idx, G_idx2);
+    end 
+
     if plot_graph
         g_fig = figure('Position', [600 600 800 800], 'Visible', vis);
         plot(graph(A_ctx(G_idx, G_idx)));
@@ -923,8 +1072,10 @@ if compute_harmonics
         end
     end
     
-    plotConnectomeStats(vertices, faces, connectome, A_c, save_figs, threshold_adjacency, PRD, SUBJ_ID, subj_type, save_suffix, vis);
-    
+    if plot_connectomeStats
+      plotConnectomeStats(vertices, faces, connectome, A_c, save_figs, threshold_adjacency, PRD, SUBJ_ID, subj_type, save_suffix, vis);
+    end
+
     % extract final degree matrix
     D = diag(degree(graph(A_ctx)));
     
@@ -940,7 +1091,31 @@ if compute_harmonics
     % reconstruct harmonics in entire surface mesh
     H = zeros(size(connectome,1), nHarmonics);
     H(G_idx, :) = evecs;
-    
+  
+    % case of harmonics computed for each hemisphere separately
+    if separate_hemispheres
+      % find index of second cluster
+      ubin = unique(G_bins);
+      nbin = zeros(numel(ubin),1);
+      for b = 1:numel(ubin)
+        nbin(b) = numel(find(G_bins==ubin(b)));
+      end
+      [nbins, bin_idx] = sort(nbin, 'descend');
+      ubin(bin_idx);
+      val = ubin(bin_idx(2));
+
+      % compute eigenvector-eigenvalue pair of second cluster (i.e. 2nd hemisphere)
+      G_idx2 = find(G_bins==val);
+      [evecs2, evals2] = eigs(L(G_idx2, G_idx2), nHarmonics, sigma_eigs, opts);
+      
+      % create harmonics by assembling pairs or eigenvectors using same and different polarity
+      H = zeros(size(connectome,1), nHarmonics);
+      H(G_idx, 1:2:nHarmonics) = evecs(:,1:(nHarmonics/2));
+      H(G_idx, 2:2:nHarmonics) = -evecs(:,1:(nHarmonics/2));
+      H(G_idx2,1:2:nHarmonics) = evecs2(:,1:(nHarmonics/2));
+      H(G_idx2,2:2:nHarmonics) = evecs2(:,1:(nHarmonics/2));
+    end
+
     % save everything needed for plotting and re-use
     combined = struct('vertices', vertices, 'faces', faces, 'L', sparse(L), 'D_A', D_A, 'eigvals', evals, 'H', H, ...
         'local_vs_global_ratio', sum(sum(A_local(ctx_idx,ctx_idx))) / sum(sum(A_ctx)), 'A_ctx', sparse(A_ctx), 'A_local', sparse(A_local), 'D', sparse(D), 'ta_zsc', threshold_adjacency, ...
@@ -978,8 +1153,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if convert_into_DSK_atlas
     fprintf('Converting Harmonics from mesh resolution to DSK atlas... \n\r');
-    load_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_10taZsc', num2str(threshold_adjacency*10), trimAdj_all, '_localSpread', num2str(local_spread), '_anisotropy', num2str(anisotropy*100), '_callosectomy', num2str(callosectomy*100), rand_type);
-    save_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_10taZsc', num2str(threshold_adjacency*10), trimAdj_all, '_localSpread', num2str(local_spread), '_anisotropy', num2str(anisotropy*100), '_callosectomy', num2str(callosectomy*100), rand_type);
+    load_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_10taZsc', num2str(threshold_adjacency*10), trimAdj_all, '_localSpread', num2str(local_spread), '_anisotropy', distAni, num2str(anisotropy*100), '_callosectomy', num2str(callosectomy*100), distCallo, callo_suffix,  rand_type, rnd_proba, sep_hemi); %, '_sigmaEigs', num2str(sigma_eigs), '_tolEigs', num2str(tol_eigs));
+    save_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_10taZsc', num2str(threshold_adjacency*10), trimAdj_all, '_localSpread', num2str(local_spread), '_anisotropy', distAni, num2str(anisotropy*100), '_callosectomy', num2str(callosectomy*100), distCallo, callo_suffix, rand_type, rnd_proba, sep_hemi); %, '_10thZscMI', num2str(thZscMI*10)); %, '_sigmaEigs', num2str(sigma_eigs), '_tolEigs', num2str(tol_eigs));
     if (~exist('combined', 'var') || reload_harmonics)
         combined = load(strcat(PRD, '/connectivity/combined_harmonics', load_suffix, '.mat'));
     end
@@ -1049,10 +1224,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Mutual information with DMN based on region mapping %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if MI_DMN
+if MI_RSN
     fprintf('Computing Mutual Information... \n\r');
-    load_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_10taZsc', num2str(threshold_adjacency*10), trimAdj_all, '_localSpread', num2str(local_spread), '_anisotropy', num2str(anisotropy*100), '_callosectomy', num2str(callosectomy*100), rand_type);
-    save_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_10taZsc', num2str(threshold_adjacency*10), trimAdj_all, '_localSpread', num2str(local_spread), '_anisotropy', num2str(anisotropy*100), '_callosectomy', num2str(callosectomy*100), rand_type, '_10thZscMI', num2str(thZscMI*10)); 
+    load_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_minTckLen', num2str(minTckLength), '_10taZsc', num2str(threshold_adjacency*10), trimAdj_all, '_localSpread', num2str(local_spread), '_anisotropy', distAni, num2str(anisotropy*100), '_callosectomy', num2str(callosectomy*100), distCallo, callo_suffix, rand_type, rnd_proba, sep_hemi); %, '_sigmaEigs', num2str(sigma_eigs), '_tolEigs', num2str(tol_eigs));
+    save_suffix = strcat('_', surf_type, '_', connectome_type, '_nsamples', num2str(nsamples), '_smoothIter', num2str(smoothIter), '_szBnd', num2str(sz_bound), '_extScaling', num2str(ext_scaling), '_minTckLen', num2str(minTckLength), '_10taZsc', num2str(threshold_adjacency*10), trimAdj_all, '_localSpread', num2str(local_spread), '_anisotropy', distAni, num2str(anisotropy*100), '_callosectomy', num2str(callosectomy*100), distCallo, callo_suffix, rand_type, rnd_proba, sep_hemi, '_10thZscMI', num2str(thZscMI*10)); %, '_sigmaEigs', num2str(sigma_eigs), '_tolEigs', num2str(tol_eigs));
     if (~exist('combined', 'var') || reload_harmonics)
         combined = load(strcat(PRD, '/connectivity/combined_harmonics', load_suffix, '.mat'));
     end
@@ -1065,38 +1240,96 @@ if MI_DMN
     end
     
     % select DMN areas ([...] is the array containing the indices of DMN areas in the region mapping: isthmus cing, mPFC, middle temp, PCC, angular gyrus)
-    
+    RSN_version = '2018_' ; %'2020v3_';
+     
     % region wise
-    dmn_lh = [19 23 24 32 40];
-    dmn_rh = [62 66 67 75 83];
-    dmn_lh_arr = ismember(wm_regmap_lh, dmn_lh);
-    dmn_rh_arr = ismember(wm_regmap_rh, dmn_rh);
-    dmn_lh_idx = find(dmn_lh_arr);
-    dmn_rh_idx = find(dmn_rh_arr);
+    if strcmp(RSN, 'DMN')
+      rsn_lh = [19 23 24 32 40];%2018 [13 17 19 24 32 34 35 37 39];% 40]; % 
+      rsn_rh = [62 66 67 75 83];%2018 [60 62 67 75 77 78 80 82];% 83]; %
+    elseif strcmp(RSN, 'SM')
+      rsn_lh = [31 33 26];
+      rsn_rh = [74 76 69];
+    elseif strcmp(RSN, 'FP')
+      rsn_lh = [12 16 18 36];
+      rsn_rh = [55 59 61 79];
+    elseif strcmp(RSN, 'Vis')
+      rsn_lh = [20 30 14 22];
+      rsn_rh = [63 73 57 65];
+    elseif strcmp(RSN, 'L')
+      rsn_lh = [15 21 23 41 42];
+      rsn_rh = [58 64 66 84 85];
+    elseif strcmp(RSN, 'VA')
+      rsn_lh = [27 44];
+      rsn_rh = [70 87];
+    elseif strcmp(RSN, 'DA')
+      rsn_lh = [38 13];
+      rsn_rh = [81 56];
+    end
     
-    
+    % based on Yeo et al. 2011
+    if RSN_Yeo2011
+      if ~contains(SUBJ_ID, 'fsaverage')
+        error("Yeo2011 parcellaltion only available for fsaverage surfaces");
+      end
+      [v.left, l.left, c.left] = read_annotation(strcat(PRD,'/label/lh.Yeo2011_7Networks_N1000.annot'));
+      [v.right, l.right, c.right] = read_annotation(strcat(PRD,'/label/rh.Yeo2011_7Networks_N1000.annot'));
+      wm_regmap_lh = l.left;
+      wm_regmap_rh = l.right;
+      wm_regmap = [wm_regmap_lh; wm_regmap_rh];
+      if strcmp(RSN, 'DA') 
+        rsn_lh = [947712];
+        rsn_rh = [941712];
+      elseif strcmp(RSN, 'FP') 
+        rsn_lh = [2266342];
+        rsn_rh = [2266342];
+      elseif strcmp(RSN, 'DMN')
+        rsn_lh = [5127885];
+        rsn_rh = [5127885];
+      elseif strcmp(RSN, 'Vis')
+        rsn_lh = [8786552];
+        rsn_rh = [8786552];
+      elseif strcmp(RSN, 'L')
+        rsn_lh = [10811612];
+        rsn_rh = [10811612];
+      elseif strcmp(RSN, 'SM') 
+        rsn_lh = [11829830];
+        rsn_rh = [11829830];
+      elseif strcmp(RSN, 'VA')
+        rsn_lh = [16399044];
+        rsn_rh = [16399044];
+      end 
+      RSN_version = '_Yeo2011';
+    end
+
+    rsn_lh_arr = ismember(wm_regmap_lh, rsn_lh);
+    rsn_rh_arr = ismember(wm_regmap_rh, rsn_rh);
+    rsn_lh_idx = find(rsn_lh_arr);
+    rsn_rh_idx = find(rsn_rh_arr);
+   
     % whole brain
-    wm_dmn_arr = ismember(wm_regmap, [32 75 19 62 23 66 40 83 24 67]);  
-    wm_dmn_idx = find(wm_dmn_arr);
+    wm_rsn_arr = ismember(wm_regmap, cat(2, rsn_lh, rsn_rh));  
+    wm_rsn_idx = find(wm_rsn_arr);
     
-    dmn_arr = [dmn_lh_arr; dmn_rh_arr; wm_dmn_arr];
+    
+    rsn_arr = [rsn_lh_arr; rsn_rh_arr; wm_rsn_arr];
     lh_idxs = 1:numel(wm_regmap_lh);
     rh_idxs = numel(wm_regmap_lh)+1:numel(wm_regmap);
     all_idxs = 1:numel(wm_regmap);
     idxs = {lh_idxs, rh_idxs, all_idxs};
     
-    if plot_DMN_mask
-        DMN_fig = plotNFsurf('DMN', combined.vertices, combined.faces, double(wm_dmn_arr), 'HCP', vis);
+    if plot_RSN_mask
+        RSN_fig = plotNFsurf(RSN, combined.vertices, combined.faces, double(wm_rsn_arr), 'HCP', vis);
         if save_figs
             pause(1)
-            print(DMN_fig, strcat(PRD, '/connectivity/img_', SUBJ_ID,'/DMN', save_suffix), '-depsc'); pause(1)
-            print(DMN_fig, strcat(PRD, '/connectivity/img_', SUBJ_ID,'/DMN', save_suffix), '-dpng'); pause(1)
-            saveas(DMN_fig, strcat(PRD, '/connectivity/img_', SUBJ_ID,'/DMN', save_suffix), 'svg'); pause(1)
+            %print(RSN_fig, strcat(PRD, '/connectivity/img_', SUBJ_ID,'/', RSN, save_suffix), '-depsc'); pause(1)
+            print(RSN_fig, strcat(PRD, '/connectivity/img_', SUBJ_ID,'/', rsn_type, save_suffix), '-dpng'); pause(1)
+            %saveas(RSN_fig, strcat(PRD, '/connectivity/img_', SUBJ_ID,'/', RSN, save_suffix), 'svg'); pause(1)
         end
         if strcmp(vis, 'off')
-            close(DMN_fig);
+            close(RSN_fig);
         end
     end
+
     
     % Compute MI with DMN using different methods
     for m = 1:numel(nBinsMI)
@@ -1107,19 +1340,19 @@ if MI_DMN
                     zharm = ( combined.H(:,h) - mean(combined.H(:,h)) ) / std(combined.H(:,h));
                     zharm_bin  = zharm > thZscMI;
 
-                    J = [ sum(~wm_dmn_arr(idxs{hemi}) & ~zharm_bin(idxs{hemi})), sum(~wm_dmn_arr(idxs{hemi}) & zharm_bin(idxs{hemi})); ...
-                          sum( wm_dmn_arr(idxs{hemi}) & ~zharm_bin(idxs{hemi})), sum( wm_dmn_arr(idxs{hemi}) & zharm_bin(idxs{hemi})) ] / numel(zharm_bin(idxs{hemi}));
+                    J = [ sum(~wm_rsn_arr(idxs{hemi}) & ~zharm_bin(idxs{hemi})), sum(~wm_rsn_arr(idxs{hemi}) & zharm_bin(idxs{hemi})); ...
+                          sum( wm_rsn_arr(idxs{hemi}) & ~zharm_bin(idxs{hemi})), sum( wm_rsn_arr(idxs{hemi}) & zharm_bin(idxs{hemi})) ] / numel(zharm_bin(idxs{hemi}));
                     JJ = sum( sum( J .* log2(J./(sum(J,2)*sum(J,1))) ) );
 
                     % sign reversal 
                     zharm_bin  = -zharm > thZscMI;
-                    K = [ sum(~wm_dmn_arr(idxs{hemi}) & ~zharm_bin(idxs{hemi})), sum(~wm_dmn_arr(idxs{hemi}) & zharm_bin(idxs{hemi})); ...
-                          sum( wm_dmn_arr(idxs{hemi}) & ~zharm_bin(idxs{hemi})), sum( wm_dmn_arr(idxs{hemi}) & zharm_bin(idxs{hemi})) ] / numel(zharm_bin(idxs{hemi}));
+                    K = [ sum(~wm_rsn_arr(idxs{hemi}) & ~zharm_bin(idxs{hemi})), sum(~wm_rsn_arr(idxs{hemi}) & zharm_bin(idxs{hemi})); ...
+                          sum( wm_rsn_arr(idxs{hemi}) & ~zharm_bin(idxs{hemi})), sum( wm_rsn_arr(idxs{hemi}) & zharm_bin(idxs{hemi})) ] / numel(zharm_bin(idxs{hemi}));
                     KK = sum( sum( K .* log2(K./(sum(K,2)*sum(K,1))) ) );
                     
                     MI(m,hemi,h) = max(JJ,KK);
 
-                    CC(h) = corr(double(wm_dmn_arr), double(zharm_bin));
+                    CC(h) = corr(double(wm_rsn_arr), double(zharm_bin));
                 end
             end
             MI_suffix = 'v3';
@@ -1128,10 +1361,10 @@ if MI_DMN
             for h = 1:nHarmonics
                 for hemi = 1:3  % left, right, both
                     [nh,eh] = histcounts(combined.H(:,h), nBinsMI(m), 'Normalization', 'probability');
-                    [nd,ed] = histcounts(wm_dmn_arr, 2, 'Normalization', 'probability');
+                    [nd,ed] = histcounts(wm_rsn_arr, 2, 'Normalization', 'probability');
                     for i=1:nBinsMI(m)  % binarized (i.e. more "continuous") data (Harmonics)
                         for j=1:2       % binary data (DMN)
-                            jdp(i,j) = sum((combined.H(idxs{hemi},h)>eh(i)) .* (combined.H(idxs{hemi},h)<=eh(i+1)) .* (wm_dmn_arr(idxs{hemi})>ed(j)) .* (wm_dmn_arr(idxs{hemi})<=ed(j+1)))/numel(wm_dmn_arr(idxs{hemi}));
+                            jdp(i,j) = sum((combined.H(idxs{hemi},h)>eh(i)) .* (combined.H(idxs{hemi},h)<=eh(i+1)) .* (wm_rsn_arr(idxs{hemi})>ed(j)) .* (wm_rsn_arr(idxs{hemi})<=ed(j+1)))/numel(wm_rsn_arr(idxs{hemi}));
                             idp(i,j) = nh(i)*nd(j);
                         end
                     end
@@ -1149,14 +1382,14 @@ if MI_DMN
         legend({'left hemi', 'right hemi', 'both'})
         if save_figs
             pause(1)
-            fname = strcat(PRD, '/connectivity/img_', SUBJ_ID,'/MI_DMN_hemis_', MI_suffix, save_suffix);
+            fname = strcat(PRD, '/connectivity/img_', SUBJ_ID,'/MI_', rsn_type, MI_suffix, save_suffix);
             print(MI_fig, fname, '-depsc');
             print(MI_fig, fname, '-dpng');
             print(MI_fig, fname, '-dsvg');
             
         end
         if save_MI
-            save(strcat(PRD, '/connectivity/MI_DMN_hemis_', MI_suffix, save_suffix), 'MI_m');
+            save(strcat(PRD, '/connectivity/MI_',rsn_type, RSN_version, MI_suffix, save_suffix), 'MI_m');
         end
         if strcmp(vis, 'off')
             close(MI_fig);
@@ -1167,20 +1400,21 @@ end
 
 
 
-function plotConnectomeStats(mesh_vertices, mesh_faces, C, A_c, save_figs, threshold_adjacency, PRD, SUBJ_ID, subj_type, save_suffix, vis)
-    if ~issymmetric(C)
-        C = C + C';
+
+function plotConnectomeStats(wm_vertices, wm_faces, cc_wm, A_c, save_figs, threshold_adjacency, PRD, SUBJ_ID, subj_type, save_suffix, vis)
+    if ~issymmetric(cc_wm)
+        cc_wm = cc_wm + cc_wm';
     end
-    C(find(eye(size(C)))) = 0;      % remove self connections
+    cc_wm(find(eye(size(cc_wm)))) = 0;      % remove self connections
     
     % Analyze connectivity matrix
     w_itv = 10.^(-1:0.1:3);
     w_centres = w_itv(1:end-1) + diff(w_itv)/2;
-    c_idx = find(C);
-    [n, e] = histcounts(C(c_idx), w_itv, 'Normalization', 'Probability');
-    sigma_C = std(C(c_idx));
-    mu_C = mean(mean(C(c_idx)));
-    
+    wm_idx = find(cc_wm);
+    [n, e] = histcounts(cc_wm(wm_idx), w_itv, 'Normalization', 'Probability');
+    sigma_cc_wm = std(cc_wm(wm_idx));
+    mu_cc_wm = mean(mean(cc_wm(wm_idx)));
+
     % Plot weight distribution figure
     d_cc = figure('Position', [500 500 1000 500], 'Visible', vis);
     
@@ -1194,7 +1428,7 @@ function plotConnectomeStats(mesh_vertices, mesh_faces, C, A_c, save_figs, thres
     title('Distribution of weights');
     
     subplot(1,4,4);
-    bar([mu_C, sigma_C, sigma_C/mu_C]);
+    bar([mu_cc_wm, sigma_cc_wm, sigma_cc_wm/mu_cc_wm]);
     xticklabels({'\mu', '\sigma', 'CV'}); 
     ylim([0 10]);
     
@@ -1205,9 +1439,25 @@ function plotConnectomeStats(mesh_vertices, mesh_faces, C, A_c, save_figs, thres
         saveas(gca, fname, 'svg'); pause(1)
     end
     close(d_cc);
-    
+  
+    % Create white matter fibers adjacency matrix (threshold if big (weighted) connectivity matrix)
+    A_cc_wm = zeros(size(cc_wm));
+    if threshold_adjacency
+        zsc_cc_wm = (cc_wm(wm_idx) - mu_cc_wm) / sigma_cc_wm;
+        A_cc_wm(wm_idx) = zsc_cc_wm > threshold_adjacency;
+    else
+        A_cc_wm = cc_wm ~= 0;
+    end
+
     % Plot white matter fibers adjacency matrix
     f_cc = figure('Units', 'Normalized', 'Position', [0.3 0.3 0.3 0.3], 'Visible', vis);
+    spy(A_cc_wm);
+    if save_figs
+        pause(1)
+        export_fig(strcat(PRD,'/connectivity/img_',SUBJ_ID,'/spy_A_cc_wm', save_suffix), '-png', '-transparent');
+        pause(1)
+        saveas(gca, strcat(PRD,'/connectivity/img_',SUBJ_ID,'/spy_A_cc_wm', save_suffix), 'svg'); pause(1)
+    end
     spy(A_c);
     if save_figs
         pause(1)
@@ -1217,13 +1467,13 @@ function plotConnectomeStats(mesh_vertices, mesh_faces, C, A_c, save_figs, thres
     close(f_cc);
     
     % Plot the degree matrix on the cortical surface to identify hub nodes
-    D_C = degree(graph(A_c));
-    D_C_fig = plotNFsurf('Degree', mesh_vertices, mesh_faces, log(1+D_C), subj_type, vis);
+    D_cc_wm = degree(graph(A_cc_wm));
+    D_cc_wm_fig = plotNFsurf('Degree', wm_vertices, wm_faces, log(1+D_cc_wm), subj_type, vis);
     if save_figs
-        fname = strcat(PRD,'/connectivity/img_',SUBJ_ID,'/D_C_ta', save_suffix);
+        fname = strcat(PRD,'/connectivity/img_',SUBJ_ID,'/D_cc_wm_ta', save_suffix);
         pause(1)
         export_fig(fname, '-png', '-transparent'); pause(1)
         saveas(gca, fname, 'svg'); pause(1)
     end
-    close(D_C_fig);
+    close(D_cc_wm_fig);
 end

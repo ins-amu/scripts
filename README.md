@@ -7,7 +7,7 @@ Please see the [wiki](https://github.com/ins-amu/scripts/wiki)
 - Compute high-resolution connectome based on tracks - surface mesh intersections (requires MATLAB Parallel Computing Toolbox).
 - Compute eigenvalue/eigenvector pairs of combined local and long-range connectivity matrices.
 - Compute Mutual Information of 100 harmonics (of lowest eigenvalues) with the Default Mode Network.
-- To perform, after running `main_surface.sh`, run `main_CH.sh`.
+- To perform: after running `main_surface.sh`, run `main_CH.sh`.
 
 #### NEW in 0.4:
 - Dockerfile for easy installation with Docker.
