@@ -3,11 +3,19 @@
  
 Please see the [wiki](https://github.com/ins-amu/scripts/wiki)
 
+If using SCRIPTS, please cite this work:
+Proix T, Spiegler A, Schirner M, Rothmeier S, Ritter P, Jirsa, VK. How do parcellation size and short-range connectivity affect dynamics in large-scale brain network models? NeuroImage, 2016, 142:135-149 \[[link](https://www.sciencedirect.com/science/article/abs/pii/S1053811916302518)\]
+
+If using the Connectomer Harmonics add-on, please cite:
+Naze S., Proix T., Atasoy S., Kozloski J. R. (2020) Robustness of connectome harmonics to local gray matter and long-range white matter connectivity changes. NeuroImage \[[link](https://www.sciencedirect.com/science/article/pii/S1053811920308508)\]
+
+
 #### Connectome Harmonics release:
 - Compute high-resolution connectome based on tracks - surface mesh intersections (requires MATLAB Parallel Computing Toolbox).
 - Compute eigenvalue/eigenvector pairs of combined local and long-range connectivity matrices.
 - Compute Mutual Information of 100 harmonics (of lowest eigenvalues) with the Default Mode Network.
 - To perform: after running `main_surface.sh`, run `main_CH.sh`.
+- Template connectome harmonics for surfaces *cvs\_avg35\_inMNI152*, *fsaverage4* and *fsaverage5* using the [Gibbs tractography streamlines](https://www.nitrc.org/projects/gibbsconnectome) is now [available on zenodo](https://zenodo.org/record/4027989)
 
 #### NEW in 0.4:
 - Dockerfile for easy installation with Docker.
@@ -29,10 +37,6 @@ Please see the [wiki](https://github.com/ins-amu/scripts/wiki)
 This poject use the MIT License.
 The full license is in LICENSE.txt in the SCRIPTS distribution.
 
-Copyright (c) [2014] [The SCRIPTS Developers]
+Copyright (c) [2014-2020] [The SCRIPTS Developers]
 
-#### How to cite
 
-When citing SCRIPTS, please cite this work:
-
-Proix T, Spiegler A, Schirner M, Rothmeier S, Ritter P, Jirsa, VK. How do parcellation size and short-range connectivity affect dynamics in large-scale brain network models? NeuroImage, 2016, 142:135-149
