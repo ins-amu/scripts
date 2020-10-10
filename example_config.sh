@@ -31,6 +31,14 @@ export PRD=/path_to_root_dir/
 # this will determine the name of your subject in the final directory
 export SUBJ_ID=name_subj
 
+# Matlab path if you have it
+# export MATLAB=/path_to_matlab/
+export MATLAB=$(which matlab)
+# if you don't have matlab, download and install the MCR (linux 64 bits) here: 
+# http://www.mathworks.com/products/compiler/mcr/index.html
+# and uncomment the following line
+# export MCR=/path_to_matlab_runtime_compiler/
+# export MCR=/usr/local/MATLAB/MATLAB_Runtime/v93
 
 #### Standard options
 
@@ -83,14 +91,13 @@ export REGISTRATION="regular"
 export REGION_MAPPING_CORR="0.42"
 
 # for computing subconnectivity
-# if you want subdivided parcellations, you can a list of how many
-# regions you want for each parecellations.
-# Subparcellations will be based on subdiving the existing parcellation
-# in more regions, with the constraints of minimizing the difference between 
-# subregion sizes across all subregions
+# if you want subdivided parcellations, you can set the folowing value
+# according to the following table
+# K:                 0   1   2    3    4    5
+# Number of Nodes:  70  140 280  560  1120 2240
 # default: ""
-# Needs to be a list of even integers
-export N_SUBREGIONS_LIST="100 200"
+# Needs to be a list of integers
+export K_LIST="0 1 2 3 4 5"
 
 # number of tracks used in the tractography step.
 # default: 10.000.000
