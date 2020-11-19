@@ -17,6 +17,16 @@ Naze S., Proix T., Atasoy S., Kozloski J. R. (2020) Robustness of connectome har
 - To perform: after running `main_surface.sh`, run `main_CH.sh`.
 - Template connectome harmonics for surfaces *cvs\_avg35\_inMNI152*, *fsaverage4* and *fsaverage5* using the [Gibbs tractography streamlines](https://www.nitrc.org/projects/gibbsconnectome) is now [available on zenodo](https://zenodo.org/record/4027989)
 
+
+#### Connectome Harmonics dependencies
+Install the following packages in the matlab_utils folder:
+- Toolbox graph <https://www.mathworks.com/matlabcentral/fileexchange/5355-toolbox-graph>
+- CBrewer colormaps  <https://www.mathworks.com/matlabcentral/fileexchange/34087-cbrewer---colorbrewer-schemes-for-matlab>
+- Export_fig <https://www.mathworks.com/matlabcentral/fileexchange/23629-export-fig>
+- TriangleRayIntersection <https://www.mathworks.com/matlabcentral/fileexchange/33073-triangle-ray-intersection>
+- SmoothPatch <https://www.mathworks.com/matlabcentral/fileexchange/26710-smooth-triangulated-mesh>
+- Subtightplot <https://www.mathworks.com/matlabcentral/fileexchange/39664-subtightplot>
+
 #### NEW in 0.4:
 - Dockerfile for easy installation with Docker.
 - Tests. 
