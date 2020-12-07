@@ -11,7 +11,7 @@ Please see the [wiki](https://github.com/ins-amu/scripts/wiki)
 - Dockerfile for easy installation with Docker.
 - Tests. 
 - Reorganization and simplification of the code => compatibility with tvb-make.
-- 4 new parcellations: Destrieux, HCP-MMP1, Yeo7 and Yeo 17.
+- 2 new parcellations: Destrieux, and HCP-MMP1
 
 #### Features
 - prepare data for TVB: surface reconstruction, region mapping, connectome.
