@@ -254,7 +254,8 @@ if __name__ == '__main__':
     CHECK = os.environ['CHECK']
     SUBJ_ID = os.environ['SUBJ_ID']
     REGION_MAPPING_CORR = os.environ['REGION_MAPPING_CORR']
-    K = os.environ['curr_K']
+    N_SUBREGIONS = os.environ['N_SUBREGIONS']
+    N_SUBREGIONS = int(N_SUBREGIONS)
     if "DISPLAY" in os.environ:
         DISPLAY = os.environ['DISPLAY']
     else:
@@ -265,9 +266,9 @@ if __name__ == '__main__':
     
     subcortical = [isub for isub in range(int(K)*70+1, int(K)*70+18)]
 
-    surface_projection(SUBJ_ID, PRD, img, img_aff, K, subcortical, DISPLAY, CHECK)
+    surface_projection(SUBJ_ID, PRD, img, img_aff, N_SUBREGIONS, subcortical, DISPLAY, CHECK)
     
-    correct_region_mapping(SUBJ_ID, PRD, K, REGION_MAPPING_CORR, DISPLAY, CHECK)
+    correct_region_mapping(SUBJ_ID, PRD, N_SUBREGIONS, REGION_MAPPING_CORR, DISPLAY, CHECK)
     
-    main_check_region_mapping(SUBJ_ID, PRD, K, REGION_MAPPING_CORR, DISPLAY, CHECK)
+    main_check_region_mapping(SUBJ_ID, PRD, N_SUBREGIONS, REGION_MAPPING_CORR, DISPLAY, CHECK)
         
